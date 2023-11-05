@@ -25,6 +25,27 @@ public class ReadWriteTests : E2ETestBase
         Assert.Equal(0L, result[0][2]);
         Assert.Equal("hello friend", result[0][3]);
     }
+    
+    [Fact]
+    public async Task Read_And_Write_Parquet()
+    {
+        var df = Spark.Range(10)
+            .WithColumn("double_col", Lit(10.0))
+            .WithColumn("bool_col", Lit(false))
+            .WithColumn("string_col", Lit("hello friend"));
+
+        var path = Path.Join(OutputPath, "parquet");
+        df.Write().Mode("overwrite").Format("parquet").Write(path);
+        
+        var df2 = Spark.Read.Parquet(path);
+        var result = await df2.CollectAsync();
+        
+        Assert.Equal(10, result.Count);
+        Assert.Equal(0L, result[0][0]);
+        Assert.Equal(10.0, result[0][1]);
+        Assert.Equal(false, result[0][2]);
+        Assert.Equal("hello friend", result[0][3]);
+    }
 }
 
 public class E2ETestBase

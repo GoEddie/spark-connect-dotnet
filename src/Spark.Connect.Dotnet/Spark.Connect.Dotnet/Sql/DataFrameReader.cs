@@ -72,9 +72,9 @@ public class DataFrameReader
 
     public DataFrame Orc(params string[] paths) => Read(paths, "orc", _options, _schema);
     
-    public DataFrame Parquet(string path) => Read(new string[]{path}, "orc", _options, _schema);
+    public DataFrame Parquet(string path) => Read(new string[]{path}, "parquet", _options, _schema);
 
-    public DataFrame Parquet(params string[] paths) => Read(paths, "orc", _options, _schema);
+    public DataFrame Parquet(params string[] paths) => Read(paths, "parquet", _options, _schema);
     
     public DataFrame Read(string[] paths, string format, MapField<string, string> options, string schema)
     {

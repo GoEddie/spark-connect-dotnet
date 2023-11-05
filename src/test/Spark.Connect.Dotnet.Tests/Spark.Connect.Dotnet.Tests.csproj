@@ -23,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Spark.Connect.Dotnet\Spark.Connect.Dotnet.csproj" />
+      <ProjectReference Include="..\..\spark.connect.dotnet\Spark.Connect.Dotnet\Spark.Connect.Dotnet.csproj" />
     </ItemGroup>
 
 </Project>
