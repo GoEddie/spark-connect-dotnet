@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <RootNamespace>basic_example_vb</RootNamespace>
+        <TargetFramework>net7.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\spark.connect.dotnet\Spark.Connect.Dotnet\Spark.Connect.Dotnet.csproj" />
+    </ItemGroup>
+
+</Project>
