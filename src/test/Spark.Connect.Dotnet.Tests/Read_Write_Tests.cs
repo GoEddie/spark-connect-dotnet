@@ -1,4 +1,3 @@
-using Spark.Connect.Dotnet.Sql;
 using static Spark.Connect.Dotnet.Sql.Functions;
 
 namespace Spark.Connect.Dotnet.Tests;
@@ -46,20 +45,67 @@ public class ReadWriteTests : E2ETestBase
         Assert.Equal(false, result[0][2]);
         Assert.Equal("hello friend", result[0][3]);
     }
-}
-
-public class E2ETestBase
-{
-    protected readonly SparkSession Spark;
-    protected readonly string OutputPath;
-
-    public E2ETestBase()
+    
+    [Fact]
+    public async Task Read_And_Write_Orc()
     {
-        var remoteAddress = Environment.GetEnvironmentVariable("SPARK_REMOTE") ?? "http://localhost:15002";
-        Spark = SparkSession.Builder.Remote(remoteAddress).GetOrCreate();
-        
-        var tempFolder = Path.GetTempPath();
+        var df = Spark.Range(10)
+            .WithColumn("double_col", Lit(10.0))
+            .WithColumn("bool_col", Lit(false))
+            .WithColumn("string_col", Lit("hello friend"));
 
-        OutputPath = Path.Join(tempFolder, "spark-connect-tests");
+        var path = Path.Join(OutputPath, "orc");
+        df.Write().Mode("overwrite").Format("orc").Write(path);
+        
+        var df2 = Spark.Read.Orc(path);
+        var result = await df2.CollectAsync();
+        
+        Assert.Equal(10, result.Count);
+        Assert.Equal(0L, result[0][0]);
+        Assert.Equal(10.0, result[0][1]);
+        Assert.Equal(false, result[0][2]);
+        Assert.Equal("hello friend", result[0][3]);
+    }
+    
+    [Fact]
+    public async Task Read_And_Write_Csv()
+    {
+        var df = Spark.Range(10)
+            .WithColumn("double_col", Lit(10.0))
+            .WithColumn("bool_col", Lit(false))
+            .WithColumn("string_col", Lit("hello friend"));
+
+        var path = Path.Join(OutputPath, "csv");
+        df.Write().Mode("overwrite").Format("csv").Write(path);
+        
+        var df2 = Spark.Read.Csv(path);
+        var result = await df2.CollectAsync();
+        
+        Assert.Equal(10, result.Count);
+        Assert.Equal("0", result[0][0]);
+        Assert.Equal("10.0", result[0][1]);
+        Assert.Equal("false", result[0][2]);
+        Assert.Equal("hello friend", result[0][3]);
+    }
+    
+    [Fact]
+    public async Task Read_And_Write_Csv_With_Types()
+    {
+        var df = Spark.Range(10)
+            .WithColumn("double_col", Lit(10.0))
+            .WithColumn("bool_col", Lit(false))
+            .WithColumn("string_col", Lit("hello friend"));
+
+        var path = Path.Join(OutputPath, "csv");
+        df.Write().Mode("overwrite").Format("csv").Write(path);
+        
+        var df2 = Spark.Read.Option("inferSchema", "true").Csv(path);
+        var result = await df2.CollectAsync();
+        
+        Assert.Equal(10, result.Count);
+        Assert.Null(result[0][0]);
+        Assert.Equal(10.0, result[0][1]);
+        Assert.Equal(false, result[0][2]);
+        Assert.Equal("hello friend", result[0][3]);
     }
 }
