@@ -108,4 +108,25 @@ public class ReadWriteTests : E2ETestBase
         Assert.Equal(false, result[0][2]);
         Assert.Equal("hello friend", result[0][3]);
     }
+    
+    [Fact]
+    public async Task Read_And_Write_Avro()
+    {
+        var df = Spark.Range(10)
+            .WithColumn("double_col", Lit(10.0))
+            .WithColumn("bool_col", Lit(false))
+            .WithColumn("string_col", Lit("hello friend"));
+
+        var path = Path.Join(OutputPath, "avro");
+        df.Write().Mode("overwrite").Format("avro").Write(path);
+
+        var df2 = Spark.Read.Format("avro").Load(path);
+        var result = await df2.CollectAsync();
+        
+        Assert.Equal(10, result.Count);
+        Assert.Null(result[0][0]);
+        Assert.Equal(10.0, result[0][1]);
+        Assert.Equal(false, result[0][2]);
+        Assert.Equal("hello friend", result[0][3]);
+    }
 }

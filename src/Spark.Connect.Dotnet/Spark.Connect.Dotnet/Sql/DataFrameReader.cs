@@ -8,6 +8,7 @@ public class DataFrameReader
     private readonly MapField<string, string> _options = new MapField<string, string>();
 
     private string _schema = String.Empty;
+    private string _format;
 
     protected internal DataFrameReader(SparkSession session)
     {
@@ -75,7 +76,9 @@ public class DataFrameReader
     public DataFrame Parquet(string path) => Read(new string[]{path}, "parquet", _options, _schema);
 
     public DataFrame Parquet(params string[] paths) => Read(paths, "parquet", _options, _schema);
-    
+
+    public DataFrame Load(string path) => Read(new []{path}, _format, _options, _schema);
+    public DataFrame Load(params string[] paths) => Read(paths, _format, _options, _schema);
     public DataFrame Read(string[] paths, string format, MapField<string, string> options, string schema)
     {
         var datasource = new Read.Types.DataSource()
@@ -140,5 +143,11 @@ public class DataFrameReader
         };
 
         return new DataFrame(_session, plan.Root);
+    }
+
+    public DataFrameReader Format(string format)
+    {
+        _format = format;
+        return this;
     }
 }

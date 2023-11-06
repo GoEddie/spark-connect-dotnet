@@ -23,6 +23,7 @@ public class SparkSessionBuilder
         var channel = GrpcChannel.ForAddress(_remote.Replace("sc://", "http://"), new GrpcChannelOptions(){});
         Task.Run(() => channel.ConnectAsync());
         var client = new SparkConnectService.SparkConnectServiceClient(channel);
+
         _session = new SparkSession(Guid.NewGuid().ToString(), client);
         return _session;
     }

@@ -76,4 +76,6 @@ public class Functions
     public static SparkColumn Col(string name) => Column(name);
 
     public static SparkColumn Column(string name) => new (name);
+    
+    
 }
