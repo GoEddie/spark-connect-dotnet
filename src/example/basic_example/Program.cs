@@ -1,5 +1,6 @@
 ﻿using Spark.Connect;
 using Spark.Connect.Dotnet.Sql;
+using static Spark.Connect.Dotnet.Sql.Functions;
 
 var spark = SparkSession
     .Builder
@@ -11,7 +12,7 @@ dataFrame.Show();
 
 var dataFrame2 = dataFrame
     .WithColumn("Hello",
-        Functions.Lit("Hello From Spark"));
+        Lit("Hello From Spark"));
 
 dataFrame2.Show();
 

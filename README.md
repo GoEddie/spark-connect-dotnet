@@ -10,6 +10,55 @@ There was already an existing project called .NET for Apache Spark which was a w
 
 The main problem with the original .NET for Apache Spark was that every version of Spark required a new custom built Jar to be built and maintained and when you connected to Spark you had to ensure your versions matched or you would get errors and nothing would work. This was a bit of a pain but with the new Grpc interface we get none of these issues.
 
+### What happens if this project is dropped?
+
+It doesn't matter, take the code and write your Grpc calls, you don't need the nuget you just need the proto files. This project includes some helpers to make it easier to make the Grpc calls and to mimic the DataFrame API so you can write your spark code like this:
+
+
+```csharp
+var spark = SparkSession
+    .Builder
+    .Remote("http://localhost:15002")
+    .GetOrCreate();
+
+var dataFrame = spark.Range(1000);
+dataFrame.Show();
+
+var dataFrame2 = dataFrame
+    .WithColumn("Hello",
+        Lit("Hello From Spark"));
+
+dataFrame2.Write().Json(jsonPath);
+
+var dataFrame3 = spark.Read().Json(jsonPath);
+dataFrame3.Show();
+```
+
+but there is nothing stopping you from using the proto files and making the calls directly, something like:
+
+
+```csharp
+var showStringPlan = new Plan
+{
+    Root = new Relation
+    {
+        ShowString = new ShowString
+        {
+            Truncate = truncate, Input = input, NumRows = numberOfRows, Vertical = vertical
+        }
+    }
+};
+
+var executeRequest = new ExecutePlanRequest
+{
+    Plan = showStringPlan, SessionId = sessionId
+};
+
+client.ExecutePlan(executeRequest, new Metadata());
+```
+
+You will need to build a plan for each of the calls you want to make but the details are all in this repo and the referenced Golang implementation.
+
 ### Inspiration
 
 The documentation for Spark Connect is limited at best but there is an example implementaion in [GO](https://github.com/apache/spark-connect-go) and that contains examples for many of the Grpc calls to Spark so has been extremely useful. So thanks go to the contributors over in Golang. 
@@ -24,9 +73,14 @@ The documentation for Spark Connect is limited at best but there is an example i
 [Dev Guide](docs/dev-guide.md)
 
 
+### Deployment scenarios to be tested
+
+1. Local on Windows
+1. Databricks
+1. Synapse Analytics
+
 ### Major Features to be implemented
 
 1. All `spark.sql.functions.*` Functions
 1. All Data Reader/Writer Functions
 1. UDF's
-
