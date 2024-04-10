@@ -2,6 +2,23 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class SparkColumn
 {
+    private bool Equals(SparkColumn other)
+    {
+        return Expression.Equals(other.Expression);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        return obj.GetType() == this.GetType() && Equals((SparkColumn)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Expression.GetHashCode();
+    }
+
     protected internal readonly Expression Expression;
 
     public SparkColumn(Expression expression)

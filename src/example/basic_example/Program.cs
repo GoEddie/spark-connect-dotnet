@@ -12,9 +12,22 @@ dataFrame.Show();
 
 var dataFrame2 = dataFrame
     .WithColumn("Hello",
-        Lit("Hello From Spark"));
+        Lit("Hello From Spark, via Spark Connect"));
 
 dataFrame2.Show();
+
+var dfFromCreate = await spark.a();
+dfFromCreate.Show();    
+
+var dfFromSl = await spark.SqlAsync("SELECT *, id + 10, 'Hello' as abc, id * 10 m2 FROM range(100) union SELECT *, id + 10, 'Hello' as abc, id * 10 m2 FROM range(100)");
+dfFromSl.Show();
+dfFromSl.CreateOrReplaceTempView("table_a");
+
+var dfFromView = await spark.SqlAsync("SELECT min(id), avg(m2) from table_a group by id");
+dfFromView.Show();
+
+dataFrame = spark.Range(1000);
+dataFrame.Show();
 
 var tempFolder = Path.GetTempPath();
 

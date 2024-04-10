@@ -8,7 +8,7 @@ public class DataFrameReader
     private readonly MapField<string, string> _options = new MapField<string, string>();
 
     private string _schema = String.Empty;
-    private string _format;
+    private string _format = String.Empty;
 
     protected internal DataFrameReader(SparkSession session)
     {
@@ -106,7 +106,8 @@ public class DataFrameReader
                 }
             }
         };
-        return new DataFrame(_session, plan.Root);
+                                                            //TODO: What do we do here??
+        return new DataFrame(_session, plan.Root, new DataType());
     }
 
     public DataFrame Jdbc(string[] paths, string format, MapField<string, string> options, string schema, RepeatedField<string> predicates)
@@ -141,8 +142,8 @@ public class DataFrameReader
                 }
             }
         };
-
-        return new DataFrame(_session, plan.Root);
+                                                            //TODO: What do we do here?? - not sure how we will know the schema??
+        return new DataFrame(_session, plan.Root, new DataType());
     }
 
     public DataFrameReader Format(string format)
