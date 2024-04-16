@@ -51,7 +51,7 @@ public class DataFrameWriter
         _options.Add(key, value);
         return this;
     }
-
+    
     public DataFrameWriter PartitionBy(params string[] columnNames)
     {
         _partitionColumnNames = columnNames.ToList();
@@ -91,6 +91,8 @@ public class DataFrameWriter
                     Source = format,
                     Options = { options },
                     Input = _what.Relation,
+                    PartitioningColumns = { _partitionColumnNames },
+                    
                     Path = path
                 }
             }

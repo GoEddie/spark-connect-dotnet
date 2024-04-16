@@ -1,2772 +1,2129 @@
+
 using Spark.Connect.Dotnet.Sql;
 using static Spark.Connect.Dotnet.Sql.Functions;
-namespace Spark.Connect.Dotnet.Tests.DataFrame;
+namespace Spark.Connect.Dotnet.Tests.FunctionsTests;
+
 public class GeneratedFunctionsTests : E2ETestBase
 {
+    private static Dotnet.Sql.DataFrame Source = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(id as binary) as idbinary, cast(id as boolean) as idboolean, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr FROM range(100)");
+    private static Window Window = new Window().OrderBy("id").PartitionBy("id");
 
-    /** SortFunctionHandler **/
-    [Fact]
-    public void Asc_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.OrderBy(Asc("id0"));
-      df.Show();
-      df = df.OrderBy(Asc(Col("id0")));
-      df.Show();
-    }
 
-    /** SortFunctionHandler **/
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Sort **/
     [Fact]
-    public void Desc_()
+    public void Asc_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.OrderBy(Desc("id0"));
-      df.Show();
-      df = df.OrderBy(Desc(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Sqrt_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Sqrt("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Sqrt(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void TryAdd_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TryAdd("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", TryAdd(Col("id0"),Col("id1")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void TryAvg_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TryAvg("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", TryAvg(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void TryDivide_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TryDivide("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", TryDivide(Col("id0"),Col("id1")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void TryMultiply_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TryMultiply("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", TryMultiply(Col("id0"),Col("id1")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void TrySubtract_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TrySubtract("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", TrySubtract(Col("id0"),Col("id1")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void TrySum_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TrySum("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", TrySum(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Abs_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Abs("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Abs(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Mode_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Mode("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Mode(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Max_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Max("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Max(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Min_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Min("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Min(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void MaxBy_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", MaxBy("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", MaxBy(Col("id0"),Col("id1")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void MinBy_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", MinBy("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", MinBy(Col("id0"),Col("id1")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Count_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Count("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Count(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Sum_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Sum("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Sum(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Avg_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Avg("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Avg(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Mean_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Mean("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Mean(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Median_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Median("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Median(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void SumDistinct_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", SumDistinct("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", SumDistinct(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Product_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Product("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Product(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Acos_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Acos("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Acos(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Acosh_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Acosh("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Acosh(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Asin_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Asin("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Asin(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Asinh_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Asinh("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Asinh(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Atan_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Atan("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Atan(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Atanh_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Atanh("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Atanh(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Cbrt_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Cbrt("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Cbrt(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Ceil_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Ceil("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Ceil(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Ceiling_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Ceiling("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Ceiling(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Cos_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Cos("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Cos(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Cosh_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Cosh("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Cosh(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Cot_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Cot("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Cot(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Csc_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Csc("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Csc(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Exp_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Exp("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Exp(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Expm1_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Expm1("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Expm1(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Floor_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Floor("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Floor(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Log_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Log("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Log(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Log10_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Log10("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Log10(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Log1p_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Log1p("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Log1p(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Negative_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Negative("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Negative(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Positive_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Positive("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Positive(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Rint_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Rint("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Rint(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Sec_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Sec("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Sec(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Signum_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Signum("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Signum(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Sign_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Sign("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Sign(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Sin_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Sin("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Sin(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Sinh_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Sinh("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Sinh(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Tan_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Tan("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Tan(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Tanh_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Tanh("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Tanh(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void ToDegrees_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ToDegrees("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", ToDegrees(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void ToRadians_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ToRadians("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", ToRadians(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void BitwiseNOT_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitwiseNOT("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitwiseNOT(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void BitwiseNot_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitwiseNot("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitwiseNot(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void BitCount_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitCount("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitCount(Col("id0")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void BitGet_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitGet("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", BitGet(Col("id0"),Col("id1")));
-      df.Show();
-    }
-/** AllArgsColumnOrNameTest  **/
-    [Fact]
-    public void Getbit_()
-    {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Getbit("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Getbit(Col("id0"),Col("id1")));
-      df.Show();
+        Source.OrderBy(Asc("id")).Show();
+        Source.OrderBy(Asc(Lit(1))).Show();
+        Source.OrderBy(Asc(Col("id"))).Show();
     }
 
-    /** SortFunctionHandler **/
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Sort **/
     [Fact]
-    public void AscNullsFirst_()
+    public void Desc_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.OrderBy(AscNullsFirst("id0"));
-      df.Show();
-      df = df.OrderBy(AscNullsFirst(Col("id0")));
-      df.Show();
+        Source.OrderBy(Desc("id")).Show();
+        Source.OrderBy(Desc(Lit(1))).Show();
+        Source.OrderBy(Desc(Col("id"))).Show();
     }
 
-    /** SortFunctionHandler **/
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void AscNullsLast_()
+    public void Sqrt_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.OrderBy(AscNullsLast("id0"));
-      df.Show();
-      df = df.OrderBy(AscNullsLast(Col("id0")));
-      df.Show();
+        Source.Select(Sqrt("id")).Show();
+        Source.Select(Sqrt(Lit(180))).Show();
+        Source.Select(Sqrt(Col("id"))).Show();
     }
 
-    /** SortFunctionHandler **/
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void DescNullsFirst_()
+    public void TryAdd_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.OrderBy(DescNullsFirst("id0"));
-      df.Show();
-      df = df.OrderBy(DescNullsFirst(Col("id0")));
-      df.Show();
+        Source.Select(TryAdd("id","id")).Show();
+        Source.Select(TryAdd(Lit(1),Lit(1))).Show();
+        Source.Select(TryAdd(Col("id"),Col("id"))).Show();
     }
 
-    /** SortFunctionHandler **/
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void DescNullsLast_()
+    public void TryAvg_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.OrderBy(DescNullsLast("id0"));
-      df.Show();
-      df = df.OrderBy(DescNullsLast(Col("id0")));
-      df.Show();
+        Source.Select(TryAvg("id")).Show();
+        Source.Select(TryAvg(Lit(180))).Show();
+        Source.Select(TryAvg(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Stddev_()
+    public void TryDivide_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Stddev("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Stddev(Col("id0")));
-      df.Show();
+        Source.Select(TryDivide("id","id")).Show();
+        Source.Select(TryDivide(Lit(1),Lit(1))).Show();
+        Source.Select(TryDivide(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Std_()
+    public void TryMultiply_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Std("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Std(Col("id0")));
-      df.Show();
+        Source.Select(TryMultiply("id","id")).Show();
+        Source.Select(TryMultiply(Lit(1),Lit(1))).Show();
+        Source.Select(TryMultiply(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void StddevSamp_()
+    public void TrySubtract_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", StddevSamp("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", StddevSamp(Col("id0")));
-      df.Show();
+        Source.Select(TrySubtract("id","id")).Show();
+        Source.Select(TrySubtract(Lit(1),Lit(1))).Show();
+        Source.Select(TrySubtract(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void StddevPop_()
+    public void TrySum_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", StddevPop("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", StddevPop(Col("id0")));
-      df.Show();
+        Source.Select(TrySum("id")).Show();
+        Source.Select(TrySum(Lit(180))).Show();
+        Source.Select(TrySum(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Variance_()
+    public void Abs_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Variance("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Variance(Col("id0")));
-      df.Show();
+        Source.Select(Abs("id")).Show();
+        Source.Select(Abs(Lit(180))).Show();
+        Source.Select(Abs(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void VarSamp_()
+    public void Mode_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", VarSamp("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", VarSamp(Col("id0")));
-      df.Show();
+        Source.Select(Mode("id")).Show();
+        Source.Select(Mode(Lit(180))).Show();
+        Source.Select(Mode(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void VarPop_()
+    public void Max_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", VarPop("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", VarPop(Col("id0")));
-      df.Show();
+        Source.Select(Max("id")).Show();
+        Source.Select(Max(Lit(180))).Show();
+        Source.Select(Max(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void RegrAvgx_()
+    public void Min_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegrAvgx("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegrAvgx(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Min("id")).Show();
+        Source.Select(Min(Lit(180))).Show();
+        Source.Select(Min(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void RegrAvgy_()
+    public void MaxBy_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegrAvgy("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegrAvgy(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(MaxBy("id","id")).Show();
+        Source.Select(MaxBy(Lit(1),Lit(1))).Show();
+        Source.Select(MaxBy(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void RegrCount_()
+    public void MinBy_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegrCount("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegrCount(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(MinBy("id","id")).Show();
+        Source.Select(MinBy(Lit(1),Lit(1))).Show();
+        Source.Select(MinBy(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void RegrIntercept_()
+    public void Count_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegrIntercept("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegrIntercept(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Count("id")).Show();
+        Source.Select(Count(Lit(180))).Show();
+        Source.Select(Count(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void RegrR2_()
+    public void Sum_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegrR2("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegrR2(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Sum("id")).Show();
+        Source.Select(Sum(Lit(180))).Show();
+        Source.Select(Sum(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void RegrSlope_()
+    public void Avg_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegrSlope("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegrSlope(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Avg("id")).Show();
+        Source.Select(Avg(Lit(180))).Show();
+        Source.Select(Avg(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void RegrSxx_()
+    public void Mean_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegrSxx("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegrSxx(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Mean("id")).Show();
+        Source.Select(Mean(Lit(180))).Show();
+        Source.Select(Mean(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void RegrSxy_()
+    public void Median_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegrSxy("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegrSxy(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Median("id")).Show();
+        Source.Select(Median(Lit(180))).Show();
+        Source.Select(Median(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void RegrSyy_()
+    public void Product_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegrSyy("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegrSyy(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Product("id")).Show();
+        Source.Select(Product(Lit(180))).Show();
+        Source.Select(Product(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Every_()
+    public void Acos_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Every("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Every(Col("id0")));
-      df.Show();
+        Source.Select(Acos("id")).Show();
+        Source.Select(Acos(Lit(180))).Show();
+        Source.Select(Acos(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void BoolAnd_()
+    public void Acosh_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BoolAnd("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BoolAnd(Col("id0")));
-      df.Show();
+        Source.Select(Acosh("id")).Show();
+        Source.Select(Acosh(Lit(180))).Show();
+        Source.Select(Acosh(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Some_()
+    public void Asin_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Some("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Some(Col("id0")));
-      df.Show();
+        Source.Select(Asin("id")).Show();
+        Source.Select(Asin(Lit(180))).Show();
+        Source.Select(Asin(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void BoolOr_()
+    public void Asinh_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BoolOr("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BoolOr(Col("id0")));
-      df.Show();
+        Source.Select(Asinh("id")).Show();
+        Source.Select(Asinh(Lit(180))).Show();
+        Source.Select(Asinh(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void BitAnd_()
+    public void Atan_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitAnd("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitAnd(Col("id0")));
-      df.Show();
+        Source.Select(Atan("id")).Show();
+        Source.Select(Atan(Lit(180))).Show();
+        Source.Select(Atan(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void BitOr_()
+    public void Atanh_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitOr("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitOr(Col("id0")));
-      df.Show();
+        Source.Select(Atanh("id")).Show();
+        Source.Select(Atanh(Lit(180))).Show();
+        Source.Select(Atanh(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void BitXor_()
+    public void Cbrt_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitXor("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitXor(Col("id0")));
-      df.Show();
+        Source.Select(Cbrt("id")).Show();
+        Source.Select(Cbrt(Lit(180))).Show();
+        Source.Select(Cbrt(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Skewness_()
+    public void Ceil_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Skewness("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Skewness(Col("id0")));
-      df.Show();
+        Source.Select(Ceil("id")).Show();
+        Source.Select(Ceil(Lit(180))).Show();
+        Source.Select(Ceil(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Kurtosis_()
+    public void Ceiling_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Kurtosis("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Kurtosis(Col("id0")));
-      df.Show();
+        Source.Select(Ceiling("id")).Show();
+        Source.Select(Ceiling(Lit(180))).Show();
+        Source.Select(Ceiling(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void CollectList_()
+    public void Cos_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", CollectList("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", CollectList(Col("id0")));
-      df.Show();
+        Source.Select(Cos("id")).Show();
+        Source.Select(Cos(Lit(180))).Show();
+        Source.Select(Cos(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ArrayAgg_()
+    public void Cosh_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArrayAgg("idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", ArrayAgg(Col("idarray")));
-      df.Show();
+        Source.Select(Cosh("id")).Show();
+        Source.Select(Cosh(Lit(180))).Show();
+        Source.Select(Cosh(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void CollectSet_()
+    public void Cot_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", CollectSet("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", CollectSet(Col("id0")));
-      df.Show();
+        Source.Select(Cot("id")).Show();
+        Source.Select(Cot(Lit(180))).Show();
+        Source.Select(Cot(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Degrees_()
+    public void Csc_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Degrees("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Degrees(Col("id0")));
-      df.Show();
+        Source.Select(Csc("id")).Show();
+        Source.Select(Csc(Lit(180))).Show();
+        Source.Select(Csc(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Radians_()
+    public void E_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Radians("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Radians(Col("id0")));
-      df.Show();
+        Source.Select(E()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Coalesce_()
+    public void Exp_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Coalesce(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", Coalesce(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(Exp("id")).Show();
+        Source.Select(Exp(Lit(180))).Show();
+        Source.Select(Exp(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Corr_()
+    public void Expm1_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Corr("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Corr(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Expm1("id")).Show();
+        Source.Select(Expm1(Lit(180))).Show();
+        Source.Select(Expm1(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void CovarPop_()
+    public void Floor_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", CovarPop("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", CovarPop(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Floor("id")).Show();
+        Source.Select(Floor(Lit(180))).Show();
+        Source.Select(Floor(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void CovarSamp_()
+    public void Log_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", CovarSamp("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", CovarSamp(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Log("id")).Show();
+        Source.Select(Log(Lit(180))).Show();
+        Source.Select(Log(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void First_Test_()
+    public void Log10_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", First("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", First(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Log10("id")).Show();
+        Source.Select(Log10(Lit(180))).Show();
+        Source.Select(Log10(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Grouping_()
+    public void Log1p_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Grouping("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Grouping(Col("id0")));
-      df.Show();
+        Source.Select(Log1p("id")).Show();
+        Source.Select(Log1p(Lit(180))).Show();
+        Source.Select(Log1p(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void GroupingId_()
+    public void Negative_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", GroupingId(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", GroupingId(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(Negative("id")).Show();
+        Source.Select(Negative(Lit(180))).Show();
+        Source.Select(Negative(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void CountMinSketch_()
+    public void Pi_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", CountMinSketch("id0","id1","id2","id3"));
-      df.Show();
-      df = df.WithColumn("new_col", CountMinSketch(Col("id0"),Col("id1"),Col("id2"),Col("id3")));
-      df.Show();
+        Source.Select(Pi()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Isnan_()
+    public void Positive_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Isnan("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Isnan(Col("id0")));
-      df.Show();
+        Source.Select(Positive("id")).Show();
+        Source.Select(Positive(Lit(180))).Show();
+        Source.Select(Positive(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Isnull_()
+    public void Rint_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Isnull("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Isnull(Col("id0")));
-      df.Show();
+        Source.Select(Rint("id")).Show();
+        Source.Select(Rint(Lit(180))).Show();
+        Source.Select(Rint(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Last_Test_()
+    public void Sec_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Last("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Last(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Sec("id")).Show();
+        Source.Select(Sec(Lit(180))).Show();
+        Source.Select(Sec(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Nanvl_()
+    public void Signum_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Nanvl("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Nanvl(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Signum("id")).Show();
+        Source.Select(Signum(Lit(180))).Show();
+        Source.Select(Signum(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Round_Test_()
+    public void Sign_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Round("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Round(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Sign("id")).Show();
+        Source.Select(Sign(Lit(180))).Show();
+        Source.Select(Sign(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Bround_Test_()
+    public void Sin_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Bround("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Bround(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Sin("id")).Show();
+        Source.Select(Sin(Lit(180))).Show();
+        Source.Select(Sin(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ShiftLeft_Test_()
+    public void Sinh_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ShiftLeft("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", ShiftLeft(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Sinh("id")).Show();
+        Source.Select(Sinh(Lit(180))).Show();
+        Source.Select(Sinh(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Shiftleft_Test_()
+    public void Tan_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Shiftleft("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Shiftleft(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Tan("id")).Show();
+        Source.Select(Tan(Lit(180))).Show();
+        Source.Select(Tan(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ShiftRight_Test_()
+    public void Tanh_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ShiftRight("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", ShiftRight(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Tanh("id")).Show();
+        Source.Select(Tanh(Lit(180))).Show();
+        Source.Select(Tanh(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Shiftright_Test_()
+    public void BitwiseNot_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Shiftright("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Shiftright(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(BitwiseNot("id")).Show();
+        Source.Select(BitwiseNot(Lit(180))).Show();
+        Source.Select(BitwiseNot(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ShiftRightUnsigned_Test_()
+    public void BitCount_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ShiftRightUnsigned("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", ShiftRightUnsigned(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(BitCount("id")).Show();
+        Source.Select(BitCount(Lit(180))).Show();
+        Source.Select(BitCount(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
-    public void Shiftrightunsigned_Test_()
+    public void BitGet_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Shiftrightunsigned("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Shiftrightunsigned(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(BitGet("id", Lit(0))).Show();
+        Source.Select(BitGet(Lit(10), Lit(0))).Show();
+        Source.Select(BitGet(Col("id"), Lit(0))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
-    public void Struct_()
+    public void Getbit_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Struct(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", Struct(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(Getbit("id", Lit(0))).Show();
+        Source.Select(Getbit(Lit(10), Lit(0))).Show();
+        Source.Select(Getbit(Col("id"), Lit(0))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Sort **/
     [Fact]
-    public void NamedStruct_()
+    public void AscNullsFirst_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", NamedStruct(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", NamedStruct(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.OrderBy(AscNullsFirst("id")).Show();
+        Source.OrderBy(AscNullsFirst(Lit(1))).Show();
+        Source.OrderBy(AscNullsFirst(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Sort **/
     [Fact]
-    public void Greatest_()
+    public void AscNullsLast_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Greatest(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", Greatest(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.OrderBy(AscNullsLast("id")).Show();
+        Source.OrderBy(AscNullsLast(Lit(1))).Show();
+        Source.OrderBy(AscNullsLast(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Sort **/
     [Fact]
-    public void Least_()
+    public void DescNullsFirst_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Least(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", Least(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.OrderBy(DescNullsFirst("id")).Show();
+        Source.OrderBy(DescNullsFirst(Lit(1))).Show();
+        Source.OrderBy(DescNullsFirst(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Sort **/
     [Fact]
-    public void Ln_()
+    public void DescNullsLast_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Ln("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Ln(Col("id0")));
-      df.Show();
+        Source.OrderBy(DescNullsLast("id")).Show();
+        Source.OrderBy(DescNullsLast(Lit(1))).Show();
+        Source.OrderBy(DescNullsLast(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Log2_()
+    public void Stddev_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Log2("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Log2(Col("id0")));
-      df.Show();
+        Source.Select(Stddev("id")).Show();
+        Source.Select(Stddev(Lit(180))).Show();
+        Source.Select(Stddev(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Factorial_()
+    public void Std_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Factorial("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Factorial(Col("id0")));
-      df.Show();
+        Source.Select(Std("id")).Show();
+        Source.Select(Std(Lit(180))).Show();
+        Source.Select(Std(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void CountIf_()
+    public void StddevSamp_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", CountIf("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", CountIf(Col("id0")));
-      df.Show();
+        Source.Select(StddevSamp("id")).Show();
+        Source.Select(StddevSamp(Lit(180))).Show();
+        Source.Select(StddevSamp(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void HistogramNumeric_()
+    public void StddevPop_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", HistogramNumeric("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", HistogramNumeric(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(StddevPop("id")).Show();
+        Source.Select(StddevPop(Lit(180))).Show();
+        Source.Select(StddevPop(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void DateFormat_Test_()
+    public void Variance_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", DateFormat("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", DateFormat(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Variance("id")).Show();
+        Source.Select(Variance(Lit(180))).Show();
+        Source.Select(Variance(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Year_()
+    public void VarSamp_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Year("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Year(Col("id0")));
-      df.Show();
+        Source.Select(VarSamp("id")).Show();
+        Source.Select(VarSamp(Lit(180))).Show();
+        Source.Select(VarSamp(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Quarter_()
+    public void VarPop_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Quarter("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Quarter(Col("id0")));
-      df.Show();
+        Source.Select(VarPop("id")).Show();
+        Source.Select(VarPop(Lit(180))).Show();
+        Source.Select(VarPop(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Month_()
+    public void RegrAvgx_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Month("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Month(Col("id0")));
-      df.Show();
+        Source.Select(RegrAvgx("id","id")).Show();
+        Source.Select(RegrAvgx(Lit(1),Lit(1))).Show();
+        Source.Select(RegrAvgx(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Dayofweek_()
+    public void RegrAvgy_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Dayofweek("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Dayofweek(Col("id0")));
-      df.Show();
+        Source.Select(RegrAvgy("id","id")).Show();
+        Source.Select(RegrAvgy(Lit(1),Lit(1))).Show();
+        Source.Select(RegrAvgy(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Dayofmonth_()
+    public void RegrCount_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Dayofmonth("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Dayofmonth(Col("id0")));
-      df.Show();
+        Source.Select(RegrCount("id","id")).Show();
+        Source.Select(RegrCount(Lit(1),Lit(1))).Show();
+        Source.Select(RegrCount(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Day_()
+    public void RegrIntercept_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Day("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Day(Col("id0")));
-      df.Show();
+        Source.Select(RegrIntercept("id","id")).Show();
+        Source.Select(RegrIntercept(Lit(1),Lit(1))).Show();
+        Source.Select(RegrIntercept(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Dayofyear_()
+    public void RegrR2_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Dayofyear("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Dayofyear(Col("id0")));
-      df.Show();
+        Source.Select(RegrR2("id","id")).Show();
+        Source.Select(RegrR2(Lit(1),Lit(1))).Show();
+        Source.Select(RegrR2(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Hour_()
+    public void RegrSlope_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Hour("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Hour(Col("id0")));
-      df.Show();
+        Source.Select(RegrSlope("id","id")).Show();
+        Source.Select(RegrSlope(Lit(1),Lit(1))).Show();
+        Source.Select(RegrSlope(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Minute_()
+    public void RegrSxx_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Minute("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Minute(Col("id0")));
-      df.Show();
+        Source.Select(RegrSxx("id","id")).Show();
+        Source.Select(RegrSxx(Lit(1),Lit(1))).Show();
+        Source.Select(RegrSxx(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Second_()
+    public void RegrSxy_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Second("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Second(Col("id0")));
-      df.Show();
+        Source.Select(RegrSxy("id","id")).Show();
+        Source.Select(RegrSxy(Lit(1),Lit(1))).Show();
+        Source.Select(RegrSxy(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Weekofyear_()
+    public void RegrSyy_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Weekofyear("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Weekofyear(Col("id0")));
-      df.Show();
+        Source.Select(RegrSyy("id","id")).Show();
+        Source.Select(RegrSyy(Lit(1),Lit(1))).Show();
+        Source.Select(RegrSyy(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Boolean **/
     [Fact]
-    public void Weekday_()
+    public void Every_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Weekday("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Weekday(Col("id0")));
-      df.Show();
+        Source.Select(Every("idboolean")).Show();
+        Source.Select(Every(Lit(false))).Show();
+        Source.Select(Every(Col("idboolean"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Boolean **/
     [Fact]
-    public void Extract_()
+    public void BoolAnd_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Extract("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Extract(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(BoolAnd("idboolean")).Show();
+        Source.Select(BoolAnd(Lit(false))).Show();
+        Source.Select(BoolAnd(Col("idboolean"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Boolean **/
     [Fact]
-    public void DatePart_()
+    public void Some_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", DatePart("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", DatePart(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Some("idboolean")).Show();
+        Source.Select(Some(Lit(false))).Show();
+        Source.Select(Some(Col("idboolean"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Boolean **/
     [Fact]
-    public void Datepart_()
+    public void BoolOr_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Datepart("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Datepart(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(BoolOr("idboolean")).Show();
+        Source.Select(BoolOr(Lit(false))).Show();
+        Source.Select(BoolOr(Col("idboolean"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void MakeDate_()
+    public void BitAnd_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", MakeDate("id0","id1","id2"));
-      df.Show();
-      df = df.WithColumn("new_col", MakeDate(Col("id0"),Col("id1"),Col("id2")));
-      df.Show();
+        Source.Select(BitAnd("id")).Show();
+        Source.Select(BitAnd(Lit(180))).Show();
+        Source.Select(BitAnd(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Datediff_()
+    public void BitOr_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Datediff("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Datediff(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(BitOr("id")).Show();
+        Source.Select(BitOr(Lit(180))).Show();
+        Source.Select(BitOr(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void DateDiff_()
+    public void BitXor_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", DateDiff("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", DateDiff(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(BitXor("id")).Show();
+        Source.Select(BitXor(Lit(180))).Show();
+        Source.Select(BitXor(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void DateFromUnixDate_()
+    public void Skewness_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", DateFromUnixDate("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", DateFromUnixDate(Col("id0")));
-      df.Show();
+        Source.Select(Skewness("id")).Show();
+        Source.Select(Skewness(Lit(180))).Show();
+        Source.Select(Skewness(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void UnixDate_()
+    public void Kurtosis_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", UnixDate("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", UnixDate(Col("id0")));
-      df.Show();
+        Source.Select(Kurtosis("id")).Show();
+        Source.Select(Kurtosis(Lit(180))).Show();
+        Source.Select(Kurtosis(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void UnixMicros_()
+    public void CollectList_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", UnixMicros("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", UnixMicros(Col("id0")));
-      df.Show();
+        Source.Select(CollectList("id")).Show();
+        Source.Select(CollectList(Lit(180))).Show();
+        Source.Select(CollectList(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void UnixMillis_()
+    public void ArrayAgg_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", UnixMillis("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", UnixMillis(Col("id0")));
-      df.Show();
+        Source.Select(ArrayAgg("id")).Show();
+        Source.Select(ArrayAgg(Lit(180))).Show();
+        Source.Select(ArrayAgg(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void UnixSeconds_()
+    public void CollectSet_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", UnixSeconds("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", UnixSeconds(Col("id0")));
-      df.Show();
+        Source.Select(CollectSet("id")).Show();
+        Source.Select(CollectSet(Lit(180))).Show();
+        Source.Select(CollectSet(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ToTimestamp_()
+    public void Degrees_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ToTimestamp("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", ToTimestamp(Col("id0")));
-      df.Show();
+        Source.Select(Degrees("id")).Show();
+        Source.Select(Degrees(Lit(180))).Show();
+        Source.Select(Degrees(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ToTimestamp_Test_()
+    public void Radians_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ToTimestamp("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", ToTimestamp(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Radians("id")).Show();
+        Source.Select(Radians(Lit(180))).Show();
+        Source.Select(Radians(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Xpath_()
+    public void RowNumber_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Xpath("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Xpath(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(RowNumber().Over(Window)).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void XpathBoolean_()
+    public void DenseRank_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", XpathBoolean("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", XpathBoolean(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(DenseRank().Over(Window)).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void XpathDouble_()
+    public void Rank_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", XpathDouble("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", XpathDouble(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Rank().Over(Window)).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void XpathNumber_()
+    public void CumeDist_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", XpathNumber("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", XpathNumber(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(CumeDist().Over(Window)).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void XpathFloat_()
+    public void PercentRank_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", XpathFloat("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", XpathFloat(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(PercentRank().Over(Window)).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void XpathInt_()
+    public void Corr_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", XpathInt("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", XpathInt(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Corr("id","id")).Show();
+        Source.Select(Corr(Lit(1),Lit(1))).Show();
+        Source.Select(Corr(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void XpathLong_()
+    public void CovarPop_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", XpathLong("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", XpathLong(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(CovarPop("id","id")).Show();
+        Source.Select(CovarPop(Lit(1),Lit(1))).Show();
+        Source.Select(CovarPop(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void XpathShort_()
+    public void CovarSamp_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", XpathShort("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", XpathShort(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(CovarSamp("id","id")).Show();
+        Source.Select(CovarSamp(Lit(1),Lit(1))).Show();
+        Source.Select(CovarSamp(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void XpathString_()
+    public void InputFileName_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", XpathString("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", XpathString(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(InputFileName()).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Trunc_Test_()
+    public void Isnan_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Trunc("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Trunc(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Isnan("id")).Show();
+        Source.Select(Isnan(Lit(180))).Show();
+        Source.Select(Isnan(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void NextDay_Test_()
+    public void Isnull_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", NextDay("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", NextDay(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Isnull("id")).Show();
+        Source.Select(Isnull(Lit(180))).Show();
+        Source.Select(Isnull(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void LastDay_()
+    public void MonotonicallyIncreasingId_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", LastDay("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", LastDay(Col("id0")));
-      df.Show();
+        Source.Select(MonotonicallyIncreasingId()).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void FromUnixtime_Test_()
+    public void Nanvl_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", FromUnixtime("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", FromUnixtime(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Nanvl("id","id")).Show();
+        Source.Select(Nanvl(Lit(1),Lit(1))).Show();
+        Source.Select(Nanvl(Col("id"),Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
-    public void UnixTimestamp_Test_()
+    public void Round_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", UnixTimestamp("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", UnixTimestamp(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Round("id", Lit(0))).Show();
+        Source.Select(Round(Lit(10), Lit(0))).Show();
+        Source.Select(Round(Col("id"), Lit(0))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
-    public void FromUtcTimestamp_()
+    public void Bround_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", FromUtcTimestamp("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", FromUtcTimestamp(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Bround("id", Lit(0))).Show();
+        Source.Select(Bround(Lit(10), Lit(0))).Show();
+        Source.Select(Bround(Col("id"), Lit(0))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
-    public void ToUtcTimestamp_()
+    public void ShiftLeft_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ToUtcTimestamp("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", ToUtcTimestamp(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(ShiftLeft("id", Lit(0))).Show();
+        Source.Select(ShiftLeft(Lit(10), Lit(0))).Show();
+        Source.Select(ShiftLeft(Col("id"), Lit(0))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
-    public void TimestampSeconds_()
+    public void Shiftleft_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TimestampSeconds("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", TimestampSeconds(Col("id0")));
-      df.Show();
+        Source.Select(Shiftleft("id", Lit(0))).Show();
+        Source.Select(Shiftleft(Lit(10), Lit(0))).Show();
+        Source.Select(Shiftleft(Col("id"), Lit(0))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void TimestampMillis_()
+    public void ShiftRight_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TimestampMillis("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", TimestampMillis(Col("id0")));
-      df.Show();
+        //Source.Select(ShiftRight("id")).Show();
+        //Source.Select(ShiftRight(Lit(180))).Show();
+        //Source.Select(ShiftRight(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void TimestampMicros_()
+    public void Shiftright_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TimestampMicros("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", TimestampMicros(Col("id0")));
-      df.Show();
+        //Source.Select(Shiftright("id")).Show();
+        //Source.Select(Shiftright(Lit(180))).Show();
+        //Source.Select(Shiftright(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
-    public void WindowTime_()
+    public void ShiftRightUnsigned_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", WindowTime("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", WindowTime(Col("id0")));
-      df.Show();
+        Source.Select(ShiftRightUnsigned("id", Lit(0))).Show();
+        Source.Select(ShiftRightUnsigned(Lit(10), Lit(0))).Show();
+        Source.Select(ShiftRightUnsigned(Col("id"), Lit(0))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
-    public void Crc32_()
+    public void Shiftrightunsigned_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Crc32("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Crc32(Col("id0")));
-      df.Show();
+        Source.Select(Shiftrightunsigned("id", Lit(0))).Show();
+        Source.Select(Shiftrightunsigned(Lit(10), Lit(0))).Show();
+        Source.Select(Shiftrightunsigned(Col("id"), Lit(0))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Md5_()
+    public void SparkPartitionId_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Md5("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Md5(Col("id0")));
-      df.Show();
+        Source.Select(SparkPartitionId()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Sha1_()
+    public void Ln_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Sha1("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Sha1(Col("id0")));
-      df.Show();
+        Source.Select(Ln("id")).Show();
+        Source.Select(Ln(Lit(180))).Show();
+        Source.Select(Ln(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Sha2_Test_()
+    public void Log2_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Sha2("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Sha2(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Log2("id")).Show();
+        Source.Select(Log2(Lit(180))).Show();
+        Source.Select(Log2(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Hash_()
+    public void Factorial_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Hash(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", Hash(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(Factorial("id")).Show();
+        Source.Select(Factorial(Lit(180))).Show();
+        Source.Select(Factorial(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Boolean **/
     [Fact]
-    public void Xxhash64_()
+    public void CountIf_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Xxhash64(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", Xxhash64(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(CountIf("idboolean")).Show();
+        Source.Select(CountIf(Lit(false))).Show();
+        Source.Select(CountIf(Col("idboolean"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Upper_()
+    public void Curdate_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Upper("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Upper(Col("id0")));
-      df.Show();
+        Source.Select(Curdate()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Lower_()
+    public void CurrentDate_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Lower("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Lower(Col("id0")));
-      df.Show();
+        Source.Select(CurrentDate()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Ascii_()
+    public void CurrentTimezone_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Ascii("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Ascii(Col("id0")));
-      df.Show();
+        Source.Select(CurrentTimezone()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Base64_()
+    public void CurrentTimestamp_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Base64("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Base64(Col("id0")));
-      df.Show();
+        Source.Select(CurrentTimestamp()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Unbase64_()
+    public void Now_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Unbase64("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Unbase64(Col("id0")));
-      df.Show();
+        Source.Select(Now()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Ltrim_()
+    public void Localtimestamp_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Ltrim("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Ltrim(Col("id0")));
-      df.Show();
+        Source.Select(Localtimestamp()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void Rtrim_()
+    public void Year_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Rtrim("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Rtrim(Col("id0")));
-      df.Show();
+        Source.Select(Year("dt")).Show();
+        Source.Select(Year(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Year(Col("dt"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void Trim_()
+    public void Quarter_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Trim("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Trim(Col("id0")));
-      df.Show();
+        Source.Select(Quarter("dt")).Show();
+        Source.Select(Quarter(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Quarter(Col("dt"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void Decode_Test_()
+    public void Month_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Decode("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Decode(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Month("dt")).Show();
+        Source.Select(Month(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Month(Col("dt"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void Encode_Test_()
+    public void Dayofweek_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Encode("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Encode(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Dayofweek("dt")).Show();
+        Source.Select(Dayofweek(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Dayofweek(Col("dt"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void FormatNumber_Test_()
+    public void Dayofmonth_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", FormatNumber("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", FormatNumber(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Dayofmonth("dt")).Show();
+        Source.Select(Dayofmonth(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Dayofmonth(Col("dt"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void Instr_Test_()
+    public void Day_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Instr("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Instr(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Day("dt")).Show();
+        Source.Select(Day(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Day(Col("dt"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void Repeat_Test_()
+    public void Dayofyear_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Repeat("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Repeat(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Dayofyear("dt")).Show();
+        Source.Select(Dayofyear(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Dayofyear(Col("dt"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Timestamp **/
     [Fact]
-    public void Rlike_()
+    public void Hour_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Rlike("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Rlike(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Hour("ts")).Show();
+        Source.Select(Hour(Lit(DateTime.Parse("1980-04-01 01:23:21")))).Show();
+        Source.Select(Hour(Col("ts"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Timestamp **/
     [Fact]
-    public void Regexp_()
+    public void Minute_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Regexp("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Regexp(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Minute("ts")).Show();
+        Source.Select(Minute(Lit(DateTime.Parse("1980-04-01 01:23:21")))).Show();
+        Source.Select(Minute(Col("ts"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Timestamp **/
     [Fact]
-    public void RegexpLike_()
+    public void Second_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegexpLike("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegexpLike(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Second("ts")).Show();
+        Source.Select(Second(Lit(DateTime.Parse("1980-04-01 01:23:21")))).Show();
+        Source.Select(Second(Col("ts"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void RegexpCount_()
+    public void Weekofyear_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegexpCount("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegexpCount(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Weekofyear("dt")).Show();
+        Source.Select(Weekofyear(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Weekofyear(Col("dt"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void RegexpSubstr_()
+    public void Weekday_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", RegexpSubstr("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", RegexpSubstr(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Weekday("dt")).Show();
+        Source.Select(Weekday(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Weekday(Col("dt"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Initcap_()
+    public void MakeDate_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Initcap("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Initcap(Col("id0")));
-      df.Show();
+        Source.Select(MakeDate("id","id","id")).Show();
+        Source.Select(MakeDate(Lit(1),Lit(1),Lit(1))).Show();
+        Source.Select(MakeDate(Col("id"),Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrName::Date **/
     [Fact]
-    public void Soundex_()
+    public void Datediff_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Soundex("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Soundex(Col("id0")));
-      df.Show();
+        Source.Select(Datediff("dt","dt")).Show();
+        Source.Select(Datediff(Lit(new DateOnly(1980, 04, 01)),Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Datediff(Col("dt"),Col("dt"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrName::Date **/
     [Fact]
-    public void Bin_()
+    public void DateDiff_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Bin("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Bin(Col("id0")));
-      df.Show();
+        Source.Select(DateDiff("dt","dt")).Show();
+        Source.Select(DateDiff(Lit(new DateOnly(1980, 04, 01)),Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(DateDiff(Col("dt"),Col("dt"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Hex_()
+    public void DateFromUnixDate_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Hex("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Hex(Col("id0")));
-      df.Show();
+        Source.Select(DateFromUnixDate("id")).Show();
+        Source.Select(DateFromUnixDate(Lit(180))).Show();
+        Source.Select(DateFromUnixDate(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void Unhex_()
+    public void UnixDate_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Unhex("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Unhex(Col("id0")));
-      df.Show();
+        Source.Select(UnixDate("dt")).Show();
+        Source.Select(UnixDate(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(UnixDate(Col("dt"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Timestamp **/
     [Fact]
-    public void Length_()
+    public void UnixMicros_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Length("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Length(Col("id0")));
-      df.Show();
+        Source.Select(UnixMicros("ts")).Show();
+        Source.Select(UnixMicros(Lit(DateTime.Parse("1980-04-01 01:23:21")))).Show();
+        Source.Select(UnixMicros(Col("ts"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Timestamp **/
     [Fact]
-    public void OctetLength_()
+    public void UnixMillis_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", OctetLength("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", OctetLength(Col("id0")));
-      df.Show();
+        Source.Select(UnixMillis("ts")).Show();
+        Source.Select(UnixMillis(Lit(DateTime.Parse("1980-04-01 01:23:21")))).Show();
+        Source.Select(UnixMillis(Col("ts"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Timestamp **/
     [Fact]
-    public void BitLength_()
+    public void UnixSeconds_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitLength("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitLength(Col("id0")));
-      df.Show();
+        Source.Select(UnixSeconds("ts")).Show();
+        Source.Select(UnixSeconds(Lit(DateTime.Parse("1980-04-01 01:23:21")))).Show();
+        Source.Select(UnixSeconds(Col("ts"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ToChar_()
+    public void ToTimestamp_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ToChar("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", ToChar(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(ToTimestamp("id")).Show();
+        Source.Select(ToTimestamp(Lit(180))).Show();
+        Source.Select(ToTimestamp(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Date **/
     [Fact]
-    public void ToVarchar_()
+    public void LastDay_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ToVarchar("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", ToVarchar(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(LastDay("dt")).Show();
+        Source.Select(LastDay(Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(LastDay(Col("dt"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void ToNumber_()
+    public void UnixTimestamp_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ToNumber("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", ToNumber(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(UnixTimestamp()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void SplitPart_()
+    public void TimestampSeconds_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", SplitPart("id0","id1","id2"));
-      df.Show();
-      df = df.WithColumn("new_col", SplitPart(Col("id0"),Col("id1"),Col("id2")));
-      df.Show();
+        Source.Select(TimestampSeconds("id")).Show();
+        Source.Select(TimestampSeconds(Lit(180))).Show();
+        Source.Select(TimestampSeconds(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void UrlDecode_()
+    public void TimestampMillis_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", UrlDecode("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", UrlDecode(Col("id0")));
-      df.Show();
+        Source.Select(TimestampMillis("id")).Show();
+        Source.Select(TimestampMillis(Lit(180))).Show();
+        Source.Select(TimestampMillis(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void UrlEncode_()
+    public void TimestampMicros_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", UrlEncode("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", UrlEncode(Col("id0")));
-      df.Show();
+        Source.Select(TimestampMicros("id")).Show();
+        Source.Select(TimestampMicros(Lit(180))).Show();
+        Source.Select(TimestampMicros(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Endswith_()
+    public void CurrentCatalog_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Endswith("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Endswith(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(CurrentCatalog()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Startswith_()
+    public void CurrentDatabase_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Startswith("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Startswith(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(CurrentDatabase()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void Char_()
+    public void CurrentSchema_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Char("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Char(Col("id0")));
-      df.Show();
+        Source.Select(CurrentSchema()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void CharLength_()
+    public void CurrentUser_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", CharLength("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", CharLength(Col("id0")));
-      df.Show();
+        Source.Select(CurrentUser()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void CharacterLength_()
+    public void User_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", CharacterLength("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", CharacterLength(Col("id0")));
-      df.Show();
+        Source.Select(User()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Binary **/
     [Fact]
-    public void TryToNumber_()
+    public void Crc32_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TryToNumber("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", TryToNumber(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Crc32("idbinary")).Show();
+        Source.Select(Crc32(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(Crc32(Col("idbinary"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Binary **/
     [Fact]
-    public void Contains_()
+    public void Md5_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Contains("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Contains(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Md5("idbinary")).Show();
+        Source.Select(Md5(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(Md5(Col("idbinary"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Binary **/
     [Fact]
-    public void Elt_()
+    public void Sha1_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Elt(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", Elt(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(Sha1("idbinary")).Show();
+        Source.Select(Sha1(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(Sha1(Col("idbinary"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void FindInSet_()
+    public void Upper_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", FindInSet("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", FindInSet(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Upper("id")).Show();
+        Source.Select(Upper(Lit(180))).Show();
+        Source.Select(Upper(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Lcase_()
+    public void Lower_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Lcase("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Lcase(Col("id0")));
-      df.Show();
+        Source.Select(Lower("id")).Show();
+        Source.Select(Lower(Lit(180))).Show();
+        Source.Select(Lower(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Ucase_()
+    public void Ascii_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Ucase("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Ucase(Col("id0")));
-      df.Show();
+        Source.Select(Ascii("id")).Show();
+        Source.Select(Ascii(Lit(180))).Show();
+        Source.Select(Ascii(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Binary **/
     [Fact]
-    public void Left_()
+    public void Base64_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Left("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Left(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Base64("idbinary")).Show();
+        Source.Select(Base64(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(Base64(Col("idbinary"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Base64 **/
     [Fact]
-    public void Right_()
+    public void Unbase64_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Right("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Right(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Unbase64("b64")).Show();
+        Source.Select(Unbase64(Lit("SGVsbG8gRnJpZW5kcw=="))).Show();
+        Source.Select(Unbase64(Col("b64"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void CreateMap_()
+    public void Ltrim_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", CreateMap(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", CreateMap(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(Ltrim("id")).Show();
+        Source.Select(Ltrim(Lit(180))).Show();
+        Source.Select(Ltrim(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void MapFromArrays_()
+    public void Rtrim_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", MapFromArrays("idarray","idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", MapFromArrays(Col("idarray"),Col("idarray")));
-      df.Show();
+        Source.Select(Rtrim("id")).Show();
+        Source.Select(Rtrim(Lit(180))).Show();
+        Source.Select(Rtrim(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Array_()
+    public void Trim_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Array(new List<string>(){"idarray"}));
-      df.Show();
-      df = df.WithColumn("new_col", Array(new List<SparkColumn>(){Col("idarray"),}));
-      df.Show();
+        Source.Select(Trim("id")).Show();
+        Source.Select(Trim(Lit(180))).Show();
+        Source.Select(Trim(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ArraysOverlap_()
+    public void FormatNumber_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArraysOverlap("idarray","idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", ArraysOverlap(Col("idarray"),Col("idarray")));
-      df.Show();
+        //Source.Select(FormatNumber("id")).Show();
+        //Source.Select(FormatNumber(Lit(180))).Show();
+        //Source.Select(FormatNumber(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
-    public void Concat_()
+    public void Repeat_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Concat(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", Concat(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(Repeat("id", Lit(0))).Show();
+        Source.Select(Repeat(Lit(10), Lit(0))).Show();
+        Source.Select(Repeat(Col("id"), Lit(0))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void TryElementAt_()
+    public void Rlike_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", TryElementAt("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", TryElementAt(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Rlike("id","id")).Show();
+        Source.Select(Rlike(Lit(1),Lit(1))).Show();
+        Source.Select(Rlike(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void ArrayDistinct_()
+    public void Regexp_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArrayDistinct("idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", ArrayDistinct(Col("idarray")));
-      df.Show();
+        Source.Select(Regexp("id","id")).Show();
+        Source.Select(Regexp(Lit(1),Lit(1))).Show();
+        Source.Select(Regexp(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void ArrayIntersect_()
+    public void RegexpLike_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArrayIntersect("idarray","idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", ArrayIntersect(Col("idarray"),Col("idarray")));
-      df.Show();
+        Source.Select(RegexpLike("id","id")).Show();
+        Source.Select(RegexpLike(Lit(1),Lit(1))).Show();
+        Source.Select(RegexpLike(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void ArrayUnion_()
+    public void RegexpCount_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArrayUnion("idarray","idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", ArrayUnion(Col("idarray"),Col("idarray")));
-      df.Show();
+        Source.Select(RegexpCount("id","id")).Show();
+        Source.Select(RegexpCount(Lit(1),Lit(1))).Show();
+        Source.Select(RegexpCount(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void ArrayExcept_()
+    public void RegexpSubstr_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArrayExcept("idarray","idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", ArrayExcept(Col("idarray"),Col("idarray")));
-      df.Show();
+        Source.Select(RegexpSubstr("id","id")).Show();
+        Source.Select(RegexpSubstr(Lit(1),Lit(1))).Show();
+        Source.Select(RegexpSubstr(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ArrayCompact_()
+    public void Initcap_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArrayCompact("idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", ArrayCompact(Col("idarray")));
-      df.Show();
+        Source.Select(Initcap("id")).Show();
+        Source.Select(Initcap(Lit(180))).Show();
+        Source.Select(Initcap(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::String **/
     [Fact]
-    public void Explode_()
+    public void Soundex_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Explode("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Explode(Col("id0")));
-      df.Show();
+        Source.Select(Soundex("str")).Show();
+        Source.Select(Soundex(Lit("Hello"))).Show();
+        Source.Select(Soundex(Col("str"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Posexplode_()
+    public void Bin_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Posexplode("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Posexplode(Col("id0")));
-      df.Show();
+        Source.Select(Bin("id")).Show();
+        Source.Select(Bin(Lit(180))).Show();
+        Source.Select(Bin(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Inline_()
+    public void Hex_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Inline("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Inline(Col("id0")));
-      df.Show();
+        Source.Select(Hex("id")).Show();
+        Source.Select(Hex(Lit(180))).Show();
+        Source.Select(Hex(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ExplodeOuter_()
+    public void Unhex_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ExplodeOuter("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", ExplodeOuter(Col("id0")));
-      df.Show();
+        Source.Select(Unhex("id")).Show();
+        Source.Select(Unhex(Lit(180))).Show();
+        Source.Select(Unhex(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void PosexplodeOuter_()
+    public void Length_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", PosexplodeOuter("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", PosexplodeOuter(Col("id0")));
-      df.Show();
+        Source.Select(Length("id")).Show();
+        Source.Select(Length(Lit(180))).Show();
+        Source.Select(Length(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void InlineOuter_()
+    public void OctetLength_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", InlineOuter("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", InlineOuter(Col("id0")));
-      df.Show();
+        Source.Select(OctetLength("id")).Show();
+        Source.Select(OctetLength(Lit(180))).Show();
+        Source.Select(OctetLength(Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void GetJsonObject_Test_()
+    public void BitLength_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", GetJsonObject("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", GetJsonObject(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(BitLength("id")).Show();
+        Source.Select(BitLength(Lit(180))).Show();
+        Source.Select(BitLength(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void JsonTuple_()
+    public void UrlDecode_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", JsonTuple("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", JsonTuple(Col("id0")));
-      df.Show();
+        Source.Select(UrlDecode("id")).Show();
+        Source.Select(UrlDecode(Lit(180))).Show();
+        Source.Select(UrlDecode(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void JsonArrayLength_()
+    public void UrlEncode_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", JsonArrayLength("idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", JsonArrayLength(Col("idarray")));
-      df.Show();
+        Source.Select(UrlEncode("id")).Show();
+        Source.Select(UrlEncode(Lit(180))).Show();
+        Source.Select(UrlEncode(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void JsonObjectKeys_()
+    public void Endswith_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", JsonObjectKeys("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", JsonObjectKeys(Col("id0")));
-      df.Show();
+        Source.Select(Endswith("id","id")).Show();
+        Source.Select(Endswith(Lit(1),Lit(1))).Show();
+        Source.Select(Endswith(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Size_()
+    public void Startswith_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Size("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Size(Col("id0")));
-      df.Show();
+        Source.Select(Startswith("id","id")).Show();
+        Source.Select(Startswith(Lit(1),Lit(1))).Show();
+        Source.Select(Startswith(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ArrayMin_()
+    public void Char_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArrayMin("idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", ArrayMin(Col("idarray")));
-      df.Show();
+        Source.Select(Char("id")).Show();
+        Source.Select(Char(Lit(180))).Show();
+        Source.Select(Char(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ArrayMax_()
+    public void CharLength_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArrayMax("idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", ArrayMax(Col("idarray")));
-      df.Show();
+        Source.Select(CharLength("id")).Show();
+        Source.Select(CharLength(Lit(180))).Show();
+        Source.Select(CharLength(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void ArraySize_()
+    public void CharacterLength_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArraySize("idarray"));
-      df.Show();
-      df = df.WithColumn("new_col", ArraySize(Col("idarray")));
-      df.Show();
+        Source.Select(CharacterLength("id")).Show();
+        Source.Select(CharacterLength(Lit(180))).Show();
+        Source.Select(CharacterLength(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Cardinality_()
+    public void Contains_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Cardinality("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Cardinality(Col("id0")));
-      df.Show();
+        Source.Select(Contains("id","id")).Show();
+        Source.Select(Contains(Lit(1),Lit(1))).Show();
+        Source.Select(Contains(Col("id"),Col("id"))).Show();
     }
-/** ColumnOrNameThenSingleSimpleTypeTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void SortArray_Test_()
+    public void FindInSet_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", SortArray("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", SortArray(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(FindInSet("id","id")).Show();
+        Source.Select(FindInSet(Lit(1),Lit(1))).Show();
+        Source.Select(FindInSet(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Shuffle_()
+    public void Lcase_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Shuffle("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Shuffle(Col("id0")));
-      df.Show();
+        Source.Select(Lcase("id")).Show();
+        Source.Select(Lcase(Lit(180))).Show();
+        Source.Select(Lcase(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void Reverse_()
+    public void Ucase_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Reverse("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Reverse(Col("id0")));
-      df.Show();
+        Source.Select(Ucase("id")).Show();
+        Source.Select(Ucase(Lit(180))).Show();
+        Source.Select(Ucase(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void Flatten_()
+    public void Left_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Flatten("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Flatten(Col("id0")));
-      df.Show();
+        Source.Select(Left("id","id")).Show();
+        Source.Select(Left(Lit(1),Lit(1))).Show();
+        Source.Select(Left(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
-    public void MapKeys_()
+    public void Right_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", MapKeys("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", MapKeys(Col("id0")));
-      df.Show();
+        Source.Select(Right("id","id")).Show();
+        Source.Select(Right(Lit(1),Lit(1))).Show();
+        Source.Select(Right(Col("id"),Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrName::IntArray **/
     [Fact]
-    public void MapValues_()
+    public void MapFromArrays_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", MapValues("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", MapValues(Col("id0")));
-      df.Show();
+        Source.Select(MapFromArrays("idarray","idarray")).Show();
+        Source.Select(MapFromArrays(Lit(new[] {0, 1, 2}),Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(MapFromArrays(Col("idarray"),Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::NoArgsFunction **/
     [Fact]
-    public void MapEntries_()
+    public void Array_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", MapEntries("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", MapEntries(Col("id0")));
-      df.Show();
+        Source.Select(Array()).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrName::IntArray **/
     [Fact]
-    public void MapFromEntries_()
+    public void ArraysOverlap_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", MapFromEntries("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", MapFromEntries(Col("id0")));
-      df.Show();
+        Source.Select(ArraysOverlap("idarray","idarray")).Show();
+        Source.Select(ArraysOverlap(Lit(new[] {0, 1, 2}),Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArraysOverlap(Col("idarray"),Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void ArraysZip_()
+    public void ArrayDistinct_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", ArraysZip(new List<string>(){"idarray"}));
-      df.Show();
-      df = df.WithColumn("new_col", ArraysZip(new List<SparkColumn>(){Col("idarray"),}));
-      df.Show();
+        Source.Select(ArrayDistinct("idarray")).Show();
+        Source.Select(ArrayDistinct(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayDistinct(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrName::IntArray **/
     [Fact]
-    public void MapConcat_()
+    public void ArrayIntersect_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", MapConcat(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", MapConcat(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(ArrayIntersect("idarray","idarray")).Show();
+        Source.Select(ArrayIntersect(Lit(new[] {0, 1, 2}),Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayIntersect(Col("idarray"),Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrName::IntArray **/
     [Fact]
-    public void Years_()
+    public void ArrayUnion_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Years("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Years(Col("id0")));
-      df.Show();
+        Source.Select(ArrayUnion("idarray","idarray")).Show();
+        Source.Select(ArrayUnion(Lit(new[] {0, 1, 2}),Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayUnion(Col("idarray"),Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::AllArgsColumnOrName::IntArray **/
     [Fact]
-    public void Months_()
+    public void ArrayExcept_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Months("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Months(Col("id0")));
-      df.Show();
+        Source.Select(ArrayExcept("idarray","idarray")).Show();
+        Source.Select(ArrayExcept(Lit(new[] {0, 1, 2}),Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayExcept(Col("idarray"),Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void Days_()
+    public void ArrayCompact_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Days("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Days(Col("id0")));
-      df.Show();
+        Source.Select(ArrayCompact("idarray")).Show();
+        Source.Select(ArrayCompact(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayCompact(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void Hours_()
+    public void Explode_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Hours("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Hours(Col("id0")));
-      df.Show();
+        Source.Select(Explode("idarray")).Show();
+        Source.Select(Explode(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(Explode(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void MakeTimestampNtz_()
+    public void Posexplode_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", MakeTimestampNtz("id0","id1","id2","id3","id4","id5"));
-      df.Show();
-      df = df.WithColumn("new_col", MakeTimestampNtz(Col("id0"),Col("id1"),Col("id2"),Col("id3"),Col("id4"),Col("id5")));
-      df.Show();
+        Source.Select(Posexplode("idarray")).Show();
+        Source.Select(Posexplode(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(Posexplode(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::ArrayOfMap **/
     [Fact]
-    public void UnwrapUdt_()
+    public void Inline_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", UnwrapUdt("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", UnwrapUdt(Col("id0")));
-      df.Show();
+        Source.Select(Inline("data")).Show();
+        Source.Select(Inline(Col("data"))).Show();
+        //Todo: Need Lit that can handle this
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void HllSketchEstimate_()
+    public void ExplodeOuter_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", HllSketchEstimate("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", HllSketchEstimate(Col("id0")));
-      df.Show();
+        Source.Select(ExplodeOuter("idarray")).Show();
+        Source.Select(ExplodeOuter(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ExplodeOuter(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void Ifnull_()
+    public void PosexplodeOuter_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Ifnull("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Ifnull(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(PosexplodeOuter("idarray")).Show();
+        Source.Select(PosexplodeOuter(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(PosexplodeOuter(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::ArrayOfMap **/
     [Fact]
-    public void Isnotnull_()
+    public void InlineOuter_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Isnotnull("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Isnotnull(Col("id0")));
-      df.Show();
+        Source.Select(InlineOuter("data")).Show();
+        Source.Select(InlineOuter(Col("data"))).Show();
+        //Todo: Need Lit that can handle this
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::JsonString **/
     [Fact]
-    public void EqualNull_()
+    public void JsonArrayLength_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", EqualNull("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", EqualNull(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(JsonArrayLength("jstr")).Show();
+        Source.Select(JsonArrayLength(Lit("[]"))).Show();
+        Source.Select(JsonArrayLength(Col("jstr"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::JsonString **/
     [Fact]
-    public void Nullif_()
+    public void JsonObjectKeys_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Nullif("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Nullif(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(JsonObjectKeys("jstr")).Show();
+        Source.Select(JsonObjectKeys(Lit("[]"))).Show();
+        Source.Select(JsonObjectKeys(Col("jstr"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void Nvl_()
+    public void Size_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Nvl("id0","id1"));
-      df.Show();
-      df = df.WithColumn("new_col", Nvl(Col("id0"),Col("id1")));
-      df.Show();
+        Source.Select(Size("idarray")).Show();
+        Source.Select(Size(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(Size(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void Nvl2_()
+    public void ArrayMin_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Nvl2("id0","id1","id2"));
-      df.Show();
-      df = df.WithColumn("new_col", Nvl2(Col("id0"),Col("id1"),Col("id2")));
-      df.Show();
+        Source.Select(ArrayMin("idarray")).Show();
+        Source.Select(ArrayMin(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayMin(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void Sha_()
+    public void ArrayMax_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Sha("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Sha(Col("id0")));
-      df.Show();
+        Source.Select(ArrayMax("idarray")).Show();
+        Source.Select(ArrayMax(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayMax(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void Reflect_()
+    public void ArraySize_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Reflect(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", Reflect(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(ArraySize("idarray")).Show();
+        Source.Select(ArraySize(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArraySize(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void Typeof_()
+    public void Cardinality_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Typeof("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", Typeof(Col("id0")));
-      df.Show();
+        Source.Select(Cardinality("idarray")).Show();
+        Source.Select(Cardinality(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(Cardinality(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
     [Fact]
-    public void Stack_()
+    public void Shuffle_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", Stack(new List<string>(){"id0"}));
-      df.Show();
-      df = df.WithColumn("new_col", Stack(new List<SparkColumn>(){Col("id0"),}));
-      df.Show();
+        Source.Select(Shuffle("idarray")).Show();
+        Source.Select(Shuffle(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(Shuffle(Col("idarray"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
     [Fact]
-    public void BitmapBitPosition_()
+    public void Reverse_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitmapBitPosition("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitmapBitPosition(Col("id0")));
-      df.Show();
+        Source.Select(Reverse("id")).Show();
+        Source.Select(Reverse(Lit(180))).Show();
+        Source.Select(Reverse(Col("id"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::IntArrayArray **/
     [Fact]
-    public void BitmapBucketNumber_()
+    public void Flatten_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitmapBucketNumber("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitmapBucketNumber(Col("id0")));
-      df.Show();
+        Source.Select(Flatten("idarrayarray")).Show();
+        Source.Select(Flatten(Col("idarrayarray"))).Show();
+        //Todo: Need a Lit that can handle this
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Map **/
     [Fact]
-    public void BitmapConstructAgg_()
+    public void MapKeys_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitmapConstructAgg("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitmapConstructAgg(Col("id0")));
-      df.Show();
+        Source.Select(MapKeys("m")).Show();
+        Source.Select(MapKeys(Lit(new Dictionary<string, int>(){{"a", 100}}))).Show();
+        Source.Select(MapKeys(Col("m"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Map **/
     [Fact]
-    public void BitmapCount_()
+    public void MapValues_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitmapCount("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitmapCount(Col("id0")));
-      df.Show();
+        Source.Select(MapValues("m")).Show();
+        Source.Select(MapValues(Lit(new Dictionary<string, int>(){{"a", 100}}))).Show();
+        Source.Select(MapValues(Col("m"))).Show();
     }
-/** AllArgsColumnOrNameTest  **/
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Map **/
     [Fact]
-    public void BitmapOrAgg_()
+    public void MapEntries_Test()
     {
-      var df = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, id, id as id0, id as id1, id as id2, id as id3, id as id4 FROM range(100)");
-      df = df.WithColumn("new_col", BitmapOrAgg("id0"));
-      df.Show();
-      df = df.WithColumn("new_col", BitmapOrAgg(Col("id0")));
-      df.Show();
+        Source.Select(MapEntries("m")).Show();
+        Source.Select(MapEntries(Lit(new Dictionary<string, int>(){{"a", 100}}))).Show();
+        Source.Select(MapEntries(Col("m"))).Show();
     }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::ArrayOfMap **/
+    [Fact]
+    public void MapFromEntries_Test()
+    {
+        Source.Select(MapFromEntries("data")).Show();
+        Source.Select(MapFromEntries(Col("data"))).Show();
+        //Todo: Need Lit that can handle this
+    }
+
+    /** GeneratedBy::NoArgsFunction **/
+    [Fact]
+    public void MapConcat_Test()
+    {
+        Source.Select(MapConcat()).Show();
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::PartitionFunction **/
+    [Fact]
+    public void Years_Test()
+    {
+        //TODO: Get Partition Functions Running Locally in PySpark and generate plan
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::PartitionFunction **/
+    [Fact]
+    public void Months_Test()
+    {
+        //TODO: Get Partition Functions Running Locally in PySpark and generate plan
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::PartitionFunction **/
+    [Fact]
+    public void Days_Test()
+    {
+        //TODO: Get Partition Functions Running Locally in PySpark and generate plan
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::PartitionFunction **/
+    [Fact]
+    public void Hours_Test()
+    {
+        //TODO: Get Partition Functions Running Locally in PySpark and generate plan
+    }
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
+    [Fact]
+    public void MakeTimestampNtz_Test()
+    {
+        Source.Select(MakeTimestampNtz("id","id","id","id","id","id")).Show();
+        Source.Select(MakeTimestampNtz(Lit(1),Lit(1),Lit(1),Lit(1),Lit(1),Lit(1))).Show();
+        Source.Select(MakeTimestampNtz(Col("id"),Col("id"),Col("id"),Col("id"),Col("id"),Col("id"))).Show();
+    }
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
+    [Fact]
+    public void Ifnull_Test()
+    {
+        Source.Select(Ifnull("id","id")).Show();
+        Source.Select(Ifnull(Lit(1),Lit(1))).Show();
+        Source.Select(Ifnull(Col("id"),Col("id"))).Show();
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
+    [Fact]
+    public void Isnotnull_Test()
+    {
+        Source.Select(Isnotnull("id")).Show();
+        Source.Select(Isnotnull(Lit(180))).Show();
+        Source.Select(Isnotnull(Col("id"))).Show();
+    }
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
+    [Fact]
+    public void EqualNull_Test()
+    {
+        Source.Select(EqualNull("id","id")).Show();
+        Source.Select(EqualNull(Lit(1),Lit(1))).Show();
+        Source.Select(EqualNull(Col("id"),Col("id"))).Show();
+    }
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
+    [Fact]
+    public void Nullif_Test()
+    {
+        Source.Select(Nullif("id","id")).Show();
+        Source.Select(Nullif(Lit(1),Lit(1))).Show();
+        Source.Select(Nullif(Col("id"),Col("id"))).Show();
+    }
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
+    [Fact]
+    public void Nvl_Test()
+    {
+        Source.Select(Nvl("id","id")).Show();
+        Source.Select(Nvl(Lit(1),Lit(1))).Show();
+        Source.Select(Nvl(Col("id"),Col("id"))).Show();
+    }
+
+    /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
+    [Fact]
+    public void Nvl2_Test()
+    {
+        Source.Select(Nvl2("id","id","id")).Show();
+        Source.Select(Nvl2(Lit(1),Lit(1),Lit(1))).Show();
+        Source.Select(Nvl2(Col("id"),Col("id"),Col("id"))).Show();
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Binary **/
+    [Fact]
+    public void Sha_Test()
+    {
+        Source.Select(Sha("idbinary")).Show();
+        Source.Select(Sha(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(Sha(Col("idbinary"))).Show();
+    }
+
+    /** GeneratedBy::NoArgsFunction **/
+    [Fact]
+    public void InputFileBlockLength_Test()
+    {
+        Source.Select(InputFileBlockLength()).Show();
+    }
+
+    /** GeneratedBy::NoArgsFunction **/
+    [Fact]
+    public void InputFileBlockStart_Test()
+    {
+        Source.Select(InputFileBlockStart()).Show();
+    }
+
+    /** GeneratedBy::NoArgsFunction **/
+    [Fact]
+    public void Version_Test()
+    {
+        Source.Select(Version()).Show();
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
+    [Fact]
+    public void Typeof_Test()
+    {
+        Source.Select(Typeof("id")).Show();
+        Source.Select(Typeof(Lit(180))).Show();
+        Source.Select(Typeof(Col("id"))).Show();
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
+    [Fact]
+    public void BitmapBitPosition_Test()
+    {
+        Source.Select(BitmapBitPosition("id")).Show();
+        Source.Select(BitmapBitPosition(Lit(180))).Show();
+        Source.Select(BitmapBitPosition(Col("id"))).Show();
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
+    [Fact]
+    public void BitmapBucketNumber_Test()
+    {
+        Source.Select(BitmapBucketNumber("id")).Show();
+        Source.Select(BitmapBucketNumber(Lit(180))).Show();
+        Source.Select(BitmapBucketNumber(Col("id"))).Show();
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
+    [Fact]
+    public void BitmapConstructAgg_Test()
+    {
+        Source.Select(BitmapConstructAgg("id")).Show();
+        Source.Select(BitmapConstructAgg(Lit(180))).Show();
+        Source.Select(BitmapConstructAgg(Col("id"))).Show();
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Binary **/
+    [Fact]
+    public void BitmapCount_Test()
+    {
+        Source.Select(BitmapCount("idbinary")).Show();
+        Source.Select(BitmapCount(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(BitmapCount(Col("idbinary"))).Show();
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::Binary **/
+    [Fact]
+    public void BitmapOrAgg_Test()
+    {
+        Source.Select(BitmapOrAgg("idbinary")).Show();
+        Source.Select(BitmapOrAgg(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(BitmapOrAgg(Col("idbinary"))).Show();
+    }
+
 }
+

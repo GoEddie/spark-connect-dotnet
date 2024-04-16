@@ -26,8 +26,4 @@
       <ProjectReference Include="..\..\spark.connect.dotnet\Spark.Connect.Dotnet\Spark.Connect.Dotnet.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="FunctionsTests\" />
-    </ItemGroup>
-
 </Project>

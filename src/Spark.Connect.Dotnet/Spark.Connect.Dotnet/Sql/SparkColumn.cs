@@ -29,10 +29,10 @@ public class SparkColumn
     public SparkColumn(string name)
     {
         Expression = new Expression()
-        {
-            ExpressionString = new Expression.Types.ExpressionString()
+        {   //TODO - is it always an Unresolvedattribute?
+            UnresolvedAttribute = new Expression.Types.UnresolvedAttribute()
             {
-                Expression = $"{name}"
+                UnparsedIdentifier = name
             }
         };
     }
@@ -274,5 +274,10 @@ public class SparkColumn
         }
         
         return new SparkColumn(expression);
+    }
+
+    public Expression Over(Window window)
+    {
+        return window.ToExpression(this.Expression);
     }
 }

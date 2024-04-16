@@ -1,6 +1,7 @@
 using System.Text;
 using Apache.Arrow.Ipc;
 using Grpc.Core;
+using Spark.Connect.Dotnet.Grpc.SparkExceptions;
 
 namespace Spark.Connect.Dotnet.Grpc;
 
@@ -48,6 +49,8 @@ static class GrpcInternal
         var analyzeResponse = client.AnalyzePlan(analyzeRequest, headers);
         return analyzeResponse.Explain.ExplainString;
     }
+
+    public static string LastPlan = "";
     
     public static async Task<(Relation, DataType?)> Exec(SparkConnectService.SparkConnectServiceClient client, string host, string sessionId, Plan plan, Metadata headers, UserContext userContext, string clientType)
     {
@@ -55,6 +58,8 @@ static class GrpcInternal
         {
             Plan = plan, SessionId = sessionId, UserContext = userContext, ClientType = clientType
         };
+
+        LastPlan = plan.ToString();
 
         AsyncServerStreamingCall<ExecutePlanResponse> Exec()
         {

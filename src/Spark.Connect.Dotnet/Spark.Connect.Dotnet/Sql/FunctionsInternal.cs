@@ -102,14 +102,64 @@ public class FunctionsInternal
                 UnparsedIdentifier = columnName
             }
         };
+    
+    // protected internal static Expression FunctionCall2(string function, bool isDistinct, params string[] parameters) => FunctionCall2(function, isDistinct, parameters.Select(ColumnNameToExpression).ToArray());
+    
+    protected internal static Expression FunctionCall2(string function, bool isDistinct, string columnName, params object[] parameters)
+    {
+        var expressions = new List<Expression>();
+        expressions.Add(ColumnNameToExpression(columnName));
+        expressions.AddRange(parameters.Select(Functions.ObjectToLit));
+        return FunctionCall2(function, isDistinct, expressions.ToArray());
+    }
+    
+    protected internal static Expression FunctionCall2(string function, bool isDistinct, SparkColumn column, params object[] parameters)
+    {
+        var expressions = new List<Expression>();
+        expressions.Add(column.Expression);
+        expressions.AddRange(parameters.Select(Functions.ObjectToLit));
+        return FunctionCall2(function, isDistinct, expressions.ToArray());
+    }
 
-    
-    protected internal static Expression FunctionCall2(string function, bool isDistinct, params string[] parameters) => FunctionCall2(function, isDistinct, parameters.Select(ColumnNameToExpression).ToArray());
-    
     protected internal static Expression FunctionCall2(string function, bool isDistinct, List<string> parameters) => FunctionCall2(function, isDistinct, parameters.Select(ColumnNameToExpression).ToArray());
 
-    protected internal static Expression
-        FunctionCall2(string function, bool isDistinct, List<SparkColumn> parameters) =>
-        FunctionCall2(function, isDistinct, parameters.ToArray());
+    protected internal static Expression FunctionCall2(string function, bool isDistinct, List<SparkColumn> parameters) => FunctionCall2(function, isDistinct, parameters.ToArray());
+
+    protected internal static Expression FunctionCallColumnLits(string function, bool isDistinct, SparkColumn column, params object[] parameters)
+    {
+        var expressions = new List<Expression>();
+        expressions.Add(column.Expression);
+        expressions.AddRange(parameters.Select(Functions.ObjectToLit));
+        return FunctionCall2(function, isDistinct, expressions.ToArray());
+    }
+
+    protected internal static Expression FunctionCallColumns(string function, bool isDistinct, List<string> columns)
+    {
+        var expressions = columns.Select(ColumnNameToExpression);
+        return FunctionCall2(function, isDistinct, expressions.ToArray());
+    }
+    protected internal static Expression FunctionCallColumns(string function, bool isDistinct, Expression expression, string column)
+    {
+        return FunctionCall2(function, isDistinct, new[]{expression, ColumnNameToExpression(column)});
+    }    
+    protected internal static Expression FunctionCallColumns(string function, bool isDistinct, Expression expression, SparkColumn column)
+    {
+        return FunctionCall2(function, isDistinct, new[]{expression, column.Expression});
+    }
+    protected internal static Expression FunctionCallColumns(string function, bool isDistinct, params string[] columns)
+    {
+        var expressions = columns.Select( ColumnNameToExpression);
+        return FunctionCall2(function, isDistinct, expressions.ToArray());
+    }
+    protected internal static Expression FunctionCallColumns(string function, bool isDistinct, List<SparkColumn> columns)
+    {
+        var expressions = columns.Select( p=>p.Expression);
+        return FunctionCall2(function, isDistinct, expressions.ToArray());
+    }
+    protected internal static Expression FunctionCallColumns(string function, bool isDistinct, params SparkColumn[] columns)
+    {
+        var expressions = columns.Select( p=>p.Expression);
+        return FunctionCall2(function, isDistinct, expressions.ToArray());
+    }
     
 }

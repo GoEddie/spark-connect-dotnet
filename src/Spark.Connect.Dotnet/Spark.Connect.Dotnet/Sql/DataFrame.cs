@@ -4,6 +4,7 @@ using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.Grpc.SparkExceptions;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -465,8 +466,8 @@ public class DataFrame
             {
                 Input = Relation,
                 GroupType = Aggregate.Types.GroupType.Groupby,
-                GroupingExpressions = { exprs.Expression },
-                AggregateExpressions = {  }
+                GroupingExpressions = {  },
+                AggregateExpressions = { exprs.Expression }
             }
         };
 
@@ -479,6 +480,9 @@ public class DataFrame
         return (long)result[0][0];
     }
 
+    public DataFrame Sort(params SparkColumn[] columns) => OrderBy(columns);
+    public DataFrame Sort(List<SparkColumn> columns) => OrderBy(columns);
+    
     public DataFrame OrderBy(params SparkColumn[] columns)
     {
         var sortColumns = new List<Expression.Types.SortOrder>();
@@ -554,6 +558,11 @@ public class DataFrame
         return OrderBy(columns.ToArray());
     }
 
+    public DataFrameWriterV2 WriteTo(string table)
+    {
+        return new DataFrameWriterV2(table, _session, this);
+    }
+    
     public string Explain(bool extended = false, string mode = null, bool outputToConsole = true)
     {
         var plan = new Plan()
