@@ -7,16 +7,16 @@ public class Window
     
     public Window PartitionBy(string col)
     {
-        _partitionSpec.Add(new SparkColumn(col).Expression);
+        _partitionSpec.Add(new Column(col).Expression);
         return this;
     }
 
-    public Window PartitionBy(SparkColumn col)
+    public Window PartitionBy(Column col)
     {
         _partitionSpec.Add(col.Expression);
         return this;
     }
-    public Window OrderBy(SparkColumn col)
+    public Window OrderBy(Column col)
     {
         _orderSpec.Add(new Expression.Types.SortOrder()
         {
@@ -30,7 +30,7 @@ public class Window
     {
         _orderSpec.Add(new Expression.Types.SortOrder()
         {
-            Child = new SparkColumn(col).Expression
+            Child = new Column(col).Expression
         });
         
         return this;

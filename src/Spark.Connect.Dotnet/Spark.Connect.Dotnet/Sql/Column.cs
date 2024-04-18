@@ -1,8 +1,11 @@
+using Spark.Connect.Dotnet.Sql.Types;
+
 namespace Spark.Connect.Dotnet.Sql;
 
-public class SparkColumn
+
+public class Column
 {
-    private bool Equals(SparkColumn other)
+    private bool Equals(Column other)
     {
         return Expression.Equals(other.Expression);
     }
@@ -11,7 +14,7 @@ public class SparkColumn
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
-        return obj.GetType() == this.GetType() && Equals((SparkColumn)obj);
+        return obj.GetType() == this.GetType() && Equals((Column)obj);
     }
 
     public override int GetHashCode()
@@ -21,12 +24,12 @@ public class SparkColumn
 
     protected internal readonly Expression Expression;
 
-    public SparkColumn(Expression expression)
+    public Column(Expression expression)
     {
         Expression = expression;
     }
 
-    public SparkColumn(string name)
+    public Column(string name)
     {
         Expression = new Expression()
         {   //TODO - is it always an Unresolvedattribute?
@@ -37,7 +40,7 @@ public class SparkColumn
         };
     }
 
-    public SparkColumn Alias(string name)
+    public Column Alias(string name)
     {
         var expression = new Expression()
         {
@@ -47,136 +50,136 @@ public class SparkColumn
             }
         };
 
-        return new SparkColumn(expression);
+        return new Column(expression);
     }
 
-    public static SparkColumn operator &(SparkColumn src, bool value) => src.And(value);
+    public static Column operator &(Column src, bool value) => src.And(value);
     
-    public SparkColumn And(bool value)
+    public Column And(bool value)
     {
         return BinaryOperation(value, "and");
     }
     
-    public static SparkColumn operator |(SparkColumn src, bool value) => src.Or(value);
+    public static Column operator |(Column src, bool value) => src.Or(value);
     
-    public SparkColumn Or(bool value)
+    public Column Or(bool value)
     {
         return BinaryOperation(value, "or");
     }
     
-    public static SparkColumn operator !(SparkColumn src) => src.Not();
+    public static Column operator !(Column src) => src.Not();
     
-    public SparkColumn Not()
+    public Column Not()
     {
         return BinaryOperation("not");
     }
     
-    public static SparkColumn operator *(SparkColumn src, int value) => src.Multiply(value);
+    public static Column operator *(Column src, int value) => src.Multiply(value);
     
-    public SparkColumn Multiply(int value)
+    public Column Multiply(int value)
     {
         return BinaryOperation(value, "*");
     }
     
-    public static SparkColumn operator ==(SparkColumn src, int value) => src.EqualTo(value);
+    public static Column operator ==(Column src, int value) => src.EqualTo(value);
     
-    public SparkColumn EqualTo(int value)
+    public Column EqualTo(int value)
     {
         return BinaryOperation(value, "==");
     }
     
-    public static SparkColumn operator !=(SparkColumn src, int value) => src.NotEqualTo(value);
+    public static Column operator !=(Column src, int value) => src.NotEqualTo(value);
     
-    public SparkColumn NotEqualTo(int value)
+    public Column NotEqualTo(int value)
     {
         var equals = BinaryOperation(value, "==");
         return NotOperation(equals);
     }
     
-    public SparkColumn RMultiply(int value)
+    public Column RMultiply(int value)
     {
         return BinaryOperation(value, "*", true);
     }
     
-    public static SparkColumn operator / (SparkColumn src, int value) => src.Divide(value);
+    public static Column operator / (Column src, int value) => src.Divide(value);
     
-    public SparkColumn Divide(int value)
+    public Column Divide(int value)
     {
         return BinaryOperation(value, "/");
     }
     
-    public SparkColumn RDivide(int value)
+    public Column RDivide(int value)
     {
         return BinaryOperation(value, "/", true);
     }
     
-    public static SparkColumn operator + (SparkColumn src, int value) => src.Add(value);
+    public static Column operator + (Column src, int value) => src.Add(value);
     
-    public SparkColumn Add(int value)
+    public Column Add(int value)
     {
         return BinaryOperation(value, "+");
     }
     
-    public SparkColumn RAdd(int value)
+    public Column RAdd(int value)
     {
         return BinaryOperation(value, "+", true);
     }
     
-    public static SparkColumn operator - (SparkColumn src, int value) => src.Minus(value);
+    public static Column operator - (Column src, int value) => src.Minus(value);
     
-    public SparkColumn Minus(int value)
+    public Column Minus(int value)
     {
         return BinaryOperation(value, "-");
     }
     
-    public SparkColumn RMinus(int value)
+    public Column RMinus(int value)
     {
         return BinaryOperation(value, "-", true);
     }
     
-    public static SparkColumn operator % (SparkColumn src, int value) => src.Mod(value);
+    public static Column operator % (Column src, int value) => src.Mod(value);
     
-    public SparkColumn Mod(int value)
+    public Column Mod(int value)
     {
         return BinaryOperation(value, "%");
     }
     
-    public SparkColumn RMod(int value)
+    public Column RMod(int value)
     {
         return BinaryOperation(value, "%", true);
     }
     
-    public SparkColumn Pow(int value)
+    public Column Pow(int value)
     {
         return BinaryOperation(value, "power");
     }
     
-    public SparkColumn RPow(int value)
+    public Column RPow(int value)
     {
         return BinaryOperation(value, "power", true);
     }
     
-    public SparkColumn Gt(int value)
+    public Column Gt(int value)
     {
         return BinaryOperation(value, ">");
     }
     
-    public SparkColumn Lt(int value)
+    public Column Lt(int value)
     {
         return BinaryOperation(value, "<");
     }
     
-    public SparkColumn Ge(int value)
+    public Column Ge(int value)
     {
         return BinaryOperation(value, ">=");
     }
     
-    public SparkColumn Le(int value)
+    public Column Le(int value)
     {
         return BinaryOperation(value, "<=");
     }
 
-    private SparkColumn BinaryOperation(string functionName)
+    private Column BinaryOperation(string functionName)
     {
         var expression = new Expression()
         {
@@ -190,10 +193,10 @@ public class SparkColumn
 
         expression.UnresolvedFunction.Arguments.Add(this.Expression);
         
-        return new SparkColumn(expression);
+        return new Column(expression);
     }
 
-    private SparkColumn NotOperation(SparkColumn equalsOperator)
+    private Column NotOperation(Column equalsOperator)
     {
         var expression = new Expression()
         {
@@ -205,10 +208,10 @@ public class SparkColumn
         
         expression.UnresolvedFunction.Arguments.Add(equalsOperator.Expression);
         
-        return new SparkColumn(expression);
+        return new Column(expression);
     }
     
-    private SparkColumn BinaryOperation(int value, string functionName, bool reverse = false)
+    private Column BinaryOperation(int value, string functionName, bool reverse = false)
     {
         var expression = new Expression()
         {
@@ -239,10 +242,10 @@ public class SparkColumn
             expression.UnresolvedFunction.Arguments.Add(literal);    
         }
         
-        return new SparkColumn(expression);
+        return new Column(expression);
     }
     
-    private SparkColumn BinaryOperation(bool value, string functionName, bool reverse = false)
+    private Column BinaryOperation(bool value, string functionName, bool reverse = false)
     {
         var expression = new Expression()
         {
@@ -273,11 +276,23 @@ public class SparkColumn
             expression.UnresolvedFunction.Arguments.Add(literal);    
         }
         
-        return new SparkColumn(expression);
+        return new Column(expression);
     }
 
     public Expression Over(Window window)
     {
         return window.ToExpression(this.Expression);
     }
+
+    public Column Cast(SparkDataType type) => new(new Expression()
+    {
+        Cast = new Expression.Types.Cast()
+        {
+            Expr = this.Expression,
+            Type = type.ToDataType()
+        }
+    });
+
+    public Column Cast(string type) => Cast(SparkDataType.FromString(type));
+
 }

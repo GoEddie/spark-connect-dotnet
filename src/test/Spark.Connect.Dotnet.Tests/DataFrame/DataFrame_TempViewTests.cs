@@ -1,3 +1,6 @@
+using Grpc.Core;
+using Spark.Connect.Dotnet.Grpc;
+
 namespace Spark.Connect.Dotnet.Tests.DataFrame;
 
 public class DataFrameTempViewTests : E2ETestBase
@@ -30,7 +33,7 @@ public class DataFrameTempViewTests : E2ETestBase
         Assert.Equal(100, rows.Count);
         Assert.Equal(0L, rows[0][0]);
 
-        Assert.Throws<AggregateException>(() => dataFrame.CreateTempView(tableName));
+        Assert.Throws<SparkException>(() => dataFrame.CreateTempView(tableName));
     }
     
     [Fact]
@@ -61,6 +64,6 @@ public class DataFrameTempViewTests : E2ETestBase
         Assert.Equal(100, rows.Count);
         Assert.Equal(0L, rows[0][0]);
 
-        Assert.Throws<AggregateException>(() => dataFrame.CreateGlobalTempView(tableName));
+        Assert.Throws<SparkException>(() => dataFrame.CreateGlobalTempView(tableName));
     }
 }

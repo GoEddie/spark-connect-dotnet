@@ -39,7 +39,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
     
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, SparkColumn col, params Expression[] parameters)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, params Expression[] parameters)
     {
         var args = new RepeatedField<Expression>();
         args.Add(col.Expression);
@@ -71,7 +71,7 @@ public class FunctionsWrapper : FunctionsInternal
                 IsUserDefinedFunction = false,
                 Arguments =
                 {
-                    parameters.Select(p => new SparkColumn(p).Expression).ToList()
+                    parameters.Select(p => new Column(p).Expression).ToList()
                 }
             }
         };
@@ -88,7 +88,7 @@ public class FunctionsWrapper : FunctionsInternal
                 IsUserDefinedFunction = false,
                 Arguments =
                 {
-                   new SparkColumn(parameter1).Expression, parameter2
+                   new Column(parameter1).Expression, parameter2
                 }
             }
         };
@@ -105,13 +105,13 @@ public class FunctionsWrapper : FunctionsInternal
                 IsUserDefinedFunction = false,
                 Arguments =
                 {
-                    parameter1, new SparkColumn(parameter2).Expression
+                    parameter1, new Column(parameter2).Expression
                 }
             }
         };
     }
     
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, SparkColumn parameter1, Expression parameter2)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column parameter1, Expression parameter2)
     {
         return new Expression()
         {
@@ -128,7 +128,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
     
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression parameter1, SparkColumn parameter2)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression parameter1, Column parameter2)
     {
         return new Expression()
         {
@@ -145,7 +145,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
     
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params SparkColumn[] parameters)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params Column[] parameters)
     {
         return new Expression()
         {
@@ -162,7 +162,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
     
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, SparkColumn col)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col)
     {
         return new Expression()
         {
@@ -190,7 +190,7 @@ public class FunctionsWrapper : FunctionsInternal
                 IsUserDefinedFunction = false,
                 Arguments =
                 {
-                    new SparkColumn(col).Expression
+                    new Column(col).Expression
                 }
             }
         };
@@ -213,7 +213,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
     
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, SparkColumn col, string value)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, string value)
     {
         return new Expression()
         {
@@ -235,7 +235,30 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
     
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, SparkColumn col, int value)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, string col, Column value)
+    {
+        return new Expression()
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            {
+                FunctionName = function,
+                IsDistinct = isDistinct,
+                IsUserDefinedFunction = false,
+                Arguments =
+                {
+                    new Expression() 
+                    { Literal = new Expression.Types.Literal()
+                        {
+                            String = col
+                        }
+                    },
+                    value.Expression
+                }
+            }
+        };
+    }
+    
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, int value)
     {
         return new Expression()
         {
@@ -258,7 +281,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, SparkColumn col, double value)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, double value)
     {
         return new Expression()
         {
@@ -281,7 +304,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, SparkColumn col, float value)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, float value)
         {
             return new Expression()
             {

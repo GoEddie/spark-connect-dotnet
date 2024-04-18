@@ -5,6 +5,9 @@ using Apache.Arrow.Types;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
+using Spark.Connect.Dotnet.Sql.Types;
+using StringType = Apache.Arrow.Types.StringType;
+using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -28,10 +31,10 @@ public class DataFrame
     }
 
     /// <summary>
-    /// Returns the `SparkColumn` denoted by name.
+    /// Returns the `Column` denoted by name.
     /// </summary>
     /// <param name="name"></param>
-    public SparkColumn this[string name] => new(name);
+    public Column this[string name] => new(name);
 
     /// <summary>
     /// Returns a new `DataFrame` by taking the first n rows.
@@ -88,7 +91,8 @@ public class DataFrame
             }
         };
         
-        await GrpcInternal.Exec(session.Client, session.Host, session.SessionId, showStringPlan, session.Headers, session.UserContext, session.ClientType);
+        var (outputRelation, schema) = await GrpcInternal.Exec(session.Client, session.Host, session.SessionId, showStringPlan, session.Headers, session.UserContext, session.ClientType);
+        Console.WriteLine($"{outputRelation} is of type: {schema}");
     }
 
     /// <summary>
@@ -96,7 +100,7 @@ public class DataFrame
     /// </summary>
     /// <param name="columns">Column Expressions (Column). If one of the column names is ‘*’, that column is expanded to include all columns in the current DataFrame.</param>
     /// <returns></returns>
-    public DataFrame Select(params SparkColumn[] columns)
+    public DataFrame Select(params Column[] columns)
     {
         var relation = new Relation()
         {
@@ -160,9 +164,9 @@ public class DataFrame
     /// The column expression must be an expression over this `DataFrame`; attempting to add a column from some other `DataFrame` will raise an error.
     /// </summary>
     /// <param name="columnName">string, name of the new column.</param>
-    /// <param name="column">a `SparkColumn` expression for the new column.</param>
+    /// <param name="column">a `Column` expression for the new column.</param>
     /// <returns></returns>
-    public DataFrame WithColumn(string columnName, SparkColumn column)
+    public DataFrame WithColumn(string columnName, Column column)
     {
         var alias = new Expression.Types.Alias()
         {
@@ -444,7 +448,7 @@ public class DataFrame
         return new DataFrame(_session, relation);
     }
 
-    public GroupedData GroupBy(params SparkColumn[] cols)
+    public GroupedData GroupBy(params Column[] cols)
     {
         var relation = new Relation()
         {
@@ -458,7 +462,7 @@ public class DataFrame
         return new GroupedData(_session, relation);
     }
 
-    public DataFrame Agg(SparkColumn exprs)
+    public DataFrame Agg(Column exprs)
     {
         var relation = new Relation()
         {
@@ -476,14 +480,14 @@ public class DataFrame
     
     public long Count()
     {
-        var result = this.Select(Functions.FunctionCall("count", Functions.Lit(1))).Collect();
+        var result = this.Select(FunctionsInternal.FunctionCall("count", Functions.Lit(1))).Collect();
         return (long)result[0][0];
     }
 
-    public DataFrame Sort(params SparkColumn[] columns) => OrderBy(columns);
-    public DataFrame Sort(List<SparkColumn> columns) => OrderBy(columns);
+    public DataFrame Sort(params Column[] columns) => OrderBy(columns);
+    public DataFrame Sort(List<Column> columns) => OrderBy(columns);
     
-    public DataFrame OrderBy(params SparkColumn[] columns)
+    public DataFrame OrderBy(params Column[] columns)
     {
         var sortColumns = new List<Expression.Types.SortOrder>();
         
@@ -553,7 +557,7 @@ public class DataFrame
 
         return new DataFrame(_session, relation);
     }
-    public DataFrame OrderBy(List<SparkColumn> columns)
+    public DataFrame OrderBy(List<Column> columns)
     {
         return OrderBy(columns.ToArray());
     }
@@ -589,6 +593,21 @@ public class DataFrame
         catch (AggregateException aggregate)
         {
             throw SparkExceptionFactory.GetExceptionFromRpcException(aggregate);
+        }
+    }
+
+    public StructType Schema
+    {
+        get
+        {
+            var plan = new Plan()
+            {
+                Root = Relation
+            };
+
+            var explain = GrpcInternal.Schema(_session.Client, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, false, "");
+            var structType = new StructType(explain.Struct);
+            return structType;
         }
     }
 }

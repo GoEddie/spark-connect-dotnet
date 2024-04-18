@@ -16,7 +16,7 @@ public class DataFrameWriterV2
         _session = session;
         _what = what;
     }
-    public DataFrameWriterV2 PartitionedBy(SparkColumn col)
+    public DataFrameWriterV2 PartitionedBy(Column col)
     {
         _partitionedBy.Add(col.Expression);
         return this;

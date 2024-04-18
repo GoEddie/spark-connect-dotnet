@@ -28,7 +28,7 @@ static class GrpcInternal
         var explainMode = explainExtended
             ? AnalyzePlanRequest.Types.Explain.Types.ExplainMode.Extended
             : AnalyzePlanRequest.Types.Explain.Types.ExplainMode.Simple;
-
+        
         if (!string.IsNullOrEmpty(mode))
         {
             AnalyzePlanRequest.Types.Explain.Types.ExplainMode.TryParse(mode, out explainMode);
@@ -48,6 +48,24 @@ static class GrpcInternal
         
         var analyzeResponse = client.AnalyzePlan(analyzeRequest, headers);
         return analyzeResponse.Explain.ExplainString;
+    }
+
+    public static DataType Schema(SparkConnectService.SparkConnectServiceClient client, string sessionId, Plan plan,
+        Metadata headers, UserContext userContext, string clientType, bool explainExtended, string mode)
+    {
+        var analyzeRequest = new AnalyzePlanRequest()
+        {
+            Schema = new AnalyzePlanRequest.Types.Schema()
+            {
+                Plan = plan
+            },
+            SessionId = sessionId,
+            UserContext = userContext,
+            ClientType = clientType
+        };
+        
+        var analyzeResponse = client.AnalyzePlan(analyzeRequest, headers);
+        return analyzeResponse.Schema.Schema_;
     }
 
     public static string LastPlan = "";

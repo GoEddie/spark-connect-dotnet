@@ -2,7 +2,7 @@ namespace Spark.Connect.Dotnet.Grpc;
 
 public class Logger
 {
-    private static int _level = 0;
+    private static int _level = 100;
 
     public Logger(int level)
     {
