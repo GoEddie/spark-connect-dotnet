@@ -1551,6 +1551,18 @@ public partial class Functions : FunctionsWrapper
 
 
     /// <Summary>
+    /// ArrayContains
+    /// Collection function: returns null if the array is null, true if the array contains the given value, and false otherwise.
+    /// </Summary>
+    public static Column ArrayContains(string col , Column value) => new(FunctionWrappedCall("array_contains", false, Col(col), value));
+
+    /// <Summary>
+    /// ArrayContains
+    /// Collection function: returns null if the array is null, true if the array contains the given value, and false otherwise.
+    /// </Summary>
+    public static Column ArrayContains(Column col, Column value) => new(FunctionWrappedCall("array_contains", false, col, value));
+
+    /// <Summary>
     /// ArraysOverlap
     /// Collection function: returns true if the arrays contain any common non-null element; if not, returns null if both the arrays are non-empty and any of them contains a null element; returns false otherwise.
     /// </Summary>
@@ -1575,6 +1587,54 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
 	public static Column Concat(params Column[] cols) => new(FunctionWrappedCall("concat", false, cols));
 
+
+    /// <Summary>
+    /// ArrayPosition
+    /// Collection function: Locates the position of the first occurrence of the given value in the given array. Returns null if either of the arguments are null.
+    /// </Summary>
+    public static Column ArrayPosition(string col , Column value) => new(FunctionWrappedCall("array_position", false, Col(col), value));
+
+    /// <Summary>
+    /// ArrayPosition
+    /// Collection function: Locates the position of the first occurrence of the given value in the given array. Returns null if either of the arguments are null.
+    /// </Summary>
+    public static Column ArrayPosition(Column col, Column value) => new(FunctionWrappedCall("array_position", false, col, value));
+
+    /// <Summary>
+    /// ElementAt
+    /// Collection function: Returns element of array at given index in `extraction` if col is array. Returns value for the given key in `extraction` if col is map. If position is negative then location of the element will start from end, if number is outside the array boundaries then None will be returned.
+    /// </Summary>
+    public static Column ElementAt(string col , Column extraction) => new(FunctionWrappedCall("element_at", false, Col(col), extraction));
+
+    /// <Summary>
+    /// ElementAt
+    /// Collection function: Returns element of array at given index in `extraction` if col is array. Returns value for the given key in `extraction` if col is map. If position is negative then location of the element will start from end, if number is outside the array boundaries then None will be returned.
+    /// </Summary>
+    public static Column ElementAt(Column col, Column extraction) => new(FunctionWrappedCall("element_at", false, col, extraction));
+
+    /// <Summary>
+    /// ArrayPrepend
+    /// Collection function: Returns an array containing element as well as all elements from array. The new element is positioned at the beginning of the array.
+    /// </Summary>
+    public static Column ArrayPrepend(string col , Column value) => new(FunctionWrappedCall("array_prepend", false, Col(col), value));
+
+    /// <Summary>
+    /// ArrayPrepend
+    /// Collection function: Returns an array containing element as well as all elements from array. The new element is positioned at the beginning of the array.
+    /// </Summary>
+    public static Column ArrayPrepend(Column col, Column value) => new(FunctionWrappedCall("array_prepend", false, col, value));
+
+    /// <Summary>
+    /// ArrayRemove
+    /// Collection function: Remove all elements that equal to element from the given array.
+    /// </Summary>
+    public static Column ArrayRemove(string col , Column element) => new(FunctionWrappedCall("array_remove", false, Col(col), element));
+
+    /// <Summary>
+    /// ArrayRemove
+    /// Collection function: Remove all elements that equal to element from the given array.
+    /// </Summary>
+    public static Column ArrayRemove(Column col, Column element) => new(FunctionWrappedCall("array_remove", false, col, element));
 
     /// <Summary>ArrayDistinct</Summary>
     public static Column ArrayDistinct(string col) => new(FunctionWrappedCall("array_distinct", false, col));
@@ -1626,6 +1686,18 @@ public partial class Functions : FunctionsWrapper
 
     /// <Summary>ArrayCompact</Summary>
 	public static Column ArrayCompact(Column col) => new(FunctionWrappedCall("array_compact", false, col));
+
+    /// <Summary>
+    /// ArrayAppend
+    /// Collection function: returns an array of the elements in col1 along with the added element in col2 at the last of the array.
+    /// </Summary>
+    public static Column ArrayAppend(string col , Column value) => new(FunctionWrappedCall("array_append", false, Col(col), value));
+
+    /// <Summary>
+    /// ArrayAppend
+    /// Collection function: returns an array of the elements in col1 along with the added element in col2 at the last of the array.
+    /// </Summary>
+    public static Column ArrayAppend(Column col, Column value) => new(FunctionWrappedCall("array_append", false, col, value));
 
     /// <Summary>Explode</Summary>
     public static Column Explode(string col) => new(FunctionWrappedCall("explode", false, col));
@@ -1722,6 +1794,18 @@ public partial class Functions : FunctionsWrapper
 
     /// <Summary>Flatten</Summary>
 	public static Column Flatten(Column col) => new(FunctionWrappedCall("flatten", false, col));
+
+    /// <Summary>
+    /// MapContainsKey
+    /// Returns true if the map contains the key.
+    /// </Summary>
+    public static Column MapContainsKey(string col , Column value) => new(FunctionWrappedCall("map_contains_key", false, Col(col), value));
+
+    /// <Summary>
+    /// MapContainsKey
+    /// Returns true if the map contains the key.
+    /// </Summary>
+    public static Column MapContainsKey(Column col, Column value) => new(FunctionWrappedCall("map_contains_key", false, col, value));
 
     /// <Summary>MapKeys</Summary>
     public static Column MapKeys(string col) => new(FunctionWrappedCall("map_keys", false, col));

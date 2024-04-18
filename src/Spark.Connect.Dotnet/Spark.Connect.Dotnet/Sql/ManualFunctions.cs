@@ -1,3 +1,5 @@
+using System.Transactions;
+
 namespace Spark.Connect.Dotnet.Sql;
 
 public partial class Functions : FunctionsWrapper  
@@ -194,6 +196,19 @@ public partial class Functions : FunctionsWrapper
             }
         });
     }
+
+    public static Column Lit(object o) => o switch
+    {
+        int i => Lit(i),
+        string s => Lit(s),
+        double d => Lit(d),
+        float f => Lit(f),
+        short s => Lit(s),
+        long l => Lit(l),
+        
+        _ => Lit(o.ToString())  //TODO not great
+        
+    };
 
     private static readonly DateOnly UnixEpoch = new DateOnly(1970, 1, 1);
     private static readonly TimeSpan UnixEpochTimespan = new TimeSpan(1970, 1, 1);
@@ -600,4 +615,11 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column JavaMethod(params string[] cols) => Reflect(cols);
 
+    /// <Summary>
+    /// When
+    /// </Summary>
+    public static Column When(Column condition, Column value) => new(FunctionWrappedCall("when", false, condition, value));
+    
+    public static Column When(Column condition, object value) => new(FunctionWrappedCall("when", false, condition, Lit(value)));
+    
 }

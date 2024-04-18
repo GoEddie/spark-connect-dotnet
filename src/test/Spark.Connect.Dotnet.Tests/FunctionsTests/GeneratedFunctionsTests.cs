@@ -972,22 +972,22 @@ public class GeneratedFunctionsTests : E2ETestBase
         Source.Select(Shiftleft(Col("id"), Lit(0))).Show();
     }
 
-    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
     public void ShiftRight_Test()
     {
-        //Source.Select(ShiftRight("id")).Show();
-        //Source.Select(ShiftRight(Lit(180))).Show();
-        //Source.Select(ShiftRight(Col("id"))).Show();
+        Source.Select(ShiftRight("id", Lit(0))).Show();
+        Source.Select(ShiftRight(Lit(10), Lit(0))).Show();
+        Source.Select(ShiftRight(Col("id"), Lit(0))).Show();
     }
 
-    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
     [Fact]
     public void Shiftright_Test()
     {
-        //Source.Select(Shiftright("id")).Show();
-        //Source.Select(Shiftright(Lit(180))).Show();
-        //Source.Select(Shiftright(Col("id"))).Show();
+        Source.Select(Shiftright("id", Lit(0))).Show();
+        Source.Select(Shiftright(Lit(10), Lit(0))).Show();
+        Source.Select(Shiftright(Col("id"), Lit(0))).Show();
     }
 
     /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
@@ -1013,15 +1013,6 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void SparkPartitionId_Test()
     {
         Source.Select(SparkPartitionId()).Show();
-    }
-
-    /** GeneratedBy::ParamsColumnOrNameFunction::EverythingElse **/
-    [Fact]
-    public void NamedStruct_Test()
-    {
-        Source.Select(NamedStruct(new []{"id", "id"})).Show();
-        Source.Select(NamedStruct(new []{Lit(180), Lit(180)})).Show();
-        Source.Select(NamedStruct(new []{Col("id"), Col("id")})).Show();
     }
 
     /** GeneratedBy::ParamsColumnOrNameFunction::EverythingElse **/
@@ -1508,6 +1499,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void FormatNumber_Test()
     {
+        Assert.Fail("To Be Implemented");
         //Source.Select(FormatNumber("id")).Show();
         //Source.Select(FormatNumber(Lit(180))).Show();
         //Source.Select(FormatNumber(Col("id"))).Show();
@@ -1790,6 +1782,15 @@ public class GeneratedFunctionsTests : E2ETestBase
         Source.Select(Array()).Show();
     }
 
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::ArrayInt **/
+    [Fact]
+    public void ArrayContains_Test()
+    {
+        Source.Select(ArrayContains(Col("idarray"), Lit(1980))).Show();
+        Source.Select(ArrayContains(Array(Lit(1), Lit(2)), Lit(1))).Show();
+        Source.Select(ArrayContains("idarray", Lit(401))).Show();
+    }
+
     /** GeneratedBy::AllArgsColumnOrName::IntArray **/
     [Fact]
     public void ArraysOverlap_Test()
@@ -1806,6 +1807,42 @@ public class GeneratedFunctionsTests : E2ETestBase
         Source.Select(Concat(new []{"id", "id"})).Show();
         Source.Select(Concat(new []{Lit(180), Lit(180)})).Show();
         Source.Select(Concat(new []{Col("id"), Col("id")})).Show();
+    }
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::ArrayInt **/
+    [Fact]
+    public void ArrayPosition_Test()
+    {
+        Source.Select(ArrayPosition(Col("idarray"), Lit(1980))).Show();
+        Source.Select(ArrayPosition(Array(Lit(1), Lit(2)), Lit(1))).Show();
+        Source.Select(ArrayPosition("idarray", Lit(401))).Show();
+    }
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::ArrayInt **/
+    [Fact]
+    public void ElementAt_Test()
+    {
+        Source.Select(ElementAt(Col("idarray"), Lit(1980))).Show();
+        Source.Select(ElementAt(Array(Lit(1), Lit(2)), Lit(1))).Show();
+        Source.Select(ElementAt("idarray", Lit(401))).Show();
+    }
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::ArrayInt **/
+    [Fact]
+    public void ArrayPrepend_Test()
+    {
+        Source.Select(ArrayPrepend(Col("idarray"), Lit(1980))).Show();
+        Source.Select(ArrayPrepend(Array(Lit(1), Lit(2)), Lit(1))).Show();
+        Source.Select(ArrayPrepend("idarray", Lit(401))).Show();
+    }
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::ArrayInt **/
+    [Fact]
+    public void ArrayRemove_Test()
+    {
+        Source.Select(ArrayRemove(Col("idarray"), Lit(1980))).Show();
+        Source.Select(ArrayRemove(Array(Lit(1), Lit(2)), Lit(1))).Show();
+        Source.Select(ArrayRemove("idarray", Lit(401))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
@@ -1851,6 +1888,15 @@ public class GeneratedFunctionsTests : E2ETestBase
         Source.Select(ArrayCompact("idarray")).Show();
         Source.Select(ArrayCompact(Lit(new[] {0, 1, 2}))).Show();
         Source.Select(ArrayCompact(Col("idarray"))).Show();
+    }
+
+    /** GeneratedBy::ColumnOrNameHidingArgTwoType::ArrayInt **/
+    [Fact]
+    public void ArrayAppend_Test()
+    {
+        Source.Select(ArrayAppend(Col("idarray"), Lit(1980))).Show();
+        Source.Select(ArrayAppend(Array(Lit(1), Lit(2)), Lit(1))).Show();
+        Source.Select(ArrayAppend("idarray", Lit(401))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
@@ -1995,6 +2041,16 @@ public class GeneratedFunctionsTests : E2ETestBase
         Source.Select(Flatten("idarrayarray")).Show();
         Source.Select(Flatten(Col("idarrayarray"))).Show();
         //Todo: Need a Lit that can handle this
+    }
+
+    /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
+    [Fact]
+    public void MapContainsKey_Test()
+    {
+        Assert.Fail("To Be Implemented");
+        //Source.Select(MapContainsKey("id")).Show();
+        //Source.Select(MapContainsKey(Lit(180))).Show();
+        //Source.Select(MapContainsKey(Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::Map **/

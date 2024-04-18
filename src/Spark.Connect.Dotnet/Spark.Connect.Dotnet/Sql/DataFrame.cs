@@ -6,6 +6,10 @@ using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
 using Spark.Connect.Dotnet.Sql.Types;
+using BinaryType = Apache.Arrow.Types.BinaryType;
+using BooleanType = Apache.Arrow.Types.BooleanType;
+using DoubleType = Apache.Arrow.Types.DoubleType;
+using IntegerType = Apache.Arrow.Types.IntegerType;
 using StringType = Apache.Arrow.Types.StringType;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 
@@ -143,8 +147,11 @@ public class DataFrame
         {
             Project = new Project()
             {
-                Input = Relation, Expressions =
+                Input = Relation, 
+                
+                Expressions =
                 {
+                    
                     columns.Select(p => new Expression()
                     {
                         Literal = new Expression.Types.Literal()
@@ -152,7 +159,7 @@ public class DataFrame
                             String = p
                         }
                     })
-                }
+                },
             }
         };
 

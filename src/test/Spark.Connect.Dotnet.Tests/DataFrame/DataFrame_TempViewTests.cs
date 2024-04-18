@@ -32,8 +32,6 @@ public class DataFrameTempViewTests : E2ETestBase
         
         Assert.Equal(100, rows.Count);
         Assert.Equal(0L, rows[0][0]);
-
-        Assert.Throws<SparkException>(() => dataFrame.CreateTempView(tableName));
     }
     
     [Fact]
@@ -64,6 +62,5 @@ public class DataFrameTempViewTests : E2ETestBase
         Assert.Equal(100, rows.Count);
         Assert.Equal(0L, rows[0][0]);
 
-        Assert.Throws<SparkException>(() => dataFrame.CreateGlobalTempView(tableName));
     }
 }

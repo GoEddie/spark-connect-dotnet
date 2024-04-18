@@ -13,7 +13,7 @@ public class DataFrameSchemaTests : E2ETestBase
         var df1 = Spark.Range(0, 5).WithColumn("Name", Functions.Lit("ed"));
         var schema = df1.Schema.SimpleString();
 
-        Assert.Equal("struct<id:bigint,Name:string>", schema);
+        Assert.Equal("StructType<id:bigint,Name:string>", schema);
     }
     
     [Fact]
@@ -22,7 +22,7 @@ public class DataFrameSchemaTests : E2ETestBase
         var df1 = Spark.Sql("SELECT struct(id as id1, id as id2, id as id3) from range(100)");
         var schema = df1.Schema.SimpleString();
 
-        Assert.Equal("struct<struct(id AS id1, id AS id2, id AS id3):struct<id1:bigint,id2:bigint,id3:bigint>>", schema);
+        Assert.Equal("StructType<struct(id AS id1, id AS id2, id AS id3):StructType<id1:bigint,id2:bigint,id3:bigint>>", schema);
     }
     
     [Fact]
@@ -31,7 +31,7 @@ public class DataFrameSchemaTests : E2ETestBase
         var df1 = Spark.Sql("SELECT array(01, 02, 03, 04, 05) as arr from range(100)");
         var schema = df1.Schema.SimpleString();
 
-        Assert.Equal("struct<arr:array<int>>", schema);
+        Assert.Equal("StructType<arr:array<int>>", schema);
     }
     
     [Fact]
@@ -40,7 +40,7 @@ public class DataFrameSchemaTests : E2ETestBase
         var df1 = Spark.Sql("SELECT array(struct(01 as a, 02 as b), struct(01 as a, 02 as b), struct(01 as a, 02 as b)) as arr from range(100)");
         var schema = df1.Schema.SimpleString();
 
-        Assert.Equal("struct<arr:array<struct<a:int,b:int>>>", schema);
+        Assert.Equal("StructType<arr:array<StructType<a:int,b:int>>>", schema);
     }
     
     [Fact]
@@ -59,8 +59,8 @@ public class DataFrameSchemaTests : E2ETestBase
         var schema = df1.Schema;
         var expected =
             new StructType(
-                new StructField("col1", StructType(new StructField("a", IntType(), false), new StructField("b", IntType(), false)), false),
-                new StructField("col2", StructType(new StructField("a", IntType(), false), new StructField("b", IntType(), false)), false)
+                new StructField("col1", StructType(new StructField("a", IntegerType(), false), new StructField("b", IntegerType(), false)), false),
+                new StructField("col2", StructType(new StructField("a", IntegerType(), false), new StructField("b", IntegerType(), false)), false)
                 
                 );
 

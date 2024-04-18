@@ -109,7 +109,7 @@ public class ReadWriteTests : E2ETestBase
         Assert.Equal("hello friend", result[0][3]);
     }
     
-    [Fact]
+    [Fact(Skip = "Needs Avro deployed to server")]
     public async Task Read_And_Write_Avro()
     {
         var df = Spark.Range(10)

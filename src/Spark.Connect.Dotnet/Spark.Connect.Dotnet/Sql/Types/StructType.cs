@@ -91,7 +91,7 @@ public class StructField
 
         if (type.Integer != null)
         {
-            return new IntType();
+            return new IntegerType();
         }
 
         if (type.Long != null)
@@ -113,7 +113,26 @@ public class StructField
         {
             var elementType = FromConnectDataType(type.Array.ElementType);
             return new ArrayType(elementType); 
-            
+        }
+
+        if (type.Binary != null)
+        {
+            return new BinaryType();
+        }
+
+        if (type.Boolean != null)
+        {
+            return new BooleanType();
+        }
+
+        if (type.Double != null)
+        {
+            return new DoubleType();
+        }
+
+        if (type.Map != null)
+        {
+            return new MapType(FromConnectDataType(type.Map.KeyType), FromConnectDataType(type.Map.ValueType));
         }
         
         return null;

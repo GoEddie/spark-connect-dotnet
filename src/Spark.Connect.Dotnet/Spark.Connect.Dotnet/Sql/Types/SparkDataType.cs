@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Spark.Connect.Dotnet.Grpc;
 
 namespace Spark.Connect.Dotnet.Sql.Types;
 
@@ -20,9 +21,22 @@ public abstract class SparkDataType
     public static ByteType ByteType() => new ();
     public static ShortType ShortType() => new ();
     public static StringType StringType() => new ();
+    public static BigIntType LongType() => new ();
+    
     public static BigIntType BigIntType() => new ();
-    public static IntType IntType() => new();
+    public static IntegerType IntegerType() => new();
+
+    public static BinaryType BinaryType() => new();
+    public static BooleanType BooleanType() => new();
+
+    public static DoubleType DoubleType() => new();
+    
+    public static IntegerType IntType() => new();
     public static StructType StructType(params StructField[] fields) => new (fields);
+
+    public static ArrayType ArrayType(SparkDataType elementType) => new(elementType);
+    
+    public static MapType MapType(SparkDataType keyType, SparkDataType valueType) => new(keyType, valueType);
 
     public static SparkDataType FromString(string type)
     {
@@ -45,10 +59,17 @@ public abstract class SparkDataType
             
             case "int":
             case "int32":
-                return new IntType();
+                return new IntegerType();
             
             case "byte":
                 return new ByteType();
+            
+            case "binary":
+                return new BinaryType();
+            
+            case "bool":
+            case "boolean":
+                return new BooleanType();
         }
 
         if (lower.StartsWith("array"))
@@ -57,6 +78,24 @@ public abstract class SparkDataType
             var elementSparkType = FromString(elementType.Value);
             return new ArrayType(elementSparkType);
         }
+        
+        if (lower.StartsWith("map"))
+        {
+            try
+            {
+                var matches = Regex.Match(lower, "<(.*?),(.*?)>");
+                var keyType = matches.Groups[0].Value;
+                var valueType = matches.Groups[1].Value;
+
+                return new MapType(FromString(keyType), FromString(valueType));
+            }
+            catch (Exception ex)
+            {
+                throw new SparkException(
+                    $"Expected map format like 'map<keyType,valueType>' but couldn't figure out the types from {lower}", ex);
+            }
+        }
+
 
         throw new NotImplementedException($"Missing DataType From String: '{type}'");
     }
@@ -72,6 +111,45 @@ public class ByteType : SparkDataType
         new()
         {
             Byte = new DataType.Types.Byte()
+        };
+}
+
+public class BinaryType : SparkDataType
+{
+    public BinaryType() : base("Binary")
+    {
+    }
+    
+    public override DataType ToDataType() =>
+        new()
+        {
+           Binary = new DataType.Types.Binary()
+        };
+}
+
+public class BooleanType : SparkDataType
+{
+    public BooleanType() : base("Boolean")
+    {
+    }
+    
+    public override DataType ToDataType() =>
+        new()
+        {
+            Boolean = new DataType.Types.Boolean()
+        };
+}
+
+public class DoubleType : SparkDataType
+{
+    public DoubleType() : base("Double")
+    {
+    }
+    
+    public override DataType ToDataType() =>
+        new()
+        {
+            Double = new DataType.Types.Double()
         };
 }
 
@@ -104,9 +182,9 @@ public class StringType : SparkDataType
         };
 }
 
-public class IntType : SparkDataType
+public class IntegerType : SparkDataType
 {
-    public IntType() : base("Int")
+    public IntegerType() : base("Int")
     {
     }
     
@@ -126,7 +204,29 @@ public class BigIntType : SparkDataType
     public override DataType ToDataType() =>
         new()
         {
-            Integer = new DataType.Types.Integer()
+            Long = new DataType.Types.Long()
+        };
+}
+
+public class MapType : SparkDataType
+{
+    private readonly SparkDataType _keyType;
+    private readonly SparkDataType _valueType;
+
+    public MapType(SparkDataType keyType, SparkDataType valueType) : base("Map")
+    {
+        _keyType = keyType;
+        _valueType = valueType;
+    }
+    
+    public override DataType ToDataType() =>
+        new()
+        {
+            Map = new DataType.Types.Map()
+            {
+                KeyType = _keyType.ToDataType(),
+                ValueType = _valueType.ToDataType()
+            }
         };
 }
 

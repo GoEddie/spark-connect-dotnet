@@ -147,6 +147,7 @@ public class FunctionsWrapper : FunctionsInternal
     
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params Column[] parameters)
     {
+        
         return new Expression()
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction()
