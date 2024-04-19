@@ -1,21 +1,11 @@
+using System.Linq.Expressions;
+
 namespace Spark.Connect.Dotnet.Sql;
 
 public class SparkLambdaFunction
 {
-    public Plan GetPlan()
+    public Plan GetPlan(Expression<Func<Column, Column>> lambda)
     {
-        var plan = new Plan();
-        var expression = new Expression()
-        {
-            LambdaFunction = new Expression.Types.LambdaFunction()
-            {
-                Function = new Expression()
-                {
-
-                }
-            }
-        };
-
-        throw new NotImplementedException();x
+        throw new NotImplementedException();
     }
 }

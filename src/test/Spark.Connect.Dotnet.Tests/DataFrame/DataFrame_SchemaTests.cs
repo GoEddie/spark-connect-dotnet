@@ -5,7 +5,7 @@ using static Spark.Connect.Dotnet.Sql.Types.SparkDataType;
 
 namespace Spark.Connect.Dotnet.Tests.DataFrame;
 
-public class DataFrameSchemaTests : E2ETestBase
+public class DataFrame_SchemaTests : E2ETestBase
 {
     [Fact]
     public void Schema_SimpleString_Test()

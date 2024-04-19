@@ -2,6 +2,7 @@ using System.Text;
 using Apache.Arrow.Ipc;
 using Grpc.Core;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
+using Spark.Connect.Dotnet.Sql;
 
 namespace Spark.Connect.Dotnet.Grpc;
 
@@ -17,9 +18,13 @@ static class GrpcInternal
             //TODO: should I be using these?
             // var offsetsBuffer = array.Data.Buffers[0];
             // var validityBuffer = array.Data.Buffers[1];
-            var dataBuffer = array.Data.Buffers[2];
+
+            if (array.Data.Buffers.Length > 2)
+            {
+                var dataBuffer = array.Data.Buffers[2];
+                Console.WriteLine(Encoding.UTF8.GetString(dataBuffer.Span));    
+            }
             
-            Console.WriteLine(Encoding.UTF8.GetString(dataBuffer.Span));
         }
     }
 
@@ -33,7 +38,7 @@ static class GrpcInternal
         {
             AnalyzePlanRequest.Types.Explain.Types.ExplainMode.TryParse(mode, out explainMode);
         }
-
+    
         var analyzeRequest = new AnalyzePlanRequest()
         {
             Explain = new AnalyzePlanRequest.Types.Explain()
@@ -48,6 +53,32 @@ static class GrpcInternal
         
         var analyzeResponse = client.AnalyzePlan(analyzeRequest, headers);
         return analyzeResponse.Explain.ExplainString;
+    }
+    
+    public static Relation Persist(SparkConnectService.SparkConnectServiceClient client, string sessionId, Relation relation, Metadata headers, UserContext userContext, string clientType, bool explainExtended, string mode)
+    {
+    
+        var analyzeRequest = new AnalyzePlanRequest()
+        {
+            Persist = new AnalyzePlanRequest.Types.Persist()
+            {
+                Relation = relation,
+                StorageLevel = new StorageLevel()
+                {
+                    UseMemory = true,
+                    UseDisk = true,
+                    UseOffHeap = false,
+                    Deserialized = true,
+                    Replication = 1
+                }
+            },
+            SessionId = sessionId,
+            UserContext = userContext,
+            ClientType = clientType
+        };
+        
+        var analyzeResponse = client.AnalyzePlan(analyzeRequest, headers);
+        return relation;
     }
 
     public static DataType Schema(SparkConnectService.SparkConnectServiceClient client, string sessionId, Plan plan,
@@ -69,6 +100,13 @@ static class GrpcInternal
     }
 
     public static string LastPlan = "";
+
+    public static Relation Exec(SparkSession session, Plan plan)
+    {
+        var task = Exec(session.Client, session.Host, session.SessionId, plan, session.Headers, session.UserContext, session.ClientType);
+        task.Wait();
+        return task.Result.Item1;
+    }
     
     public static async Task<(Relation, DataType?)> Exec(SparkConnectService.SparkConnectServiceClient client, string host, string sessionId, Plan plan, Metadata headers, UserContext userContext, string clientType)
     {

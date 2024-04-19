@@ -815,6 +815,33 @@ public class GeneratedFunctionsTests : E2ETestBase
         Source.Select(Radians(Col("id"))).Show();
     }
 
+    /** GeneratedBy::TwoArgColumnOrNameOrAllSimpleFunction **/
+    [Fact]
+    public void Hypot_Test()
+    {
+        Source.Select(Hypot("id", "id")).Show();
+        Source.Select(Hypot(Lit(1), Lit(2))).Show();
+        Source.Select(Hypot(Col("id"), Col("id"))).Show();
+    }
+
+    /** GeneratedBy::TwoArgColumnOrNameOrAllSimpleFunction **/
+    [Fact]
+    public void Pow_Test()
+    {
+        Source.Select(Pow("id", "id")).Show();
+        Source.Select(Pow(Lit(1), Lit(2))).Show();
+        Source.Select(Pow(Col("id"), Col("id"))).Show();
+    }
+
+    /** GeneratedBy::TwoArgColumnOrNameOrAllSimpleFunction **/
+    [Fact]
+    public void Pmod_Test()
+    {
+        Source.Select(Pmod("id", "id")).Show();
+        Source.Select(Pmod(Lit(1), Lit(2))).Show();
+        Source.Select(Pmod(Col("id"), Col("id"))).Show();
+    }
+
     /** GeneratedBy::NoArgsFunction **/
     [Fact]
     public void RowNumber_Test()
@@ -934,6 +961,26 @@ public class GeneratedFunctionsTests : E2ETestBase
         Source.Select(Nanvl("id","id")).Show();
         Source.Select(Nanvl(Lit(1),Lit(1))).Show();
         Source.Select(Nanvl(Col("id"),Col("id"))).Show();
+    }
+
+    /** GeneratedBy::SingleOptionalArgBasicType::EverythingElse **/
+    [Fact]
+    public void Rand_Test()
+    {
+        Source.Select(Rand()).Show();
+        Source.Select(Rand(1)).Show();        
+        Source.Select(Rand(Lit(180))).Show();
+  
+    }
+
+    /** GeneratedBy::SingleOptionalArgBasicType::EverythingElse **/
+    [Fact]
+    public void Randn_Test()
+    {
+        Source.Select(Randn()).Show();
+        Source.Select(Randn(1)).Show();        
+        Source.Select(Randn(Lit(180))).Show();
+  
     }
 
     /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/

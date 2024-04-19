@@ -1,4 +1,6 @@
 using System.Text.RegularExpressions;
+using Apache.Arrow;
+using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Grpc;
 
 namespace Spark.Connect.Dotnet.Sql.Types;
@@ -6,6 +8,7 @@ namespace Spark.Connect.Dotnet.Sql.Types;
 public abstract class SparkDataType
 {
     public abstract DataType ToDataType();
+    public abstract IArrowType ToArrowType();
     
     private readonly string _typeName;
 
@@ -112,6 +115,11 @@ public class ByteType : SparkDataType
         {
             Byte = new DataType.Types.Byte()
         };
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.Int8Type();
+    }
 }
 
 public class BinaryType : SparkDataType
@@ -125,6 +133,11 @@ public class BinaryType : SparkDataType
         {
            Binary = new DataType.Types.Binary()
         };
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.BinaryType();
+    }
 }
 
 public class BooleanType : SparkDataType
@@ -138,6 +151,11 @@ public class BooleanType : SparkDataType
         {
             Boolean = new DataType.Types.Boolean()
         };
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.BooleanType();
+    }
 }
 
 public class DoubleType : SparkDataType
@@ -151,6 +169,11 @@ public class DoubleType : SparkDataType
         {
             Double = new DataType.Types.Double()
         };
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.DoubleType();
+    }
 }
 
 public class ShortType : SparkDataType
@@ -164,6 +187,11 @@ public class ShortType : SparkDataType
         {
             Short = new DataType.Types.Short()
         };
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.Int16Type();
+    }
 }
 
 public class StringType : SparkDataType
@@ -180,6 +208,11 @@ public class StringType : SparkDataType
 
             }
         };
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.StringType();
+    }
 }
 
 public class IntegerType : SparkDataType
@@ -193,6 +226,11 @@ public class IntegerType : SparkDataType
         {
             Integer = new DataType.Types.Integer()
         };
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.Int32Type();
+    }
 }
 
 public class BigIntType : SparkDataType
@@ -206,6 +244,11 @@ public class BigIntType : SparkDataType
         {
             Long = new DataType.Types.Long()
         };
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.Int64Type();
+    }
 }
 
 public class MapType : SparkDataType
@@ -228,6 +271,11 @@ public class MapType : SparkDataType
                 ValueType = _valueType.ToDataType()
             }
         };
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.DictionaryType(_keyType.ToArrowType(), _valueType.ToArrowType(), false);
+    }
 }
 
 public class ArrayType : SparkDataType
@@ -247,6 +295,11 @@ public class ArrayType : SparkDataType
                 ElementType = _elementType.ToDataType()
             }
         };
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.ListType(_elementType.ToArrowType());
+    }
 
     public override string SimpleString()
     {

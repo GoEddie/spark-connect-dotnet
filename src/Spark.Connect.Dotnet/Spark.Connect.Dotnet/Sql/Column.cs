@@ -53,6 +53,24 @@ public class Column
         return new Column(expression);
     }
 
+    public Column Asc() => new (new Expression()
+    {
+        SortOrder = new Expression.Types.SortOrder()
+        {
+            Child = Expression,
+            Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending
+        }
+    });
+    
+    public Column Desc() => new (new Expression()
+    {
+        SortOrder = new Expression.Types.SortOrder()
+        {
+            Child = Expression,
+            Direction = Expression.Types.SortOrder.Types.SortDirection.Descending
+        }
+    });
+    
     public static Column operator &(Column src, bool value) => src.And(value);
     
     public Column And(bool value)

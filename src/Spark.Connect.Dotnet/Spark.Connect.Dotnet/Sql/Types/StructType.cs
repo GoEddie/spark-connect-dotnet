@@ -1,3 +1,4 @@
+using Apache.Arrow;
 using Apache.Arrow.Types;
 using Google.Protobuf.Collections;
 
@@ -60,6 +61,11 @@ public class StructType : SparkDataType
                 Fields = { fields }
             }
         };
+    }
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.StructType(Fields.Select(field => new Field(field.Name, field.DataType.ToArrowType(), field.Nullable)).ToList());
     }
 }
 

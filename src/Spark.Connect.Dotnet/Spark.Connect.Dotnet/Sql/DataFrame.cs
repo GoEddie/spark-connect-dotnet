@@ -2,16 +2,15 @@ using System.Text;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
-using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
-using Spark.Connect.Dotnet.Sql.Types;
 using BinaryType = Apache.Arrow.Types.BinaryType;
 using BooleanType = Apache.Arrow.Types.BooleanType;
 using DoubleType = Apache.Arrow.Types.DoubleType;
 using IntegerType = Apache.Arrow.Types.IntegerType;
 using StringType = Apache.Arrow.Types.StringType;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
+using static Spark.Connect.Dotnet.Sql.Functions;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -27,7 +26,7 @@ public class DataFrame
         Relation = relation;
         _schema = schema;
     }
-    
+
     protected internal DataFrame(SparkSession session, Relation relation)
     {
         _session = session;
@@ -55,7 +54,7 @@ public class DataFrame
                 {
                     Limit_ = num, Input = Relation
                 }
-            }, 
+            },
         };
 
         return new DataFrame(_session, limitPlan.Root, _schema);
@@ -72,7 +71,7 @@ public class DataFrame
         var result = Task.Run(() => ShowAsync(Relation, numberOfRows, truncate, vertical, _session));
         Wait(result);
     }
-    
+
     /// <summary>
     /// Prints the first `numberOfRows` rows to the console.
     /// </summary>
@@ -82,7 +81,8 @@ public class DataFrame
     /// <param name="vertical">Print output rows vertically (one line per column value).</param>
     /// <param name="sessionId">SessionId to make the call on</param>
     /// <param name="client">`SparkConnectServiceClient` client, must already be connected</param>
-    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical, SparkSession session)
+    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical,
+        SparkSession session)
     {
         var showStringPlan = new Plan
         {
@@ -94,8 +94,9 @@ public class DataFrame
                 }
             }
         };
-        
-        var (outputRelation, schema) = await GrpcInternal.Exec(session.Client, session.Host, session.SessionId, showStringPlan, session.Headers, session.UserContext, session.ClientType);
+
+        var (outputRelation, schema) = await GrpcInternal.Exec(session.Client, session.Host, session.SessionId,
+            showStringPlan, session.Headers, session.UserContext, session.ClientType);
         Console.WriteLine($"{outputRelation} is of type: {schema}");
     }
 
@@ -119,7 +120,7 @@ public class DataFrame
 
         return new DataFrame(_session, relation, _schema);
     }
-    
+
     public DataFrame Select(params Expression[] columns)
     {
         var relation = new Relation()
@@ -147,11 +148,11 @@ public class DataFrame
         {
             Project = new Project()
             {
-                Input = Relation, 
-                
+                Input = Relation,
+
                 Expressions =
                 {
-                    
+
                     columns.Select(p => new Expression()
                     {
                         Literal = new Expression.Types.Literal()
@@ -166,6 +167,82 @@ public class DataFrame
         return new DataFrame(_session, relation, _schema);
     }
 
+    public DataFrame Alias(string alias)
+    {
+        var newRelation = new Relation()
+        {
+            SubqueryAlias = new SubqueryAlias()
+            {
+                Input = this.Relation,
+                Alias = alias
+            }
+        };
+
+        return new DataFrame(_session, newRelation);
+    }
+
+    public DataFrame Cache() => new DataFrame(_session,
+        GrpcInternal.Persist(_session.Client, _session.SessionId, Relation, _session.Headers, _session.UserContext,
+            _session.ClientType, true, "Physical"));
+
+    public DataFrame Checkpoint() => throw new NotImplementedException("Not yet implemented in Apache Spark Connect");
+
+    public DataFrame Coalesce() => Coalesce(1);
+    public DataFrame Coalesce(int numPartitions)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Repartition = new Repartition()
+                {
+                    Input = this.Relation,
+                    NumPartitions = numPartitions
+                }
+            }
+        };
+
+        return new DataFrame(_session,  GrpcInternal.Exec(_session, plan));
+    }
+
+    public DataFrame Repartition(int numPartitions, params Column[] cols)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                RepartitionByExpression = new RepartitionByExpression()
+                {
+                    Input = this.Relation,
+                    NumPartitions = numPartitions,
+                    PartitionExprs =
+                    {
+                        cols.Select(p => p.Expression)
+                    }
+                }
+            }
+        };
+
+        return new DataFrame(_session,  GrpcInternal.Exec(_session, plan));
+    }
+
+    public DataFrame Repartition(params Column[] cols) => Repartition(1, cols);
+
+    public Column ColRegex(string regex)
+    {
+        var expression = new Expression()
+        {
+            UnresolvedRegex = new Expression.Types.UnresolvedRegex()
+            {
+                ColName = regex
+            }
+        };
+
+        return new Column(expression);
+    } 
+    
+    
+    
     /// <summary>
     /// Returns a new `DataFrame` by adding a column or replacing the existing column that has the same name.
     /// The column expression must be an expression over this `DataFrame`; attempting to add a column from some other `DataFrame` will raise an error.
@@ -457,16 +534,7 @@ public class DataFrame
 
     public GroupedData GroupBy(params Column[] cols)
     {
-        var relation = new Relation()
-        {
-            GroupMap = new GroupMap()
-            {
-                Input = Relation,
-                GroupingExpressions = { cols.Select(p => p.Expression) }
-            }
-        };
-
-        return new GroupedData(_session, relation);
+        return new GroupedData(_session, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Groupby);
     }
 
     public DataFrame Agg(Column exprs)
@@ -500,56 +568,64 @@ public class DataFrame
         
         foreach (var column in columns)
         {
-            switch (column.Expression.UnresolvedFunction.FunctionName)
+            if (column.Expression.SortOrder != null)
             {
-                case "asc":
-                    sortColumns.Add(new Expression.Types.SortOrder()
-                    {
-                        Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                        Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
-                        NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
-                    });
-                    break;
-                case "desc":
-                    sortColumns.Add(new Expression.Types.SortOrder()
-                    {
-                        Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                        Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
-                        NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
-                    });
-                    break;
-                case "asc_nulls_last":
-                    sortColumns.Add(new Expression.Types.SortOrder()
-                    {
-                        Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                        Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
-                        NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
-                    });
-                    break;
-                case "asc_nulls_first":
-                    sortColumns.Add(new Expression.Types.SortOrder()
-                    {
-                        Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                        Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
-                        NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsFirst
-                    });
-                    break;
-                case "desc_nulls_last":
-                    sortColumns.Add(new Expression.Types.SortOrder()
-                    {
-                        Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                        Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
-                        NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
-                    });
-                    break;
-                case "desc_nulls_first":
-                    sortColumns.Add(new Expression.Types.SortOrder()
-                    {
-                        Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                        Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
-                        NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsFirst
-                    });
-                    break;
+                sortColumns.Add(column.Expression.SortOrder);
+            }
+
+            if (column.Expression.UnresolvedFunction != null)
+            {
+                switch (column.Expression.UnresolvedFunction.FunctionName)
+                {
+                    case "asc":
+                        sortColumns.Add(new Expression.Types.SortOrder()
+                        {
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
+                            Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
+                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
+                        });
+                        break;
+                    case "desc":
+                        sortColumns.Add(new Expression.Types.SortOrder()
+                        {
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
+                            Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
+                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
+                        });
+                        break;
+                    case "asc_nulls_last":
+                        sortColumns.Add(new Expression.Types.SortOrder()
+                        {
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
+                            Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
+                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
+                        });
+                        break;
+                    case "asc_nulls_first":
+                        sortColumns.Add(new Expression.Types.SortOrder()
+                        {
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
+                            Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
+                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsFirst
+                        });
+                        break;
+                    case "desc_nulls_last":
+                        sortColumns.Add(new Expression.Types.SortOrder()
+                        {
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
+                            Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
+                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
+                        });
+                        break;
+                    case "desc_nulls_first":
+                        sortColumns.Add(new Expression.Types.SortOrder()
+                        {
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
+                            Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
+                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsFirst
+                        });
+                        break;
+                }
             }
         }
         var relation = new Relation()
@@ -617,4 +693,128 @@ public class DataFrame
             return structType;
         }
     }
+
+    public List<string> Columns => Schema.FieldNames();
+
+    public double Corr(string col1, string col2)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Corr = new StatCorr()
+                {
+                    Input = this.Relation, Col1 = col1, Col2 = col2, Method = "pearson"
+                }
+            }
+        };
+
+        var response = new DataFrame(_session, GrpcInternal.Exec(_session, plan)).Collect();
+        return (double) response[0][0];
+    }
+
+    public double Cov(string col1, string col2)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Cov = new StatCov()
+                {
+                    Input = this.Relation, Col1 = col1, Col2 = col2
+                }
+            }
+        };
+
+        var response = new DataFrame(_session, GrpcInternal.Exec(_session, plan)).Collect();
+        return (double) response[0][0];
+    }
+
+    public DataFrame CrossJoin(DataFrame other) => Join(other, new List<string>(), JoinType.Cross);
+    
+    public DataFrame Join(DataFrame other, List<string> on, string how) => Join(other, on, ToJoinType(how));
+    
+    public DataFrame Join(DataFrame other,  List<string> on, JoinType how = JoinType.Unspecified)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Join = new Join()
+                {
+                    JoinType = (Connect.Join.Types.JoinType)(int)how,
+                    Left = this.Relation,
+                    Right = other.Relation,
+                    UsingColumns = { on }
+                }
+            }
+        };
+
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    private JoinType ToJoinType(string type)
+    {
+        if (JoinType.TryParse(type, true, out JoinType jt))
+        {
+            return jt;
+        }
+
+        throw new SparkException($"Unrecognised join type '{type}'");
+    }
+
+    public DataFrame CrossTab(string col1, string col2)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Crosstab = new StatCrosstab()
+                {
+                    Input = Relation,
+                    Col1 = col1, Col2 = col2
+                }
+            }
+        };
+
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public GroupedData Cube(List<string> cols) => Cube(cols.Select(Col).ToList());
+    
+    public GroupedData Cube(params string[] cols) => Cube(cols.Select(Col).ToList());
+    public GroupedData Cube(List<Column> cols)
+    {
+        var relation = new Relation()
+        {
+            GroupMap = new GroupMap()
+            {
+                Input = Relation,
+                GroupingExpressions = {(cols.Select(p => p.Expression)) }
+            }
+        };
+
+        return new GroupedData(_session, Relation,cols.Select(p => p.Expression), Aggregate.Types.GroupType.Cube );
+    }
+    
 }
+
+
+
+public enum JoinType
+{
+    Unspecified = 0,
+    Inner = 1,
+    FullOuter = 2,
+    LeftOuter = 3,
+    RightOuter = 4,
+    LeftAnti = 5,
+    LeftSemi = 6,
+    Cross = 7,
+}
+
+/*
+ * Todo: ApproxQuantiles
+ *
+ *
+ */

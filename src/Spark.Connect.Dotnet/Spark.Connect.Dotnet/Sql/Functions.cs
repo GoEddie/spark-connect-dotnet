@@ -657,6 +657,63 @@ public partial class Functions : FunctionsWrapper
 
     /// <Summary>Radians</Summary>
 	public static Column Radians(Column col) => new(FunctionWrappedCall("radians", false, col));
+
+    /// <Summary>
+    /// Hypot
+    /// Computes ``sqrt(a^2 + b^2)`` without intermediate overflow or underflow.
+    /// </Summary>
+    public static Column Hypot(float col1, float col2 ) => new(FunctionWrappedCall("hypot", false, Lit(col1), Lit(col2)));
+
+    /// <Summary>
+    /// Hypot
+    /// Computes ``sqrt(a^2 + b^2)`` without intermediate overflow or underflow.
+    /// </Summary>
+    public static Column Hypot(string col1, string col2 ) => new(FunctionWrappedCall("hypot", false, Col(col1), Col(col2)));
+
+    /// <Summary>
+    /// Hypot
+    /// Computes ``sqrt(a^2 + b^2)`` without intermediate overflow or underflow.
+    /// </Summary>
+    public static Column Hypot(Column col1, Column col2 ) => new(FunctionWrappedCall("hypot", false, col1, col2));
+
+
+    /// <Summary>
+    /// Pow
+    /// Returns the value of the first argument raised to the power of the second argument.
+    /// </Summary>
+    public static Column Pow(float col1, float col2 ) => new(FunctionWrappedCall("pow", false, Lit(col1), Lit(col2)));
+
+    /// <Summary>
+    /// Pow
+    /// Returns the value of the first argument raised to the power of the second argument.
+    /// </Summary>
+    public static Column Pow(string col1, string col2 ) => new(FunctionWrappedCall("pow", false, Col(col1), Col(col2)));
+
+    /// <Summary>
+    /// Pow
+    /// Returns the value of the first argument raised to the power of the second argument.
+    /// </Summary>
+    public static Column Pow(Column col1, Column col2 ) => new(FunctionWrappedCall("pow", false, col1, col2));
+
+
+    /// <Summary>
+    /// Pmod
+    /// Returns the positive value of dividend mod divisor.
+    /// </Summary>
+    public static Column Pmod(float dividend, float divisor ) => new(FunctionWrappedCall("pmod", false, Lit(dividend), Lit(divisor)));
+
+    /// <Summary>
+    /// Pmod
+    /// Returns the positive value of dividend mod divisor.
+    /// </Summary>
+    public static Column Pmod(string dividend, string divisor ) => new(FunctionWrappedCall("pmod", false, Col(dividend), Col(divisor)));
+
+    /// <Summary>
+    /// Pmod
+    /// Returns the positive value of dividend mod divisor.
+    /// </Summary>
+    public static Column Pmod(Column dividend, Column divisor ) => new(FunctionWrappedCall("pmod", false, dividend, divisor));
+
 	/// <Summary>RowNumber</Summary>
 	public static Column RowNumber() => new(FunctionWrappedCall("row_number", false));
     
@@ -774,6 +831,46 @@ public partial class Functions : FunctionsWrapper
     /// Returns col1 if it is not NaN, or col2 if col1 is NaN.
     /// </Summary>    
 	public static Column Nanvl(Column col1, Column col2) => new(FunctionWrappedCall("nanvl", false, col1, col2));
+
+
+    /// <Summary>
+    /// Rand
+    /// </Summary>
+    /// <Gen>SingleOptionalArgBasicType::rand</Gen>
+    public static Column Rand() => new(FunctionWrappedCall("rand", false));
+
+    /// <Summary>
+    /// Rand
+    /// </Summary>
+    /// <Gen>SingleOptionalArgBasicType::rand</Gen>
+	public static Column Rand(int seed) => new(FunctionWrappedCall("rand", false, Lit(seed)));
+
+    /// <Summary>
+    /// Rand
+    /// </Summary>
+    /// <Gen>SingleOptionalArgBasicType::rand</Gen>
+	public static Column Rand(Column seed) => new(FunctionWrappedCall("rand", false, seed));
+
+
+
+    /// <Summary>
+    /// Randn
+    /// </Summary>
+    /// <Gen>SingleOptionalArgBasicType::randn</Gen>
+    public static Column Randn() => new(FunctionWrappedCall("randn", false));
+
+    /// <Summary>
+    /// Randn
+    /// </Summary>
+    /// <Gen>SingleOptionalArgBasicType::randn</Gen>
+	public static Column Randn(int seed) => new(FunctionWrappedCall("randn", false, Lit(seed)));
+
+    /// <Summary>
+    /// Randn
+    /// </Summary>
+    /// <Gen>SingleOptionalArgBasicType::randn</Gen>
+	public static Column Randn(Column seed) => new(FunctionWrappedCall("randn", false, seed));
+
 
 
     /// <Summary>
@@ -933,6 +1030,93 @@ public partial class Functions : FunctionsWrapper
     /// <Summary>Factorial</Summary>
 	public static Column Factorial(Column col) => new(FunctionWrappedCall("factorial", false, col));
 
+    /// <Summary>
+    /// AnyValue
+    /// Returns some value of `col` for a group of rows.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::any_value</Gen>
+    public static Column AnyValue(string col, bool ignoreNulls ) => new(FunctionWrappedCall("any_value", false, Col(col), Lit(ignoreNulls)));
+
+    /// <Summary>
+    /// AnyValue
+    /// Returns some value of `col` for a group of rows.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column AnyValue(Column col, bool ignoreNulls ) => new(FunctionWrappedCall("any_value", false, col, Lit(ignoreNulls)));
+
+    /// <Summary>
+    /// AnyValue
+    /// Returns some value of `col` for a group of rows.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column AnyValue(Column col, Column ignoreNulls ) => new(FunctionWrappedCall("any_value", false, col, ignoreNulls));
+
+    /// <Summary>
+    /// AnyValue
+    /// Returns some value of `col` for a group of rows.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column AnyValue(string col, Column ignoreNulls ) => new(FunctionWrappedCall("any_value", false, Col(col), ignoreNulls));
+
+
+    /// <Summary>
+    /// FirstValue
+    /// Returns the first value of `col` for a group of rows. It will return the first non-null value it sees when `ignoreNulls` is set to true. If all values are null, then null is returned.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::first_value</Gen>
+    public static Column FirstValue(string col, bool ignoreNulls ) => new(FunctionWrappedCall("first_value", false, Col(col), Lit(ignoreNulls)));
+
+    /// <Summary>
+    /// FirstValue
+    /// Returns the first value of `col` for a group of rows. It will return the first non-null value it sees when `ignoreNulls` is set to true. If all values are null, then null is returned.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column FirstValue(Column col, bool ignoreNulls ) => new(FunctionWrappedCall("first_value", false, col, Lit(ignoreNulls)));
+
+    /// <Summary>
+    /// FirstValue
+    /// Returns the first value of `col` for a group of rows. It will return the first non-null value it sees when `ignoreNulls` is set to true. If all values are null, then null is returned.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column FirstValue(Column col, Column ignoreNulls ) => new(FunctionWrappedCall("first_value", false, col, ignoreNulls));
+
+    /// <Summary>
+    /// FirstValue
+    /// Returns the first value of `col` for a group of rows. It will return the first non-null value it sees when `ignoreNulls` is set to true. If all values are null, then null is returned.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column FirstValue(string col, Column ignoreNulls ) => new(FunctionWrappedCall("first_value", false, Col(col), ignoreNulls));
+
+
+    /// <Summary>
+    /// LastValue
+    /// Returns the last value of `col` for a group of rows. It will return the last non-null value it sees when `ignoreNulls` is set to true. If all values are null, then null is returned.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::last_value</Gen>
+    public static Column LastValue(string col, bool ignoreNulls ) => new(FunctionWrappedCall("last_value", false, Col(col), Lit(ignoreNulls)));
+
+    /// <Summary>
+    /// LastValue
+    /// Returns the last value of `col` for a group of rows. It will return the last non-null value it sees when `ignoreNulls` is set to true. If all values are null, then null is returned.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column LastValue(Column col, bool ignoreNulls ) => new(FunctionWrappedCall("last_value", false, col, Lit(ignoreNulls)));
+
+    /// <Summary>
+    /// LastValue
+    /// Returns the last value of `col` for a group of rows. It will return the last non-null value it sees when `ignoreNulls` is set to true. If all values are null, then null is returned.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column LastValue(Column col, Column ignoreNulls ) => new(FunctionWrappedCall("last_value", false, col, ignoreNulls));
+
+    /// <Summary>
+    /// LastValue
+    /// Returns the last value of `col` for a group of rows. It will return the last non-null value it sees when `ignoreNulls` is set to true. If all values are null, then null is returned.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column LastValue(string col, Column ignoreNulls ) => new(FunctionWrappedCall("last_value", false, Col(col), ignoreNulls));
+
+
     /// <Summary>CountIf</Summary>
     public static Column CountIf(string col) => new(FunctionWrappedCall("count_if", false, col));
 
@@ -961,6 +1145,35 @@ public partial class Functions : FunctionsWrapper
 	/// <Summary>Localtimestamp</Summary>
 	public static Column Localtimestamp() => new(FunctionWrappedCall("localtimestamp", false));
     
+
+
+    /// <Summary>
+    /// DateFormat
+    /// Converts a date/timestamp/string to a value of string in the format specified by the date format given by the second argument.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::date_format</Gen>
+    public static Column DateFormat(string date, string format ) => new(FunctionWrappedCall("date_format", false, Col(date), Lit(format)));
+
+    /// <Summary>
+    /// DateFormat
+    /// Converts a date/timestamp/string to a value of string in the format specified by the date format given by the second argument.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column DateFormat(Column date, string format ) => new(FunctionWrappedCall("date_format", false, date, Lit(format)));
+
+    /// <Summary>
+    /// DateFormat
+    /// Converts a date/timestamp/string to a value of string in the format specified by the date format given by the second argument.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column DateFormat(Column date, Column format ) => new(FunctionWrappedCall("date_format", false, date, format));
+
+    /// <Summary>
+    /// DateFormat
+    /// Converts a date/timestamp/string to a value of string in the format specified by the date format given by the second argument.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column DateFormat(string date, Column format ) => new(FunctionWrappedCall("date_format", false, Col(date), format));
 
 
     /// <Summary>Year</Summary>
@@ -1110,11 +1323,127 @@ public partial class Functions : FunctionsWrapper
     /// <Summary>ToTimestamp</Summary>
 	public static Column ToTimestamp(Column col) => new(FunctionWrappedCall("to_timestamp", false, col));
 
+    /// <Summary>
+    /// ToTimestamp
+    /// 
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::to_timestamp</Gen>
+    public static Column ToTimestamp(string col, string format ) => new(FunctionWrappedCall("to_timestamp", false, Col(col), Lit(format)));
+
+    /// <Summary>
+    /// ToTimestamp
+    /// 
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column ToTimestamp(Column col, string format ) => new(FunctionWrappedCall("to_timestamp", false, col, Lit(format)));
+
+    /// <Summary>
+    /// ToTimestamp
+    /// 
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column ToTimestamp(Column col, Column format ) => new(FunctionWrappedCall("to_timestamp", false, col, format));
+
+    /// <Summary>
+    /// ToTimestamp
+    /// 
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column ToTimestamp(string col, Column format ) => new(FunctionWrappedCall("to_timestamp", false, Col(col), format));
+
+
+    /// <Summary>
+    /// Trunc
+    /// Returns date truncated to the unit specified by the format.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::trunc</Gen>
+    public static Column Trunc(string date, string format ) => new(FunctionWrappedCall("trunc", false, Col(date), Lit(format)));
+
+    /// <Summary>
+    /// Trunc
+    /// Returns date truncated to the unit specified by the format.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Trunc(Column date, string format ) => new(FunctionWrappedCall("trunc", false, date, Lit(format)));
+
+    /// <Summary>
+    /// Trunc
+    /// Returns date truncated to the unit specified by the format.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Trunc(Column date, Column format ) => new(FunctionWrappedCall("trunc", false, date, format));
+
+    /// <Summary>
+    /// Trunc
+    /// Returns date truncated to the unit specified by the format.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Trunc(string date, Column format ) => new(FunctionWrappedCall("trunc", false, Col(date), format));
+
+
+    /// <Summary>
+    /// NextDay
+    /// Returns the first date which is later than the value of the date column based on second `week day` argument.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::next_day</Gen>
+    public static Column NextDay(string date, string dayOfWeek ) => new(FunctionWrappedCall("next_day", false, Col(date), Lit(dayOfWeek)));
+
+    /// <Summary>
+    /// NextDay
+    /// Returns the first date which is later than the value of the date column based on second `week day` argument.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column NextDay(Column date, string dayOfWeek ) => new(FunctionWrappedCall("next_day", false, date, Lit(dayOfWeek)));
+
+    /// <Summary>
+    /// NextDay
+    /// Returns the first date which is later than the value of the date column based on second `week day` argument.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column NextDay(Column date, Column dayOfWeek ) => new(FunctionWrappedCall("next_day", false, date, dayOfWeek));
+
+    /// <Summary>
+    /// NextDay
+    /// Returns the first date which is later than the value of the date column based on second `week day` argument.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column NextDay(string date, Column dayOfWeek ) => new(FunctionWrappedCall("next_day", false, Col(date), dayOfWeek));
+
+
     /// <Summary>LastDay</Summary>
     public static Column LastDay(string col) => new(FunctionWrappedCall("last_day", false, col));
 
     /// <Summary>LastDay</Summary>
 	public static Column LastDay(Column col) => new(FunctionWrappedCall("last_day", false, col));
+
+    /// <Summary>
+    /// FromUnixtime
+    /// Converts the number of seconds from unix epoch (1970-01-01 00:00:00 UTC) to a string representing the timestamp of that moment in the current system time zone in the given format.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::from_unixtime</Gen>
+    public static Column FromUnixtime(string timestamp, string format ) => new(FunctionWrappedCall("from_unixtime", false, Col(timestamp), Lit(format)));
+
+    /// <Summary>
+    /// FromUnixtime
+    /// Converts the number of seconds from unix epoch (1970-01-01 00:00:00 UTC) to a string representing the timestamp of that moment in the current system time zone in the given format.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column FromUnixtime(Column timestamp, string format ) => new(FunctionWrappedCall("from_unixtime", false, timestamp, Lit(format)));
+
+    /// <Summary>
+    /// FromUnixtime
+    /// Converts the number of seconds from unix epoch (1970-01-01 00:00:00 UTC) to a string representing the timestamp of that moment in the current system time zone in the given format.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column FromUnixtime(Column timestamp, Column format ) => new(FunctionWrappedCall("from_unixtime", false, timestamp, format));
+
+    /// <Summary>
+    /// FromUnixtime
+    /// Converts the number of seconds from unix epoch (1970-01-01 00:00:00 UTC) to a string representing the timestamp of that moment in the current system time zone in the given format.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column FromUnixtime(string timestamp, Column format ) => new(FunctionWrappedCall("from_unixtime", false, Col(timestamp), format));
+
 	/// <Summary>UnixTimestamp</Summary>
 	public static Column UnixTimestamp() => new(FunctionWrappedCall("unix_timestamp", false));
     
@@ -1251,6 +1580,64 @@ public partial class Functions : FunctionsWrapper
 	public static Column Trim(Column col) => new(FunctionWrappedCall("trim", false, col));
 
     /// <Summary>
+    /// Decode
+    /// Computes the first argument into a string from a binary using the provided character set (one of 'US-ASCII', 'ISO-8859-1', 'UTF-8', 'UTF-16BE', 'UTF-16LE', 'UTF-16').
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::decode</Gen>
+    public static Column Decode(string col, string charset ) => new(FunctionWrappedCall("decode", false, Col(col), Lit(charset)));
+
+    /// <Summary>
+    /// Decode
+    /// Computes the first argument into a string from a binary using the provided character set (one of 'US-ASCII', 'ISO-8859-1', 'UTF-8', 'UTF-16BE', 'UTF-16LE', 'UTF-16').
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Decode(Column col, string charset ) => new(FunctionWrappedCall("decode", false, col, Lit(charset)));
+
+    /// <Summary>
+    /// Decode
+    /// Computes the first argument into a string from a binary using the provided character set (one of 'US-ASCII', 'ISO-8859-1', 'UTF-8', 'UTF-16BE', 'UTF-16LE', 'UTF-16').
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Decode(Column col, Column charset ) => new(FunctionWrappedCall("decode", false, col, charset));
+
+    /// <Summary>
+    /// Decode
+    /// Computes the first argument into a string from a binary using the provided character set (one of 'US-ASCII', 'ISO-8859-1', 'UTF-8', 'UTF-16BE', 'UTF-16LE', 'UTF-16').
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Decode(string col, Column charset ) => new(FunctionWrappedCall("decode", false, Col(col), charset));
+
+
+    /// <Summary>
+    /// Encode
+    /// Computes the first argument into a binary from a string using the provided character set (one of 'US-ASCII', 'ISO-8859-1', 'UTF-8', 'UTF-16BE', 'UTF-16LE', 'UTF-16').
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::encode</Gen>
+    public static Column Encode(string col, string charset ) => new(FunctionWrappedCall("encode", false, Col(col), Lit(charset)));
+
+    /// <Summary>
+    /// Encode
+    /// Computes the first argument into a binary from a string using the provided character set (one of 'US-ASCII', 'ISO-8859-1', 'UTF-8', 'UTF-16BE', 'UTF-16LE', 'UTF-16').
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Encode(Column col, string charset ) => new(FunctionWrappedCall("encode", false, col, Lit(charset)));
+
+    /// <Summary>
+    /// Encode
+    /// Computes the first argument into a binary from a string using the provided character set (one of 'US-ASCII', 'ISO-8859-1', 'UTF-8', 'UTF-16BE', 'UTF-16LE', 'UTF-16').
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Encode(Column col, Column charset ) => new(FunctionWrappedCall("encode", false, col, charset));
+
+    /// <Summary>
+    /// Encode
+    /// Computes the first argument into a binary from a string using the provided character set (one of 'US-ASCII', 'ISO-8859-1', 'UTF-8', 'UTF-16BE', 'UTF-16LE', 'UTF-16').
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Encode(string col, Column charset ) => new(FunctionWrappedCall("encode", false, Col(col), charset));
+
+
+    /// <Summary>
     /// FormatNumber
     /// Formats the number X to a format like '#,--#,--#.--', rounded to d decimal places with HALF_EVEN round mode, and returns the result as a string.
     /// </Summary>
@@ -1261,6 +1648,35 @@ public partial class Functions : FunctionsWrapper
     /// Formats the number X to a format like '#,--#,--#.--', rounded to d decimal places with HALF_EVEN round mode, and returns the result as a string.
     /// </Summary>
     public static Column FormatNumber(Column col, Column d) => new(FunctionWrappedCall("format_number", false, col, d));
+
+    /// <Summary>
+    /// Instr
+    /// Locate the position of the first occurrence of substr column in the given string. Returns null if either of the arguments are null.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::instr</Gen>
+    public static Column Instr(string str, string substr ) => new(FunctionWrappedCall("instr", false, Col(str), Lit(substr)));
+
+    /// <Summary>
+    /// Instr
+    /// Locate the position of the first occurrence of substr column in the given string. Returns null if either of the arguments are null.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Instr(Column str, string substr ) => new(FunctionWrappedCall("instr", false, str, Lit(substr)));
+
+    /// <Summary>
+    /// Instr
+    /// Locate the position of the first occurrence of substr column in the given string. Returns null if either of the arguments are null.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Instr(Column str, Column substr ) => new(FunctionWrappedCall("instr", false, str, substr));
+
+    /// <Summary>
+    /// Instr
+    /// Locate the position of the first occurrence of substr column in the given string. Returns null if either of the arguments are null.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column Instr(string str, Column substr ) => new(FunctionWrappedCall("instr", false, Col(str), substr));
+
 
     /// <Summary>
     /// Repeat
@@ -1735,6 +2151,35 @@ public partial class Functions : FunctionsWrapper
     /// <Summary>InlineOuter</Summary>
 	public static Column InlineOuter(Column col) => new(FunctionWrappedCall("inline_outer", false, col));
 
+    /// <Summary>
+    /// GetJsonObject
+    /// Extracts json object from a json string based on json `path` specified, and returns json string of the extracted json object. It will return null if the input json string is invalid.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::get_json_object</Gen>
+    public static Column GetJsonObject(string col, string path ) => new(FunctionWrappedCall("get_json_object", false, Col(col), Lit(path)));
+
+    /// <Summary>
+    /// GetJsonObject
+    /// Extracts json object from a json string based on json `path` specified, and returns json string of the extracted json object. It will return null if the input json string is invalid.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column GetJsonObject(Column col, string path ) => new(FunctionWrappedCall("get_json_object", false, col, Lit(path)));
+
+    /// <Summary>
+    /// GetJsonObject
+    /// Extracts json object from a json string based on json `path` specified, and returns json string of the extracted json object. It will return null if the input json string is invalid.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column GetJsonObject(Column col, Column path ) => new(FunctionWrappedCall("get_json_object", false, col, path));
+
+    /// <Summary>
+    /// GetJsonObject
+    /// Extracts json object from a json string based on json `path` specified, and returns json string of the extracted json object. It will return null if the input json string is invalid.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column GetJsonObject(string col, Column path ) => new(FunctionWrappedCall("get_json_object", false, Col(col), path));
+
+
     /// <Summary>JsonArrayLength</Summary>
     public static Column JsonArrayLength(string col) => new(FunctionWrappedCall("json_array_length", false, col));
 
@@ -1899,6 +2344,35 @@ public partial class Functions : FunctionsWrapper
 
 
     /// <Summary>
+    /// HllUnionAgg
+    /// Aggregate function: returns the updatable binary representation of the Datasketches HllSketch, generated by merging previously created Datasketches HllSketch instances via a Datasketches Union instance. Throws an exception if sketches have different lgConfigK values and allowDifferentLgConfigK is unset or set to false.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::hll_union_agg</Gen>
+    public static Column HllUnionAgg(string col, bool allowDifferentLgConfigK ) => new(FunctionWrappedCall("hll_union_agg", false, Col(col), Lit(allowDifferentLgConfigK)));
+
+    /// <Summary>
+    /// HllUnionAgg
+    /// Aggregate function: returns the updatable binary representation of the Datasketches HllSketch, generated by merging previously created Datasketches HllSketch instances via a Datasketches Union instance. Throws an exception if sketches have different lgConfigK values and allowDifferentLgConfigK is unset or set to false.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column HllUnionAgg(Column col, bool allowDifferentLgConfigK ) => new(FunctionWrappedCall("hll_union_agg", false, col, Lit(allowDifferentLgConfigK)));
+
+    /// <Summary>
+    /// HllUnionAgg
+    /// Aggregate function: returns the updatable binary representation of the Datasketches HllSketch, generated by merging previously created Datasketches HllSketch instances via a Datasketches Union instance. Throws an exception if sketches have different lgConfigK values and allowDifferentLgConfigK is unset or set to false.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column HllUnionAgg(Column col, Column allowDifferentLgConfigK ) => new(FunctionWrappedCall("hll_union_agg", false, col, allowDifferentLgConfigK));
+
+    /// <Summary>
+    /// HllUnionAgg
+    /// Aggregate function: returns the updatable binary representation of the Datasketches HllSketch, generated by merging previously created Datasketches HllSketch instances via a Datasketches Union instance. Throws an exception if sketches have different lgConfigK values and allowDifferentLgConfigK is unset or set to false.
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column HllUnionAgg(string col, Column allowDifferentLgConfigK ) => new(FunctionWrappedCall("hll_union_agg", false, Col(col), allowDifferentLgConfigK));
+
+
+    /// <Summary>
     /// Ifnull
     /// Returns `col2` if `col1` is null, or `col1` otherwise.
     /// </Summary>
@@ -2035,6 +2509,35 @@ public partial class Functions : FunctionsWrapper
 
     /// <Summary>BitmapOrAgg</Summary>
 	public static Column BitmapOrAgg(Column col) => new(FunctionWrappedCall("bitmap_or_agg", false, col));
+
+    /// <Summary>
+    /// CheckField
+    /// 
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction::check_field</Gen>
+    public static Column CheckField(string field, string fieldName ) => new(FunctionWrappedCall("check_field", false, Col(field), Lit(fieldName)));
+
+    /// <Summary>
+    /// CheckField
+    /// 
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column CheckField(Column field, string fieldName ) => new(FunctionWrappedCall("check_field", false, field, Lit(fieldName)));
+
+    /// <Summary>
+    /// CheckField
+    /// 
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column CheckField(Column field, Column fieldName ) => new(FunctionWrappedCall("check_field", false, field, fieldName));
+
+    /// <Summary>
+    /// CheckField
+    /// 
+    /// </Summary>
+    /// <Gen>TwoArgColumnOrNameThenSimpleTypeFunction</Gen>
+    public static Column CheckField(string field, Column fieldName ) => new(FunctionWrappedCall("check_field", false, Col(field), fieldName));
+
 
 }
 

@@ -1,10 +1,18 @@
+using System.Collections;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
+using Apache.Arrow.Types;
 using Google.Protobuf;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.Sql.Types;
+using Array = Apache.Arrow.Array;
+using BinaryType = Apache.Arrow.Types.BinaryType;
+using BooleanType = Apache.Arrow.Types.BooleanType;
+using DoubleType = Apache.Arrow.Types.DoubleType;
 using StringType = Apache.Arrow.Types.StringType;
+using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -185,13 +193,15 @@ public class SparkSession
         var stream = new MemoryStream();
         var arrowSchema = new Schema(new List<Field>()
         {
-            new Field("col_a", new StringType(), false)
+            new Field("col_a", new StringType(), false),
+            new Field("col_b", new Int32Type(), false)
         },new List<KeyValuePair<string, string>>());
         
         var writer = new ArrowStreamWriter(stream, arrowSchema);
 
         var batch = new RecordBatch.Builder()
             .Append("cola", false, col => col.String(array => array.AppendRange(cola)))
+            .Append("colb", false, col => col.Int32(array => array.AppendRange(colb)))
             .Build();
         
         writer.WriteStart();
@@ -217,4 +227,167 @@ public class SparkSession
         );
         return new DataFrame(this, relation, schema);
     }
+
+    public DataFrame CreateDataFrame(List<(object, object)> rows)
+    {
+        if (rows.Count == 0)
+        {
+            throw new SparkException("Cannot CreateDataFrame with no rows");
+        }
+        
+        var first = rows.First();
+        
+        var fields = new List<StructField>();
+        fields.Add(new StructField("_1", SparkDataType.FromString(first.Item1.GetType().Name), true));
+        fields.Add(new StructField("_2", SparkDataType.FromString(first.Item2.GetType().Name), true));
+        var schema = new StructType(fields.ToArray());
+        
+        var data = new List<IList<object>>();
+        foreach (var row in rows)
+        {
+            data.Add(new List<object>(){row.Item1, row.Item2});
+        }
+
+        return CreateDataFrame(data, schema);
+    }
+    
+    public DataFrame CreateDataFrame(List<Dictionary<string, object>> rows)
+    {
+        if (rows.Count == 0)
+        {
+            throw new SparkException("Cannot CreateDataFrame with no rows");
+        }
+
+        var first = rows.First();
+        var fields = new List<StructField>();
+        foreach (var key in first.Keys)
+        {
+            fields.Add(new StructField(key, SparkDataType.FromString(first[key].GetType().Name), true));
+        }
+        
+        var schema = new StructType(fields.ToArray());
+        var data = new List<IList<object>>();
+        foreach (var row in rows)
+        {
+            var newRow = new List<object>();
+            
+            foreach (var key in first.Keys)
+            {
+                newRow.Add(row[key]);
+            }
+
+            data.Add(newRow);
+        }
+
+        return CreateDataFrame(data, schema);
+    }
+    
+    public DataFrame CreateDataFrame(IList<IList<object>> data, StructType schema)
+    {
+        var columns = DataToColumns(data);
+        var schemaFields = schema.Fields.Select(field => new Field(field.Name, field.DataType.ToArrowType(), field.Nullable)).ToList();
+        var arrowSchema = new Schema(schemaFields, new List<KeyValuePair<string, string>>());
+        var stream = new MemoryStream();
+        var writer = new ArrowStreamWriter(stream, arrowSchema);
+
+        var batchBuilder = new RecordBatch.Builder();
+        var i = 0;
+        foreach(var schemaCol in schemaFields)
+        {
+            var column = columns[i++];
+            switch (schemaCol.DataType)
+            {
+                case StringType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.String(builder => builder.AppendRange(column)));
+                    break;
+                case Int32Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Int32(builder => builder.AppendRange(column)));
+                    break;
+                case DoubleType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Double(builder => builder.AppendRange(column)));
+                    break;
+                case Int8Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Int8(builder => builder.AppendRange(column)));
+                    break;
+                case Int64Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Int64(builder => builder.AppendRange(column)));
+                    break;
+                case BinaryType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Binary(builder => builder.AppendRange(column)));
+                    break;
+                case BooleanType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Boolean(builder => builder.AppendRange(column)));
+                    break;
+                
+                default:
+                    throw new SparkException($"Need Arrow Type for Builder: {schemaCol.DataType}");
+            }
+        }
+
+        var batch = batchBuilder.Build();
+        
+        writer.WriteStart();
+        writer.WriteRecordBatch(batch);
+        writer.WriteEnd();
+        
+        stream.Position = 0;
+        
+        var createdRelation = new LocalRelation()
+        {
+            Data = ByteString.FromStream(stream)
+        };
+            
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                LocalRelation = createdRelation
+            }
+        };
+        
+        var relation = GrpcInternal.Exec(this, plan);
+        return new DataFrame(this, relation);
+    }
+    
+
+    private dynamic DataToColumns(IList<IList<object>> data)
+    {
+        if (!data.Any())
+        {
+            throw new SparkException("Cannot create a dataframe without any rows");
+        }
+        
+        var firstRow = data.First();
+        var columns = new List<IList>();
+        
+        foreach (var column in firstRow)
+        {
+            var newColumn = CreateGenericList(column.GetType());
+            columns.Add(newColumn);
+        }
+
+        foreach (var row in data)
+        {
+            for (var i = 0; i < columns.Count(); i++)
+            {
+                columns[i].Add(row[i]);
+            }
+        }
+
+        return columns;
+    }
+    
+    private static IList CreateGenericList(Type elementType)
+    {   //ChatGPT generated
+        var listType = typeof(List<>);
+
+        // Make the generic type by using the elementType
+        var constructedListType = listType.MakeGenericType(elementType);
+
+        // Create an instance of the list
+        var instance = (IList)Activator.CreateInstance(constructedListType);
+
+        return instance;
+    }
+
 }
