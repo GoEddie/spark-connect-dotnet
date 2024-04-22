@@ -90,10 +90,15 @@ public class CustomTestFramework : XunitTestFramework
             try
             {
                 var task = base.RunTestCaseAsync(testCase);
-                var taskCompleted = Task.WaitAny(new []{task}, TimeSpan.FromSeconds(30));
+                var taskCompleted = Task.WaitAny(new []{task}, TimeSpan.FromSeconds(10));
                 //var result = await base.RunTestCaseAsync(testCase);
+                if (-1 == taskCompleted)
+                {
+                    throw new TimeoutException($"Test {test} timed out");
+                }
+                
                 var result = task.Result;
-
+                
                 var status = result.Failed > 0 
                     ? "FAILURE" 
                     : (result.Skipped > 0 ? "SKIPPED" : "SUCCESS");
