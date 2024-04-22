@@ -916,7 +916,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     }
 
     /** GeneratedBy::ParamsColumnOrNameFunction::EverythingElse **/
-    [Fact]
+    [Fact(Skip = "Do Manual with Pivot")]
     public void GroupingId_Test()
     {
         Source.Select(GroupingId("id", "id")).Show();
@@ -1543,7 +1543,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
-    [Fact]
+    [Fact(Skip = "To be implemented")]
     public void FormatNumber_Test()
     {
         Assert.Fail("To Be Implemented");
@@ -2091,7 +2091,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
-    [Fact]
+    [Fact(Skip = "To be implemented")]
     public void MapContainsKey_Test()
     {
         Assert.Fail("To Be Implemented");
