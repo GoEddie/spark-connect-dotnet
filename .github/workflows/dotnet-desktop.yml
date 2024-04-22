@@ -28,7 +28,10 @@ jobs:
         dotnet-version: '7.0'  # Specify your .NET Core version here
     
     - name: Print current directory
-      run: pwd && ls
+      run: pwd
+
+    - name: Print current directory listing
+      run: ls -a
 
     - name: Install dependencies
       working-directory: ./src/Spark.Connect.Dotnet/
