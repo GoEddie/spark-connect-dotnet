@@ -62,9 +62,10 @@ jobs:
       working-directory: ./src/Spark.Connect.Dotnet/
       run: dotnet build --configuration Release --no-restore
 
-      
+
     # Execute all unit tests in the solution
     - name: Execute unit tests
+      working-directory: ./src/Spark.Connect.Dotnet/test/Spark.Connect.Dotnet.Tests/
       run: dotnet test
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
