@@ -4,6 +4,7 @@ using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
+using Spark.Connect.Dotnet.Sql.Streaming;
 using BinaryType = Apache.Arrow.Types.BinaryType;
 using BooleanType = Apache.Arrow.Types.BooleanType;
 using DoubleType = Apache.Arrow.Types.DoubleType;
@@ -796,7 +797,9 @@ public class DataFrame
 
         return new GroupedData(_session, Relation,cols.Select(p => p.Expression), Aggregate.Types.GroupType.Cube );
     }
-    
+
+    public DataStreamWriter WriteStream() => new DataStreamWriter(_session, this.Relation);
+
 }
 
 

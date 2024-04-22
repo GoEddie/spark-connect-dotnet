@@ -76,11 +76,10 @@ public class DataFrame_Tests : E2ETestBase
     }
     
     [Fact]
-    public async Task CubwwweTest()
+    public void VersionTest()
     {
-        var df = await Spark.a();
-        df.Show();
-
+        var df = Spark.Version();
+        Console.WriteLine($"SPARK Version: {df}");
     }
     
 }

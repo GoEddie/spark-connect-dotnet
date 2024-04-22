@@ -6,6 +6,7 @@ using Google.Protobuf;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.Sql.Streaming;
 using Spark.Connect.Dotnet.Sql.Types;
 using Array = Apache.Arrow.Array;
 using BinaryType = Apache.Arrow.Types.BinaryType;
@@ -390,4 +391,18 @@ public class SparkSession
         return instance;
     }
 
+    /// <summary>
+    /// Does nothing.
+    /// </summary>
+    public void Stop()
+    {
+        
+    }
+    
+    public string Version()
+    {
+        return GrpcInternal.Version(this);
+    }
+
+    public DataStreamReader ReadStream() => new DataStreamReader(this);
 }

@@ -5,23 +5,23 @@ namespace Spark.Connect.Dotnet.Sql;
 public class Row
 {
     private readonly StructType _schema;
-    private readonly List<object> _data;
+    public readonly List<object> Data;
 
     public Row(StructType schema, params object[] data)
     {
         _schema = schema;
-        _data = data.ToList();
+        Data = data.ToList();
     }
 
     public Row(params Tuple<string, object>[] data)
     {
         var fields = new List<StructField>();
-        _data = new List<object>();
+        Data = new List<object>();
         
         foreach (var tuple in data)
         {
             fields.Add(new StructField(tuple.Item1, SparkDataType.FromString(tuple.Item2.GetType().Name), true));
-            _data.Add(tuple.Item2);
+            Data.Add(tuple.Item2);
         }
         
         _schema = new StructType(fields.ToArray());
@@ -32,7 +32,7 @@ public class Row
         var data = "";
         for (var i = 0; i < _schema.Fields.Count; i++)
         {
-            data += ($"{_schema.Fields[0].Name}={_data[i]}, ");
+            data += ($"{_schema.Fields[0].Name}={Data[i]}, ");
         }
 
         return $"Row({data})";
