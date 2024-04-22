@@ -142,13 +142,32 @@ public class DataFrameReader
                 }
             }
         };
-                                                            //TODO: What do we do here?? - not sure how we will know the schema??
-        return new DataFrame(_session, plan.Root, new DataType());
+                                                            
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrameReader Format(string format)
     {
         _format = format;
         return this;
+    }
+
+    public DataFrame Table(string name)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Read = new Read()
+                {
+                    NamedTable = new Read.Types.NamedTable()
+                    {
+                        UnparsedIdentifier = name
+                    }
+                }
+            }
+        };
+        
+        return new DataFrame(_session, plan.Root);
     }
 }

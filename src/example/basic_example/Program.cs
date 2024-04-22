@@ -16,9 +16,6 @@ var dataFrame2 = dataFrame
 
 dataFrame2.Show();
 
-var dfFromCreate = await spark.a();
-dfFromCreate.Show();    
-
 var dfFromSl = await spark.SqlAsync("SELECT *, id + 10, 'Hello' as abc, id * 10 m2 FROM range(100) union SELECT *, id + 10, 'Hello' as abc, id * 10 m2 FROM range(100)");
 dfFromSl.Show();
 dfFromSl.CreateOrReplaceTempView("table_a");
@@ -51,5 +48,16 @@ dataFrame2
     .Write(parquetPath);
 
 Console.WriteLine($"Wrote Parquet to '{parquetPath}'");
+
+Console.WriteLine("Sturctured Streaming ");
+
+var sq = spark.ReadStream().Format("rate").Load().WriteStream().Format("memory").QueryName("this_query").Start();
+var sqm = spark.Streams;
+foreach (var query in sqm.Active.ToList())
+{
+    query.Stop();
+}
+
+
 
 Console.WriteLine("Finished");

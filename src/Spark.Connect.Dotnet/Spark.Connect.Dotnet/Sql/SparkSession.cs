@@ -171,64 +171,6 @@ public class SparkSession
         return new DataFrame(this, relation, schema);
     }
 
-    public async Task<DataFrame>  a()
-    {
-        var list = new List<List<object>>()
-        {
-            new List<object>() { "hello1", 100 },
-            new List<object>() { "hello2", 200 },
-            new List<object>() { "hello3", 300 },
-        };
-        
-        var cola = new List<string>();
-        foreach (var row in list)
-        { 
-            cola.Add(row[0] as string);
-        }
-        var colb = new List<int>();
-        foreach (var row in list)
-        {
-            colb.Add((int)row[1]);
-        }
-        
-        var stream = new MemoryStream();
-        var arrowSchema = new Schema(new List<Field>()
-        {
-            new Field("col_a", new StringType(), false),
-            new Field("col_b", new Int32Type(), false)
-        },new List<KeyValuePair<string, string>>());
-        
-        var writer = new ArrowStreamWriter(stream, arrowSchema);
-
-        var batch = new RecordBatch.Builder()
-            .Append("cola", false, col => col.String(array => array.AppendRange(cola)))
-            .Append("colb", false, col => col.Int32(array => array.AppendRange(colb)))
-            .Build();
-        
-        writer.WriteStart();
-        writer.WriteRecordBatch(batch);
-        writer.WriteEnd();
-
-        stream.Position = 0;
-        
-        var createdRelation = new LocalRelation()
-        {
-            Data = ByteString.FromStream(stream)
-        };
-            
-        var plan = new Plan()
-        {
-            Root = new Relation()
-            {
-                LocalRelation = createdRelation
-            }
-        };
-        
-        var (relation, schema) = await GrpcInternal.Exec(Client,  Host, SessionId, plan, Headers, UserContext, ClientType
-        );
-        return new DataFrame(this, relation, schema);
-    }
-
     public DataFrame CreateDataFrame(List<(object, object)> rows)
     {
         if (rows.Count == 0)
@@ -405,4 +347,10 @@ public class SparkSession
     }
 
     public DataStreamReader ReadStream() => new DataStreamReader(this);
+
+    public StreamingQueryManager Streams { get; } = new StreamingQueryManager();
+
+    public DataFrame Table(string name) => this.Read.Table(name);
+    
+    
 }

@@ -72,7 +72,6 @@ public class DataFrame_Tests : E2ETestBase
             .Agg(Count(Col("Col2")));
         
         df.Show();
-
     }
     
     [Fact]
@@ -81,5 +80,7 @@ public class DataFrame_Tests : E2ETestBase
         var df = Spark.Version();
         Console.WriteLine($"SPARK Version: {df}");
     }
+    
+   
     
 }

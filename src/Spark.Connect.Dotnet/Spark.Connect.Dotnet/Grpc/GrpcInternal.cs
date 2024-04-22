@@ -370,4 +370,191 @@ static class GrpcInternal
 
         return (batches, schema);
     }
+    
+    
+    public static async Task<bool> ExecStreamingQueryAwaitCommandResponse(SparkSession session, Plan plan)
+    {
+        var executeRequest = new ExecutePlanRequest
+        {
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
+        };
+
+        LastPlan = plan.ToString();
+
+        AsyncServerStreamingCall<ExecutePlanResponse> Exec()
+        {
+            try
+            {
+                return session.Client.ExecutePlan(executeRequest, session.Headers);
+            }
+            catch (Exception exception)
+            {
+                if (exception is AggregateException aggregateException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(aggregateException);
+                }
+
+                if (exception is RpcException rpcException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(rpcException);
+                }
+
+                throw new SparkException(exception);
+            }
+        }
+
+        var execResponse = Exec();
+        await execResponse.ResponseStream.MoveNext(new CancellationToken());
+        var current = execResponse.ResponseStream.Current;
+        
+        bool? terminated = null;
+        
+        while (current != null)
+        {
+            if (current.StreamingQueryCommandResult?.AwaitTermination != null)
+            {
+                terminated = current.StreamingQueryCommandResult.AwaitTermination.Terminated;
+            }
+            
+            await execResponse.ResponseStream.MoveNext(new CancellationToken());
+            current = execResponse.ResponseStream.Current;
+        }
+
+        return terminated.Value;
+    }
+    public static async Task<StreamingQueryCommandResult.Types.ExceptionResult> ExecStreamingQueryExceptionCommandResponse(SparkSession session, Plan plan)
+    {
+        var executeRequest = new ExecutePlanRequest
+        {
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
+        };
+
+        LastPlan = plan.ToString();
+
+        AsyncServerStreamingCall<ExecutePlanResponse> Exec()
+        {
+            try
+            {
+                return session.Client.ExecutePlan(executeRequest, session.Headers);
+            }
+            catch (Exception exception)
+            {
+                if (exception is AggregateException aggregateException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(aggregateException);
+                }
+
+                if (exception is RpcException rpcException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(rpcException);
+                }
+
+                throw new SparkException(exception);
+            }
+        }
+
+        var execResponse = Exec();
+        await execResponse.ResponseStream.MoveNext(new CancellationToken());
+        var current = execResponse.ResponseStream.Current;
+        
+        StreamingQueryCommandResult.Types.ExceptionResult result = null;
+        
+        while (current != null)
+        {
+            if (current.StreamingQueryCommandResult?.Exception != null)
+            {
+                result = current.StreamingQueryCommandResult.Exception;
+            }
+            
+            await execResponse.ResponseStream.MoveNext(new CancellationToken());
+            current = execResponse.ResponseStream.Current;
+        }
+
+        return result;
+    }
+
+    public static async Task<StreamingQueryCommandResult.Types.RecentProgressResult> ExecStreamingQueryProgressCommandResponse(SparkSession session, Plan plan)
+    {
+        var executeRequest = new ExecutePlanRequest
+        {
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
+        };
+
+        LastPlan = plan.ToString();
+
+        AsyncServerStreamingCall<ExecutePlanResponse> Exec()
+        {
+            try
+            {
+                return session.Client.ExecutePlan(executeRequest, session.Headers);
+            }
+            catch (Exception exception)
+            {
+                if (exception is AggregateException aggregateException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(aggregateException);
+                }
+
+                if (exception is RpcException rpcException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(rpcException);
+                }
+
+                throw new SparkException(exception);
+            }
+        }
+
+        var execResponse = Exec();
+        await execResponse.ResponseStream.MoveNext(new CancellationToken());
+        var current = execResponse.ResponseStream.Current;
+        
+        while (current != null)
+        {
+            if (current?.StreamingQueryCommandResult?.RecentProgress != null)
+            {
+                return current?.StreamingQueryCommandResult?.RecentProgress;
+            }
+            
+            await execResponse.ResponseStream.MoveNext(new CancellationToken());
+            current = execResponse.ResponseStream.Current;
+        }
+
+        return null;
+    }
+
+    public static async Task ExecStreamingQueryProcessAvailableCommandResponse(SparkSession session, Plan plan)
+    {
+        var executeRequest = new ExecutePlanRequest
+        {
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
+        };
+
+        LastPlan = plan.ToString();
+
+        AsyncServerStreamingCall<ExecutePlanResponse> Exec()
+        {
+            try
+            {
+                return session.Client.ExecutePlan(executeRequest, session.Headers);
+            }
+            catch (Exception exception)
+            {
+                if (exception is AggregateException aggregateException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(aggregateException);
+                }
+
+                if (exception is RpcException rpcException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(rpcException);
+                }
+
+                throw new SparkException(exception);
+            }
+        }
+
+        var execResponse = Exec();
+        await execResponse.ResponseStream.MoveNext(new CancellationToken());
+        
+    }
 }

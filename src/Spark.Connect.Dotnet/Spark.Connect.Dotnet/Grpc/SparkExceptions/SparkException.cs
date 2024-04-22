@@ -18,7 +18,6 @@ public class SparkException : Exception
             OverrideMessage = rpcExceptionFromRpc.Status.Detail;
         }
         
-        Console.WriteLine(GrpcInternal.LastPlan);
     }
 
     public override string Message

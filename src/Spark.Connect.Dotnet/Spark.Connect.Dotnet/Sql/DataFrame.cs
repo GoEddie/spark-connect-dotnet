@@ -82,8 +82,7 @@ public class DataFrame
     /// <param name="vertical">Print output rows vertically (one line per column value).</param>
     /// <param name="sessionId">SessionId to make the call on</param>
     /// <param name="client">`SparkConnectServiceClient` client, must already be connected</param>
-    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical,
-        SparkSession session)
+    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical, SparkSession session)
     {
         var showStringPlan = new Plan
         {
@@ -96,9 +95,7 @@ public class DataFrame
             }
         };
 
-        var (outputRelation, schema) = await GrpcInternal.Exec(session.Client, session.Host, session.SessionId,
-            showStringPlan, session.Headers, session.UserContext, session.ClientType);
-        Console.WriteLine($"{outputRelation} is of type: {schema}");
+        await GrpcInternal.Exec(session.Client, session.Host, session.SessionId, showStringPlan, session.Headers, session.UserContext, session.ClientType);
     }
 
     /// <summary>

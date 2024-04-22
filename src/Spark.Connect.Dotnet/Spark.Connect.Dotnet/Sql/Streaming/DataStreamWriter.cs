@@ -1,3 +1,4 @@
+using Google.Protobuf;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
 using static Spark.Connect.Dotnet.Sql.Functions;
@@ -20,6 +21,9 @@ public class DataStreamWriter
     private bool? _once;
     private string _continuous = String.Empty;
     private bool? _availableNow;
+    
+    private string _udf_pythonVersion = String.Empty;
+    private string _udf_base64_function = String.Empty;
     
     private WriteStreamOperationStart BuildWriteStartOperation()
     {
@@ -73,8 +77,21 @@ public class DataStreamWriter
         {
             operation.Options.Add(_options);
         }
+
+        if (!string.IsNullOrEmpty(_udf_base64_function))
+        {
+            operation.ForeachWriter = new StreamingForeachFunction()
+            {
+                PythonFunction = new PythonUDF()
+                {
+                    Command = ByteString.FromBase64(_udf_base64_function),
+                    PythonVer = _udf_pythonVersion
+                }
+            };
+        }
         
         operation.Input = _input;
+        
         return operation;
     }
 
@@ -220,7 +237,18 @@ public class DataStreamWriter
         
         var task = GrpcInternal.ExecStreamingResponse(_session, plan);
         task.Wait();
-        return new StreamingQuery(_session, task.Result.Item1, task.Result.Item2);
+        
+        var sq = new StreamingQuery(_session, task.Result.Item1, task.Result.Item2);
+        _session.Streams.Add(sq);
+        return sq;
     }
-    
+
+    // public DataStreamWriter ForEach()
+    // {
+    //     // _udf_base64_function =
+    //     //     "gAWVjAQAAAAAAAAojB9weXNwYXJrLmNsb3VkcGlja2xlLmNsb3VkcGlja2xllIwOX21ha2VfZnVuY3Rpb26Uk5QoaACMDV9idWlsdGluX3R5cGWUk5SMCENvZGVUeXBllIWUUpQoSwJLAEsASwNLBEsTQ0KVAZcAfAFEAF0NfQICAIkDfAKmAQAAqwEAAAAAAAAAAAEAjA50AQAAAAAAAAAAAABnAKYBAACrAQAAAAAAAAAAUwCUToWUjARpdGVylIWUjAFflIwIaXRlcmF0b3KUjAF4lIeUjCwvVXNlcnMvZWQvZ2l0L2dvZWRkaWUvcHl0aG9uLy4vZ2V0X3B5dGhvbi5weZSMFGZ1bmNfd2l0aG91dF9wcm9jZXNzlIw5X2NvbnN0cnVjdF9mb3JlYWNoX2Z1bmN0aW9uLjxsb2NhbHM+LmZ1bmNfd2l0aG91dF9wcm9jZXNzlEseQyz4gADYFR3wAAENFfAAAQ0VkAHYEBGQAZAhkQSUBJAEkATdExeYApE4lDiIT5RDAJSMAWaUhZQpdJRSlH2UKIwLX19wYWNrYWdlX1+UTowIX19uYW1lX1+UjAhfX21haW5fX5SMCF9fZmlsZV9flGgQdU5OaACMEF9tYWtlX2VtcHR5X2NlbGyUk5QpUpSFlHSUUpSMJHB5c3BhcmsuY2xvdWRwaWNrbGUuY2xvdWRwaWNrbGVfZmFzdJSMEl9mdW5jdGlvbl9zZXRzdGF0ZZSTlGgjfZR9lChoG2gRjAxfX3F1YWxuYW1lX1+UaBKMD19fYW5ub3RhdGlvbnNfX5R9lIwOX19rd2RlZmF1bHRzX1+UTowMX19kZWZhdWx0c19flE6MCl9fbW9kdWxlX1+UaByMB19fZG9jX1+UTowLX19jbG9zdXJlX1+UaACMCl9tYWtlX2NlbGyUk5RoAihoByhLAUsASwBLAUsESwNDKpcAdAEAAAAAAAAAAAAAZAF8AJsAnQKmAQAAqwEAAAAAAAAAAAEAZABTAJROjDIqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiBSb3cgRnJvbSBQeXRob25VREY6IJSGlIwFcHJpbnSUhZSMA3Jvd5SFlGgQjAZteV91ZGaUaDpLCEMfgADdBAnQCkS4c9AKRNAKRNEERdQERdAERdAERdAERZRoFCkpdJRSlGgZTk5OdJRSlGgmaD99lH2UKGgbaDpoKWg6aCp9lGg4jBFweXNwYXJrLnNxbC50eXBlc5SMA1Jvd5STlHNoLE5oLU5oLmgcaC9OaDBOjBdfY2xvdWRwaWNrbGVfc3VibW9kdWxlc5RdlIwLX19nbG9iYWxzX1+UfZR1hpSGUjCFlFKUhZRoRl2UaEh9lHWGlIZSME6ME3B5c3Bhcmsuc2VyaWFsaXplcnOUjBVBdXRvQmF0Y2hlZFNlcmlhbGl6ZXKUk5QpgZR9lCiMCnNlcmlhbGl6ZXKUaFGMFUNsb3VkUGlja2xlU2VyaWFsaXplcpSTlCmBlIwJYmF0Y2hTaXpllEsAjAhiZXN0U2l6ZZRKAAABAHViaFR0lC4=";
+    //     // _udf_pythonVersion = "3.11";
+    //     //If we have to support udf's - just testing whether we can pass up python code as base64 - seems to work
+    //     return this;
+    // }
 }
