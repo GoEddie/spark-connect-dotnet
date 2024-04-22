@@ -146,7 +146,15 @@ class CustomTestMethodRunner : XunitTestMethodRunner
         try
         {
             // Execute the test and get the result
-            var result = await base.RunTestCaseAsync(testCase);
+            var task = base.RunTestCaseAsync(testCase);
+            var taskCompleted = Task.WaitAny(new []{task}, TimeSpan.FromSeconds(10));
+            //var result = await base.RunTestCaseAsync(testCase);
+            if (-1 == taskCompleted)
+            {
+                throw new TimeoutException($"Test {test} timed out");
+            }
+                
+            var result = task.Result;
 
             // Work out the final status of the test
             var status = result.Failed > 0 
