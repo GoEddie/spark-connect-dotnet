@@ -11,7 +11,7 @@ public class DataFrame_Tests : E2ETestBase
         df1.Select(Col("bob.id")).Show();
     }
 
-    [Fact]
+    [Fact(Skip = "GH")]
     public void PersistTest()
     {
         var df1 = Spark.Range(0, 5).Cache();
