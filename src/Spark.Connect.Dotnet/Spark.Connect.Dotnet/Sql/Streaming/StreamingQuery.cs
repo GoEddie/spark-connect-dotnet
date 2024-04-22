@@ -4,9 +4,9 @@ namespace Spark.Connect.Dotnet.Sql.Streaming;
 
 public class StreamingQuery
 {
-    private readonly SparkSession _session;
     private readonly StreamingQueryInstanceId _queryId;
     private readonly string _queryName;
+    private readonly SparkSession _session;
 
     public StreamingQuery(SparkSession session, StreamingQueryInstanceId queryId, string queryName)
     {
@@ -15,13 +15,15 @@ public class StreamingQuery
         _queryName = queryName;
     }
 
+    public string Id => _queryId.Id;
+
     public void Stop()
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Command = new Command()
+            Command = new Command
             {
-                StreamingQueryCommand = new StreamingQueryCommand()
+                StreamingQueryCommand = new StreamingQueryCommand
                 {
                     Stop = true,
                     QueryId = _queryId
@@ -35,11 +37,11 @@ public class StreamingQuery
 
     public bool IsActive()
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Command = new Command()
+            Command = new Command
             {
-                StreamingQueryCommand = new StreamingQueryCommand()
+                StreamingQueryCommand = new StreamingQueryCommand
                 {
                     Status = true,
                     QueryId = _queryId
@@ -52,28 +54,23 @@ public class StreamingQuery
         return task.Result.Item2.IsActive;
     }
 
-    public string Id => _queryId.Id;
-
     public async Task<bool> AwaitTerminationAsync(int? timeout = null)
     {
-        var command = new StreamingQueryCommand()
+        var command = new StreamingQueryCommand
         {
             QueryId = _queryId,
-            
+
             AwaitTermination = new StreamingQueryCommand.Types.AwaitTerminationCommand()
-            {
-                
-            }
         };
 
         if (timeout.HasValue)
         {
             command.AwaitTermination.TimeoutMs = timeout.Value * 1000;
         }
-        
-        var plan = new Plan()
+
+        var plan = new Plan
         {
-            Command = new Command()
+            Command = new Command
             {
                 StreamingQueryCommand = command
             }
@@ -81,27 +78,24 @@ public class StreamingQuery
 
         return await GrpcInternal.ExecStreamingQueryAwaitCommandResponse(_session, plan);
     }
-    
+
     public bool AwaitTermination(int? timeout = null)
     {
-        var command = new StreamingQueryCommand()
+        var command = new StreamingQueryCommand
         {
             QueryId = _queryId,
-            
+
             AwaitTermination = new StreamingQueryCommand.Types.AwaitTerminationCommand()
-            {
-                
-            }
         };
 
         if (timeout.HasValue)
         {
             command.AwaitTermination.TimeoutMs = timeout.Value * 1000;
         }
-        
-        var plan = new Plan()
+
+        var plan = new Plan
         {
-            Command = new Command()
+            Command = new Command
             {
                 StreamingQueryCommand = command
             }
@@ -114,16 +108,16 @@ public class StreamingQuery
 
     public StreamingQueryException Exception()
     {
-        var command = new StreamingQueryCommand()
+        var command = new StreamingQueryCommand
         {
             QueryId = _queryId,
-            Exception = true,
+            Exception = true
         };
-        
-        
-        var plan = new Plan()
+
+
+        var plan = new Plan
         {
-            Command = new Command()
+            Command = new Command
             {
                 StreamingQueryCommand = command
             }
@@ -136,21 +130,21 @@ public class StreamingQuery
         {
             return null;
         }
-        
+
         return new StreamingQueryException(result.ExceptionMessage);
     }
 
     public void ProcessAllAvailable()
     {
-        var command = new StreamingQueryCommand()
+        var command = new StreamingQueryCommand
         {
             QueryId = _queryId,
             ProcessAllAvailable = true
         };
-        
-        var plan = new Plan()
+
+        var plan = new Plan
         {
-            Command = new Command()
+            Command = new Command
             {
                 StreamingQueryCommand = command
             }
@@ -162,15 +156,15 @@ public class StreamingQuery
 
     public IEnumerable<string> RecentProgress()
     {
-        var command = new StreamingQueryCommand()
+        var command = new StreamingQueryCommand
         {
             QueryId = _queryId,
             RecentProgress = true
         };
-        
-        var plan = new Plan()
+
+        var plan = new Plan
         {
-            Command = new Command()
+            Command = new Command
             {
                 StreamingQueryCommand = command
             }

@@ -81,3 +81,4 @@
 //         internal int GetInterval() => (_dateTime - DateType.s_unixTimeEpoch).Days;
 //     }
 // }
+

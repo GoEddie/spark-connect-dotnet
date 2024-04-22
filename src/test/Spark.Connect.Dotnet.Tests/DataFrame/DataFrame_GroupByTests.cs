@@ -1,4 +1,3 @@
-using Spark.Connect.Dotnet.Sql;
 using static Spark.Connect.Dotnet.Sql.Functions;
 
 namespace Spark.Connect.Dotnet.Tests.DataFrame;
@@ -15,5 +14,4 @@ public class DataFrameGroupByTests : E2ETestBase
         var df4 = df1.Union(df2).Union(df3);
         var groupedData = df4.GroupBy(Col("Name"));
     }
-
 }

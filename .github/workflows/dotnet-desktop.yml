@@ -66,7 +66,7 @@ jobs:
     # Execute all unit tests in the solution
     - name: Execute unit tests
       working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
-      run: dotnet test
+      run: dotnet test -- xunit.parallelizeAssembly=true --configuration Release --no-build
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application

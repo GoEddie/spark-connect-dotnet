@@ -2,7 +2,6 @@ namespace Spark.Connect.Dotnet.Sql.Streaming;
 
 public class StreamingQueryProgress
 {
-    
     // def __init__(
     //     self,
     //     id: uuid.UUID,

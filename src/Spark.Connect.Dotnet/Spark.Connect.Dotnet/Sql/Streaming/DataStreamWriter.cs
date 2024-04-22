@@ -1,30 +1,35 @@
 using Google.Protobuf;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
-using static Spark.Connect.Dotnet.Sql.Functions;
 
 namespace Spark.Connect.Dotnet.Sql.Streaming;
 
 public class DataStreamWriter
 {
-    private readonly SparkSession _session;
     private readonly Relation _input;
-    
-    private readonly MapField<string, string> _options = new();
 
-    private string _format = String.Empty;
-    private string _path = String.Empty;
-    private string _outputMode = String.Empty;
-    private List<string> _paritionBy = new();
-    private string _queryName = String.Empty;
-    private string _processingTime = String.Empty;
-    private bool? _once;
-    private string _continuous = String.Empty;
+    private readonly MapField<string, string> _options = new();
+    private readonly SparkSession _session;
     private bool? _availableNow;
-    
-    private string _udf_pythonVersion = String.Empty;
-    private string _udf_base64_function = String.Empty;
-    
+    private string _continuous = string.Empty;
+
+    private string _format = string.Empty;
+    private bool? _once;
+    private string _outputMode = string.Empty;
+    private readonly List<string> _paritionBy = new();
+    private string _path = string.Empty;
+    private string _processingTime = string.Empty;
+    private string _queryName = string.Empty;
+    private readonly string _udf_base64_function = string.Empty;
+
+    private readonly string _udf_pythonVersion = string.Empty;
+
+    public DataStreamWriter(SparkSession session, Relation input)
+    {
+        _session = session;
+        _input = input;
+    }
+
     private WriteStreamOperationStart BuildWriteStartOperation()
     {
         var operation = new WriteStreamOperationStart();
@@ -80,25 +85,19 @@ public class DataStreamWriter
 
         if (!string.IsNullOrEmpty(_udf_base64_function))
         {
-            operation.ForeachWriter = new StreamingForeachFunction()
+            operation.ForeachWriter = new StreamingForeachFunction
             {
-                PythonFunction = new PythonUDF()
+                PythonFunction = new PythonUDF
                 {
                     Command = ByteString.FromBase64(_udf_base64_function),
                     PythonVer = _udf_pythonVersion
                 }
             };
         }
-        
-        operation.Input = _input;
-        
-        return operation;
-    }
 
-    public DataStreamWriter(SparkSession session, Relation input)
-    {
-        _session = session;
-        _input = input;
+        operation.Input = _input;
+
+        return operation;
     }
 
     public DataStreamWriter Format(string format)
@@ -112,31 +111,33 @@ public class DataStreamWriter
         _options.Add(key, value);
         return this;
     }
-    
+
     public DataStreamWriter Options(List<KeyValuePair<string, string>> options)
     {
         foreach (var option in options)
         {
             _options.Add(option.Key, option.Value);
         }
+
         return this;
     }
-    
+
     public DataStreamWriter Options(Dictionary<string, string> options)
     {
         foreach (var option in options)
         {
             _options.Add(option.Key, option.Value);
         }
+
         return this;
     }
-    
+
     public DataStreamWriter Path(string path)
     {
         _path = path;
         return this;
     }
-    
+
     public DataStreamWriter OutputMode(string mode)
     {
         _outputMode = mode;
@@ -155,7 +156,8 @@ public class DataStreamWriter
         return this;
     }
 
-    public DataStreamWriter Trigger(string processingTime=null, bool? once=null, string continuous=null, bool? availableNow=null)
+    public DataStreamWriter Trigger(string processingTime = null, bool? once = null, string continuous = null,
+        bool? availableNow = null)
     {
         _processingTime = processingTime;
         _once = once;
@@ -163,33 +165,35 @@ public class DataStreamWriter
         _availableNow = availableNow;
         return this;
     }
-    
+
     public StreamingQuery ToTable(string tableName)
     {
         var writeStreamOperationStart = BuildWriteStartOperation();
         writeStreamOperationStart.TableName = tableName;
-        
-        var plan = new Plan()
+
+        var plan = new Plan
         {
-            Command = new Command()
+            Command = new Command
             {
                 WriteStreamOperationStart = writeStreamOperationStart
             }
         };
-        
+
         var task = GrpcInternal.ExecStreamingResponse(_session, plan);
         task.Wait();
         return new StreamingQuery(_session, task.Result.Item1, task.Result.Item2);
     }
 
-    public StreamingQuery Start(string? path = null, string? tableName = null, string? format = null, string? outputMode = null, string[]? partitionBy=null, string? queryName=null, Dictionary<string, string>? options = null)
+    public StreamingQuery Start(string? path = null, string? tableName = null, string? format = null,
+        string? outputMode = null, string[]? partitionBy = null, string? queryName = null,
+        Dictionary<string, string>? options = null)
     {
         var writer = this;
         if (!string.IsNullOrEmpty(path))
         {
             writer = Path(path);
         }
-        
+
         if (!string.IsNullOrEmpty(format))
         {
             writer = writer.Format(format);
@@ -214,7 +218,7 @@ public class DataStreamWriter
         {
             writer = Options(options);
         }
-        
+
         if (!string.IsNullOrEmpty(tableName))
         {
             return writer.ToTable(tableName);
@@ -226,18 +230,18 @@ public class DataStreamWriter
     private StreamingQuery StartInternal()
     {
         var writeStreamOperationStart = BuildWriteStartOperation();
-        
-        var plan = new Plan()
+
+        var plan = new Plan
         {
-            Command = new Command()
+            Command = new Command
             {
                 WriteStreamOperationStart = writeStreamOperationStart
             }
         };
-        
+
         var task = GrpcInternal.ExecStreamingResponse(_session, plan);
         task.Wait();
-        
+
         var sq = new StreamingQuery(_session, task.Result.Item1, task.Result.Item2);
         _session.Streams.Add(sq);
         return sq;

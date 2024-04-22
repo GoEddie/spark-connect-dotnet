@@ -2,12 +2,6 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class DatabricksCfgReader
 {
-    private enum Mode
-    {
-        SearchingForProfile,
-        InProfile
-    }
-    
     public Dictionary<string, string> GetProfile(string profileName)
     {
         var values = new Dictionary<string, string>();
@@ -18,9 +12,10 @@ public class DatabricksCfgReader
 
         if (!File.Exists(configPath))
         {
-            throw new ArgumentException($"Cannot use profile when no profile file exists: '{new FileInfo(configPath).FullName}'");
+            throw new ArgumentException(
+                $"Cannot use profile when no profile file exists: '{new FileInfo(configPath).FullName}'");
         }
-        
+
         foreach (var line in File.ReadAllLines(configPath))
         {
             if (mode == Mode.SearchingForProfile)
@@ -41,7 +36,7 @@ public class DatabricksCfgReader
                 {
                     return values;
                 }
-                
+
                 var parts = line.Split('=');
                 values.Add(parts[0].Trim(), parts[1].Trim());
             }
@@ -49,7 +44,8 @@ public class DatabricksCfgReader
 
         if (values.Count == 0)
         {
-            throw new ArgumentException($"Profile '{profileName}' was not found in '{new FileInfo(configPath).FullName}'");    
+            throw new ArgumentException(
+                $"Profile '{profileName}' was not found in '{new FileInfo(configPath).FullName}'");
         }
 
         return values;
@@ -58,5 +54,11 @@ public class DatabricksCfgReader
     private static bool IsProfileNameLine(string line)
     {
         return line.Trim().StartsWith('[') && line.Trim().EndsWith(']');
+    }
+
+    private enum Mode
+    {
+        SearchingForProfile,
+        InProfile
     }
 }

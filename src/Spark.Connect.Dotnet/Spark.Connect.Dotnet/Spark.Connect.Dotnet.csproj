@@ -7,53 +7,66 @@
     </PropertyGroup>
 
     <ItemGroup>
-    <PackageReference Include="Apache.Arrow" Version="13.0.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.24.4" />
-    <PackageReference Include="Grpc.Core.Api" Version="2.57.0" />
-    <PackageReference Include="Grpc.Net.Client" Version="2.57.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.40.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-  </ItemGroup>
+        <PackageReference Include="Apache.Arrow" Version="16.0.0" />
+        <PackageReference Include="Google.Protobuf" Version="3.24.4"/>
+        <PackageReference Include="Grpc.Core.Api" Version="2.62.0" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.62.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Content Update="spark\connect\catalog.proto">
-      <Link>connect\catalog.proto</Link>
-    </Content>
-    <Content Update="spark\connect\commands.proto">
-      <Link>connect\commands.proto</Link>
-    </Content>
-    <Content Update="spark\connect\common.proto">
-      <Link>connect\common.proto</Link>
-    </Content>
-    <Content Update="spark\connect\example_plugins.proto">
-      <Link>connect\example_plugins.proto</Link>
-    </Content>
-    <Content Update="spark\connect\expressions.proto">
-      <Link>connect\expressions.proto</Link>
-    </Content>
-    <Content Update="spark\connect\relations.proto">
-      <Link>connect\relations.proto</Link>
-    </Content>
-    <Content Update="spark\connect\types.proto">
-      <Link>connect\types.proto</Link>
-    </Content>
-  </ItemGroup>
+    <ItemGroup>
+        <Content Update="spark\connect\catalog.proto">
+            <Link>connect\catalog.proto</Link>
+        </Content>
+        <Content Update="spark\connect\commands.proto">
+            <Link>connect\commands.proto</Link>
+        </Content>
+        <Content Update="spark\connect\common.proto">
+            <Link>connect\common.proto</Link>
+        </Content>
+        <Content Update="spark\connect\example_plugins.proto">
+            <Link>connect\example_plugins.proto</Link>
+        </Content>
+        <Content Update="spark\connect\expressions.proto">
+            <Link>connect\expressions.proto</Link>
+        </Content>
+        <Content Update="spark\connect\relations.proto">
+            <Link>connect\relations.proto</Link>
+        </Content>
+        <Content Update="spark\connect\types.proto">
+            <Link>connect\types.proto</Link>
+        </Content>
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="spark\connect\catalog.proto" />
-    <None Remove="spark\connect\commands.proto" />
-    <None Remove="spark\connect\common.proto" />
-    <None Remove="spark\connect\example_plugins.proto" />
-    <None Remove="spark\connect\expressions.proto" />
-    <None Remove="spark\connect\relations.proto" />
-    <None Remove="spark\connect\types.proto" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Remove="spark\connect\catalog.proto"/>
+        <None Remove="spark\connect\commands.proto"/>
+        <None Remove="spark\connect\common.proto"/>
+        <None Remove="spark\connect\example_plugins.proto"/>
+        <None Remove="spark\connect\expressions.proto"/>
+        <None Remove="spark\connect\relations.proto"/>
+        <None Remove="spark\connect\types.proto"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Spark.Connect.Dotnet.GrpcClient\Spark.Connect.Dotnet.GrpcClient.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Spark.Connect.Dotnet.GrpcClient\Spark.Connect.Dotnet.GrpcClient.csproj"/>
+    </ItemGroup>
+
+
+    <PropertyGroup>
+        <PackageId>GOEddie.Spark.Dotnet</PackageId>
+        <Version>3.5.1-1</Version>
+        <Authors>GOEddie (Ed Elliott)</Authors>
+        <Company>OSS</Company>
+        <Product>GOEddie Spark Dotnet</Product>
+        <Description>DataFrame API over the Apache Spark gRPC API</Description>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryUrl>https://github.com/GoEddie/spark-connect-dotnet</RepositoryUrl>
+    </PropertyGroup>
 
 </Project>

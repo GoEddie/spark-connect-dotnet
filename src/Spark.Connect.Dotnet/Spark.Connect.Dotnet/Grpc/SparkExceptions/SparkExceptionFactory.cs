@@ -4,8 +4,9 @@ namespace Spark.Connect.Dotnet.Grpc.SparkExceptions;
 
 public static class SparkExceptionFactory
 {
-    private static SparkException DetailStringToException(string exceptionCode, string detail, Exception exception) =>
-        exceptionCode switch
+    private static SparkException DetailStringToException(string exceptionCode, string detail, Exception exception)
+    {
+        return exceptionCode switch
         {
             "MISSING_GROUP_BY" => new MissingGroupByException(detail, exception),
             "DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE" => new DataTypeMismatchUnexpectedInputTypeException(detail,
@@ -19,6 +20,7 @@ public static class SparkExceptionFactory
             "Unavailable" => new UnavailableException(detail, exception),
             _ => new SparkException(exception)
         };
+    }
 
     private static string ExceptionCodeFromSparkError(string detail, string statusCode)
     {
@@ -26,25 +28,27 @@ public static class SparkExceptionFactory
         {
             return statusCode;
         }
-        
-        var exceptionCodeStopLocation = detail.IndexOf(']') -1;
+
+        var exceptionCodeStopLocation = detail.IndexOf(']') - 1;
         var exceptionCode = detail.Substring(1, exceptionCodeStopLocation);
 
         return exceptionCode;
-    } 
+    }
+
     public static SparkException GetExceptionFromRpcException(RpcException exception)
     {
-        var exceptionCode = ExceptionCodeFromSparkError(exception.Status.Detail, exception.Status.StatusCode.ToString());
+        var exceptionCode =
+            ExceptionCodeFromSparkError(exception.Status.Detail, exception.Status.StatusCode.ToString());
         return DetailStringToException(exceptionCode, exception.Status.Detail, exception);
     }
-    
+
     public static SparkException GetExceptionFromRpcException(AggregateException aggException)
     {
         if (aggException.InnerException is RpcException exception)
         {
             return GetExceptionFromRpcException(exception);
         }
-        
+
         return new SparkException(aggException);
     }
 }

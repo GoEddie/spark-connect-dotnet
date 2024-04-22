@@ -1,6 +1,3 @@
-using Apache.Arrow;
-using Apache.Arrow.Types;
-
 namespace Spark.Connect.Dotnet.Sql;
 
 public class CreateDataFrameHelper

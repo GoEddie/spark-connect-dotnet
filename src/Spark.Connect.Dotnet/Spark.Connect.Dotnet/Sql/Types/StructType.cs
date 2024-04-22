@@ -6,9 +6,7 @@ namespace Spark.Connect.Dotnet.Sql.Types;
 
 public class StructType : SparkDataType
 {
-    public List<StructField> Fields { get; }
-
-    public StructType(Spark.Connect.DataType.Types.Struct source) : base("StructType")
+    public StructType(DataType.Types.Struct source) : base("StructType")
     {
         Fields = new List<StructField>();
         foreach (var field in source.Fields)
@@ -16,8 +14,8 @@ public class StructType : SparkDataType
             Fields.Add(new StructField(field.Name, field.DataType, field.Nullable));
         }
     }
-    
-    public StructType(RepeatedField<Spark.Connect.DataType.Types.StructField> source) : base("StructType")
+
+    public StructType(RepeatedField<DataType.Types.StructField> source) : base("StructType")
     {
         Fields = new List<StructField>();
         foreach (var field in source)
@@ -25,11 +23,13 @@ public class StructType : SparkDataType
             Fields.Add(new StructField(field.Name, field.DataType, field.Nullable));
         }
     }
-    
+
     public StructType(params StructField[] fields) : base("StructType")
     {
         Fields = fields.ToList();
     }
+
+    public List<StructField> Fields { get; }
 
     public StructType Add(string name, SparkDataType type, bool nullable)
     {
@@ -37,26 +37,33 @@ public class StructType : SparkDataType
         return this;
     }
 
-    public List<string> FieldNames() => Fields.Select(p => p.Name).ToList();
+    public List<string> FieldNames()
+    {
+        return Fields.Select(p => p.Name).ToList();
+    }
 
     public override string SimpleString()
     {
-        string GetNameAndType(StructField field) => $"{field.Name}:{field.DataType.SimpleString()}";
+        string GetNameAndType(StructField field)
+        {
+            return $"{field.Name}:{field.DataType.SimpleString()}";
+        }
+
         return $"StructType<{string.Join(",", Fields.Select(GetNameAndType))}>";
     }
-    
+
     public override DataType ToDataType()
     {
-        var fields = Fields.Select(field => new DataType.Types.StructField()
+        var fields = Fields.Select(field => new DataType.Types.StructField
         {
-            DataType = field.DataType.ToDataType(), 
-            Name = field.Name, 
+            DataType = field.DataType.ToDataType(),
+            Name = field.Name,
             Nullable = field.Nullable
         });
-        
-        return new DataType()
+
+        return new DataType
         {
-            Struct = new DataType.Types.Struct()
+            Struct = new DataType.Types.Struct
             {
                 Fields = { fields }
             }
@@ -65,7 +72,8 @@ public class StructType : SparkDataType
 
     public override IArrowType ToArrowType()
     {
-        return new Apache.Arrow.Types.StructType(Fields.Select(field => new Field(field.Name, field.DataType.ToArrowType(), field.Nullable)).ToList());
+        return new Apache.Arrow.Types.StructType(Fields
+            .Select(field => new Field(field.Name, field.DataType.ToArrowType(), field.Nullable)).ToList());
     }
 }
 
@@ -73,7 +81,6 @@ public class StructField
 {
     public StructField()
     {
-        
     }
 
     public StructField(string name, SparkDataType type, bool nullable)
@@ -83,13 +90,26 @@ public class StructField
         Nullable = nullable;
     }
 
+    public StructField(string name, DataType type, bool nullable)
+    {
+        Name = name;
+        Nullable = nullable;
+        DataType = FromConnectDataType(type);
+    }
+
+    public string Name { get; set; }
+
+
+    public SparkDataType DataType { get; set; }
+    public bool Nullable { get; set; }
+
     private SparkDataType FromConnectDataType(DataType type)
     {
         if (type.String != null)
         {
             return new StringType();
         }
-        
+
         if (type.Short != null)
         {
             return new ShortType();
@@ -118,7 +138,7 @@ public class StructField
         if (type.Array != null)
         {
             var elementType = FromConnectDataType(type.Array.ElementType);
-            return new ArrayType(elementType); 
+            return new ArrayType(elementType);
         }
 
         if (type.Binary != null)
@@ -140,19 +160,7 @@ public class StructField
         {
             return new MapType(FromConnectDataType(type.Map.KeyType), FromConnectDataType(type.Map.ValueType));
         }
-        
+
         return null;
     }
-    public StructField(string name, DataType type, bool nullable)
-    {
-        Name = name;
-        Nullable = nullable;
-        DataType = FromConnectDataType(type);
-    }
-    
-    public string Name { get; set; }
-    
-    
-    public SparkDataType DataType { get; set; }
-    public bool Nullable { get; set; }
 }

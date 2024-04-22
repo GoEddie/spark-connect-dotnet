@@ -4,15 +4,15 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class SparkSessionBuilder
 {
-    private SparkSession? _session;
-    
-    private string _remote = String.Empty;
-    private string _bearerToken = String.Empty;
-    private string _clusterId = String.Empty;
-    
+    private string _bearerToken = string.Empty;
+
     private string _clientType = "goeddie-spark-dotnet";
-    private string _userName = String.Empty;
-    private string _userId = String.Empty;
+    private string _clusterId = string.Empty;
+
+    private string _remote = string.Empty;
+    private SparkSession? _session;
+    private string _userId = string.Empty;
+    private string _userName = string.Empty;
 
     public SparkSessionBuilder Remote(string address)
     {
@@ -53,7 +53,7 @@ public class SparkSessionBuilder
     public SparkSessionBuilder Profile(string profileName)
     {
         var profileData = new DatabricksCfgReader().GetProfile(profileName);
-        
+
         foreach (var item in profileData)
         {
             switch (item.Key)
@@ -72,7 +72,7 @@ public class SparkSessionBuilder
 
         return this;
     }
-    
+
     public SparkSession GetOrCreate()
     {
         if (_session != null)
@@ -80,7 +80,8 @@ public class SparkSessionBuilder
             return _session;
         }
 
-        _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(), _clientType);
+        _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(),
+            _clientType);
         return _session;
     }
 
@@ -90,8 +91,8 @@ public class SparkSessionBuilder
         {
             return new UserContext();
         }
-        
-        return new UserContext()
+
+        return new UserContext
         {
             UserId = _userId,
             UserName = _userName

@@ -1,4 +1,3 @@
-using System.Text;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
@@ -17,9 +16,9 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class DataFrame
 {
+    private readonly DataType? _schema;
     private readonly SparkSession _session;
     protected internal readonly Relation Relation;
-    private readonly DataType? _schema;
 
     public DataFrame(SparkSession session, Relation relation, DataType? schema)
     {
@@ -35,13 +34,31 @@ public class DataFrame
     }
 
     /// <summary>
-    /// Returns the `Column` denoted by name.
+    ///     Returns the `Column` denoted by name.
     /// </summary>
     /// <param name="name"></param>
     public Column this[string name] => new(name);
 
+    public StructType Schema
+    {
+        get
+        {
+            var plan = new Plan
+            {
+                Root = Relation
+            };
+
+            var explain = GrpcInternal.Schema(_session.Client, _session.SessionId, plan, _session.Headers,
+                _session.UserContext, _session.ClientType, false, "");
+            var structType = new StructType(explain.Struct);
+            return structType;
+        }
+    }
+
+    public List<string> Columns => Schema.FieldNames();
+
     /// <summary>
-    /// Returns a new `DataFrame` by taking the first n rows.
+    ///     Returns a new `DataFrame` by taking the first n rows.
     /// </summary>
     /// <param name="num">The number of rows to limit the `DataFrame` to.</param>
     /// <returns>`DataFrame` truncated to the number of rows specified in `num`.</returns>
@@ -55,14 +72,14 @@ public class DataFrame
                 {
                     Limit_ = num, Input = Relation
                 }
-            },
+            }
         };
 
         return new DataFrame(_session, limitPlan.Root, _schema);
     }
 
     /// <summary>
-    /// Prints the first `numberOfRows` rows to the console.
+    ///     Prints the first `numberOfRows` rows to the console.
     /// </summary>
     /// <param name="numberOfRows">The number of rows to show</param>
     /// <param name="truncate">If set greater than one, truncates long strings to length truncate and align cells right.</param>
@@ -74,7 +91,7 @@ public class DataFrame
     }
 
     /// <summary>
-    /// Prints the first `numberOfRows` rows to the console.
+    ///     Prints the first `numberOfRows` rows to the console.
     /// </summary>
     /// <param name="input">`DataFrame` to show</param>
     /// <param name="numberOfRows">The number of rows to show</param>
@@ -82,7 +99,8 @@ public class DataFrame
     /// <param name="vertical">Print output rows vertically (one line per column value).</param>
     /// <param name="sessionId">SessionId to make the call on</param>
     /// <param name="client">`SparkConnectServiceClient` client, must already be connected</param>
-    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical, SparkSession session)
+    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical,
+        SparkSession session)
     {
         var showStringPlan = new Plan
         {
@@ -95,19 +113,23 @@ public class DataFrame
             }
         };
 
-        await GrpcInternal.Exec(session.Client, session.Host, session.SessionId, showStringPlan, session.Headers, session.UserContext, session.ClientType);
+        await GrpcInternal.Exec(session.Client, session.Host, session.SessionId, showStringPlan, session.Headers,
+            session.UserContext, session.ClientType);
     }
 
     /// <summary>
-    /// Projects a set of expressions and returns a new `DataFrame`.
+    ///     Projects a set of expressions and returns a new `DataFrame`.
     /// </summary>
-    /// <param name="columns">Column Expressions (Column). If one of the column names is ‘*’, that column is expanded to include all columns in the current DataFrame.</param>
+    /// <param name="columns">
+    ///     Column Expressions (Column). If one of the column names is ‘*’, that column is expanded to
+    ///     include all columns in the current DataFrame.
+    /// </param>
     /// <returns></returns>
     public DataFrame Select(params Column[] columns)
     {
-        var relation = new Relation()
+        var relation = new Relation
         {
-            Project = new Project()
+            Project = new Project
             {
                 Input = Relation, Expressions =
                 {
@@ -121,9 +143,9 @@ public class DataFrame
 
     public DataFrame Select(params Expression[] columns)
     {
-        var relation = new Relation()
+        var relation = new Relation
         {
-            Project = new Project()
+            Project = new Project
             {
                 Input = Relation, Expressions =
                 {
@@ -136,29 +158,31 @@ public class DataFrame
     }
 
     /// <summary>
-    /// Projects a set of expressions and returns a new `DataFrame`.
+    ///     Projects a set of expressions and returns a new `DataFrame`.
     /// </summary>
-    /// <param name="columns">If one of the column names is ‘*’, that column is expanded to include all columns in the current DataFrame.</param>
+    /// <param name="columns">
+    ///     If one of the column names is ‘*’, that column is expanded to include all columns in the current
+    ///     DataFrame.
+    /// </param>
     /// <returns></returns>
     public DataFrame Select(params string[] columns)
     {
-        var relation = new Relation()
+        var relation = new Relation
         {
-            Project = new Project()
+            Project = new Project
             {
                 Input = Relation,
 
                 Expressions =
                 {
-
-                    columns.Select(p => new Expression()
+                    columns.Select(p => new Expression
                     {
-                        Literal = new Expression.Types.Literal()
+                        Literal = new Expression.Types.Literal
                         {
                             String = p
                         }
                     })
-                },
+                }
             }
         };
 
@@ -167,11 +191,11 @@ public class DataFrame
 
     public DataFrame Alias(string alias)
     {
-        var newRelation = new Relation()
+        var newRelation = new Relation
         {
-            SubqueryAlias = new SubqueryAlias()
+            SubqueryAlias = new SubqueryAlias
             {
-                Input = this.Relation,
+                Input = Relation,
                 Alias = alias
             }
         };
@@ -179,39 +203,49 @@ public class DataFrame
         return new DataFrame(_session, newRelation);
     }
 
-    public DataFrame Cache() => new DataFrame(_session,
-        GrpcInternal.Persist(_session.Client, _session.SessionId, Relation, _session.Headers, _session.UserContext,
-            _session.ClientType, true, "Physical"));
+    public DataFrame Cache()
+    {
+        return new DataFrame(_session,
+            GrpcInternal.Persist(_session.Client, _session.SessionId, Relation, _session.Headers, _session.UserContext,
+                _session.ClientType, true, "Physical"));
+    }
 
-    public DataFrame Checkpoint() => throw new NotImplementedException("Not yet implemented in Apache Spark Connect");
+    public DataFrame Checkpoint()
+    {
+        throw new NotImplementedException("Not yet implemented in Apache Spark Connect");
+    }
 
-    public DataFrame Coalesce() => Coalesce(1);
+    public DataFrame Coalesce()
+    {
+        return Coalesce(1);
+    }
+
     public DataFrame Coalesce(int numPartitions)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Repartition = new Repartition()
+                Repartition = new Repartition
                 {
-                    Input = this.Relation,
+                    Input = Relation,
                     NumPartitions = numPartitions
                 }
             }
         };
 
-        return new DataFrame(_session,  GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
     }
 
     public DataFrame Repartition(int numPartitions, params Column[] cols)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                RepartitionByExpression = new RepartitionByExpression()
+                RepartitionByExpression = new RepartitionByExpression
                 {
-                    Input = this.Relation,
+                    Input = Relation,
                     NumPartitions = numPartitions,
                     PartitionExprs =
                     {
@@ -221,70 +255,76 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session,  GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
     }
 
-    public DataFrame Repartition(params Column[] cols) => Repartition(1, cols);
+    public DataFrame Repartition(params Column[] cols)
+    {
+        return Repartition(1, cols);
+    }
 
     public Column ColRegex(string regex)
     {
-        var expression = new Expression()
+        var expression = new Expression
         {
-            UnresolvedRegex = new Expression.Types.UnresolvedRegex()
+            UnresolvedRegex = new Expression.Types.UnresolvedRegex
             {
                 ColName = regex
             }
         };
 
         return new Column(expression);
-    } 
-    
-    
-    
+    }
+
+
     /// <summary>
-    /// Returns a new `DataFrame` by adding a column or replacing the existing column that has the same name.
-    /// The column expression must be an expression over this `DataFrame`; attempting to add a column from some other `DataFrame` will raise an error.
+    ///     Returns a new `DataFrame` by adding a column or replacing the existing column that has the same name.
+    ///     The column expression must be an expression over this `DataFrame`; attempting to add a column from some other
+    ///     `DataFrame` will raise an error.
     /// </summary>
     /// <param name="columnName">string, name of the new column.</param>
     /// <param name="column">a `Column` expression for the new column.</param>
     /// <returns></returns>
     public DataFrame WithColumn(string columnName, Column column)
     {
-        var alias = new Expression.Types.Alias()
+        var alias = new Expression.Types.Alias
         {
             Expr = column.Expression, Name = { columnName }
         };
-        
+
         var relation = new Relation
         {
             WithColumns = new WithColumns()
         };
-        
+
         relation.WithColumns.Aliases.Add(alias);
         relation.WithColumns.Input = Relation;
-            
+
         return new DataFrame(_session, relation, _schema);
     }
 
     public DataFrame WithColumn(string columnName, Expression column)
     {
-        var alias = new Expression.Types.Alias()
+        var alias = new Expression.Types.Alias
         {
             Expr = column, Name = { columnName }
         };
-        
+
         var relation = new Relation
         {
             WithColumns = new WithColumns()
         };
-        
+
         relation.WithColumns.Aliases.Add(alias);
         relation.WithColumns.Input = Relation;
-            
+
         return new DataFrame(_session, relation, _schema);
     }
 
-    public DataFrameWriter Write() => new(_session, this);
+    public DataFrameWriter Write()
+    {
+        return new DataFrameWriter(_session, this);
+    }
 
     public List<object[]> Collect()
     {
@@ -295,32 +335,33 @@ public class DataFrame
 
     public async Task<List<object[]>> CollectAsync()
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
             Root = Relation
         };
-        
-        var (batches, schema) =  await GrpcInternal.ExecArrowResponse(_session.Client, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
+
+        var (batches, schema) = await GrpcInternal.ExecArrowResponse(_session.Client, _session.SessionId, plan,
+            _session.Headers, _session.UserContext, _session.ClientType);
         var rows = new List<object[]>();
-        
+
         foreach (var batch in batches)
         {
             rows.AddRange(await ArrowBatchToList(batch));
         }
-        
+
         return rows;
     }
 
     private static async Task<List<object[]>> ArrowBatchToList(ExecutePlanResponse.Types.ArrowBatch batch)
     {
         var rows = new List<object[]>();
-        
+
         var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(batch.Data.ToByteArray()));
         var recordBatch = await reader.ReadNextRecordBatchAsync();
-        
+
         Logger.WriteLine("arrow: Read record batch with {0} column(s)", recordBatch.ColumnCount);
 
-        for (int i = 0; i < recordBatch.Column(0).Length; i++)
+        for (var i = 0; i < recordBatch.Column(0).Length; i++)
         {
             rows.Add(new object[reader.Schema.FieldsList.Count]);
         }
@@ -333,7 +374,7 @@ public class DataFrame
                     break;
                 case BooleanType booleanType:
                     var b = (BooleanArray)recordBatch.Column(i);
-                    for (int ii = 0; ii < b.Length; ii++)
+                    for (var ii = 0; ii < b.Length; ii++)
                     {
                         rows[ii][i] = b.GetValue(ii)!;
                     }
@@ -353,7 +394,7 @@ public class DataFrame
                     break;
                 case DoubleType doubleType:
                     var d = (DoubleArray)recordBatch.Column(i);
-                    for (int ii = 0; ii < d.Length; ii++)
+                    for (var ii = 0; ii < d.Length; ii++)
                     {
                         rows[ii][i] = d.GetValue(ii)!;
                     }
@@ -373,7 +414,7 @@ public class DataFrame
                     break;
                 case Int64Type int64Type:
                     var i64 = (Int64Array)recordBatch.Column(i);
-                    for (int ii = 0; ii < i64.Length; ii++)
+                    for (var ii = 0; ii < i64.Length; ii++)
                     {
                         rows[ii][i] = i64.GetValue(ii)!;
                     }
@@ -415,14 +456,14 @@ public class DataFrame
                     break;
                 case StringType stringType:
                     var s = (StringArray)recordBatch.Column(i);
-                    for (int ii = 0; ii < s.Length; ii++)
+                    for (var ii = 0; ii < s.Length; ii++)
                     {
                         rows[ii][i] = s.GetString(i);
                     }
 
                     break;
-                case UnionType unionType:
-                    break;
+                // case UnionType unionType:
+                //     break;
                 case ArrowType arrowType:
                     break;
                 default:
@@ -438,32 +479,32 @@ public class DataFrame
         var task = Task.Run(async () => await CreateDataFrameViewCommand(name, true, false));
         Wait(task);
     }
-    
+
     public void CreateTempView(string name)
     {
         var task = Task.Run(async () => await CreateDataFrameViewCommand(name, false, false));
         Wait(task);
     }
-    
+
     public void CreateOrReplaceGlobalTempView(string name)
     {
         var task = Task.Run(async () => await CreateDataFrameViewCommand(name, true, true));
         Wait(task);
     }
-    
+
     public void CreateGlobalTempView(string name)
     {
         var task = Task.Run(async () => await CreateDataFrameViewCommand(name, false, true));
         Wait(task);
     }
-    
+
     private async Task CreateDataFrameViewCommand(string name, bool replace, bool global)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Command = new Command()
+            Command = new Command
             {
-                CreateDataframeView = new CreateDataFrameViewCommand()
+                CreateDataframeView = new CreateDataFrameViewCommand
                 {
                     Input = Relation,
                     Name = name,
@@ -472,15 +513,16 @@ public class DataFrame
                 }
             }
         };
-        
-        await GrpcInternal.Exec(_session.Client,  _session.Host, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
+
+        await GrpcInternal.Exec(_session.Client, _session.Host, _session.SessionId, plan, _session.Headers,
+            _session.UserContext, _session.ClientType);
     }
 
     public DataFrame Union(DataFrame other)
     {
-        var relation = new Relation()
+        var relation = new Relation
         {
-            SetOp = new SetOperation()
+            SetOp = new SetOperation
             {
                 AllowMissingColumns = false,
                 ByName = false,
@@ -493,12 +535,12 @@ public class DataFrame
 
         return new DataFrame(_session, relation);
     }
-    
+
     public DataFrame UnionAll(DataFrame other)
     {
-        var relation = new Relation()
+        var relation = new Relation
         {
-            SetOp = new SetOperation()
+            SetOp = new SetOperation
             {
                 AllowMissingColumns = false,
                 ByName = false,
@@ -511,12 +553,12 @@ public class DataFrame
 
         return new DataFrame(_session, relation);
     }
-    
+
     public DataFrame UnionByName(DataFrame other, bool allowMissingColumns)
     {
-        var relation = new Relation()
+        var relation = new Relation
         {
-            SetOp = new SetOperation()
+            SetOp = new SetOperation
             {
                 AllowMissingColumns = allowMissingColumns,
                 ByName = true,
@@ -537,33 +579,39 @@ public class DataFrame
 
     public DataFrame Agg(Column exprs)
     {
-        var relation = new Relation()
+        var relation = new Relation
         {
-            Aggregate = new Aggregate()
+            Aggregate = new Aggregate
             {
                 Input = Relation,
                 GroupType = Aggregate.Types.GroupType.Groupby,
-                GroupingExpressions = {  },
                 AggregateExpressions = { exprs.Expression }
             }
         };
 
         return new DataFrame(_session, relation);
     }
-    
+
     public long Count()
     {
-        var result = this.Select(FunctionsInternal.FunctionCall("count", Functions.Lit(1))).Collect();
+        var result = Select(FunctionsInternal.FunctionCall("count", Lit(1))).Collect();
         return (long)result[0][0];
     }
 
-    public DataFrame Sort(params Column[] columns) => OrderBy(columns);
-    public DataFrame Sort(List<Column> columns) => OrderBy(columns);
-    
+    public DataFrame Sort(params Column[] columns)
+    {
+        return OrderBy(columns);
+    }
+
+    public DataFrame Sort(List<Column> columns)
+    {
+        return OrderBy(columns);
+    }
+
     public DataFrame OrderBy(params Column[] columns)
     {
         var sortColumns = new List<Expression.Types.SortOrder>();
-        
+
         foreach (var column in columns)
         {
             if (column.Expression.SortOrder != null)
@@ -576,7 +624,7 @@ public class DataFrame
                 switch (column.Expression.UnresolvedFunction.FunctionName)
                 {
                     case "asc":
-                        sortColumns.Add(new Expression.Types.SortOrder()
+                        sortColumns.Add(new Expression.Types.SortOrder
                         {
                             Child = column.Expression.UnresolvedFunction.Arguments.First(),
                             Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
@@ -584,7 +632,7 @@ public class DataFrame
                         });
                         break;
                     case "desc":
-                        sortColumns.Add(new Expression.Types.SortOrder()
+                        sortColumns.Add(new Expression.Types.SortOrder
                         {
                             Child = column.Expression.UnresolvedFunction.Arguments.First(),
                             Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
@@ -592,7 +640,7 @@ public class DataFrame
                         });
                         break;
                     case "asc_nulls_last":
-                        sortColumns.Add(new Expression.Types.SortOrder()
+                        sortColumns.Add(new Expression.Types.SortOrder
                         {
                             Child = column.Expression.UnresolvedFunction.Arguments.First(),
                             Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
@@ -600,7 +648,7 @@ public class DataFrame
                         });
                         break;
                     case "asc_nulls_first":
-                        sortColumns.Add(new Expression.Types.SortOrder()
+                        sortColumns.Add(new Expression.Types.SortOrder
                         {
                             Child = column.Expression.UnresolvedFunction.Arguments.First(),
                             Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
@@ -608,7 +656,7 @@ public class DataFrame
                         });
                         break;
                     case "desc_nulls_last":
-                        sortColumns.Add(new Expression.Types.SortOrder()
+                        sortColumns.Add(new Expression.Types.SortOrder
                         {
                             Child = column.Expression.UnresolvedFunction.Arguments.First(),
                             Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
@@ -616,7 +664,7 @@ public class DataFrame
                         });
                         break;
                     case "desc_nulls_first":
-                        sortColumns.Add(new Expression.Types.SortOrder()
+                        sortColumns.Add(new Expression.Types.SortOrder
                         {
                             Child = column.Expression.UnresolvedFunction.Arguments.First(),
                             Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
@@ -626,9 +674,10 @@ public class DataFrame
                 }
             }
         }
-        var relation = new Relation()
+
+        var relation = new Relation
         {
-            Sort = new Sort()
+            Sort = new Sort
             {
                 Input = Relation,
                 Order = { sortColumns },
@@ -638,6 +687,7 @@ public class DataFrame
 
         return new DataFrame(_session, relation);
     }
+
     public DataFrame OrderBy(List<Column> columns)
     {
         return OrderBy(columns.ToArray());
@@ -647,14 +697,15 @@ public class DataFrame
     {
         return new DataFrameWriterV2(table, _session, this);
     }
-    
+
     public string Explain(bool extended = false, string mode = null, bool outputToConsole = true)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
             Root = Relation
         };
-        var output = GrpcInternal.Explain(_session.Client, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, extended, mode);
+        var output = GrpcInternal.Explain(_session.Client, _session.SessionId, plan, _session.Headers,
+            _session.UserContext, _session.ClientType, extended, mode);
 
         if (outputToConsole)
         {
@@ -677,71 +728,60 @@ public class DataFrame
         }
     }
 
-    public StructType Schema
-    {
-        get
-        {
-            var plan = new Plan()
-            {
-                Root = Relation
-            };
-
-            var explain = GrpcInternal.Schema(_session.Client, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, false, "");
-            var structType = new StructType(explain.Struct);
-            return structType;
-        }
-    }
-
-    public List<string> Columns => Schema.FieldNames();
-
     public double Corr(string col1, string col2)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Corr = new StatCorr()
+                Corr = new StatCorr
                 {
-                    Input = this.Relation, Col1 = col1, Col2 = col2, Method = "pearson"
+                    Input = Relation, Col1 = col1, Col2 = col2, Method = "pearson"
                 }
             }
         };
 
         var response = new DataFrame(_session, GrpcInternal.Exec(_session, plan)).Collect();
-        return (double) response[0][0];
+        return (double)response[0][0];
     }
 
     public double Cov(string col1, string col2)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Cov = new StatCov()
+                Cov = new StatCov
                 {
-                    Input = this.Relation, Col1 = col1, Col2 = col2
+                    Input = Relation, Col1 = col1, Col2 = col2
                 }
             }
         };
 
         var response = new DataFrame(_session, GrpcInternal.Exec(_session, plan)).Collect();
-        return (double) response[0][0];
+        return (double)response[0][0];
     }
 
-    public DataFrame CrossJoin(DataFrame other) => Join(other, new List<string>(), JoinType.Cross);
-    
-    public DataFrame Join(DataFrame other, List<string> on, string how) => Join(other, on, ToJoinType(how));
-    
-    public DataFrame Join(DataFrame other,  List<string> on, JoinType how = JoinType.Unspecified)
+    public DataFrame CrossJoin(DataFrame other)
     {
-        var plan = new Plan()
+        return Join(other, new List<string>(), JoinType.Cross);
+    }
+
+    public DataFrame Join(DataFrame other, List<string> on, string how)
+    {
+        return Join(other, on, ToJoinType(how));
+    }
+
+    public DataFrame Join(DataFrame other, List<string> on, JoinType how = JoinType.Unspecified)
+    {
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Join = new Join()
+                Join = new Join
                 {
-                    JoinType = (Connect.Join.Types.JoinType)(int)how,
-                    Left = this.Relation,
+                    JoinType = (Join.Types.JoinType)(int)how,
+                    Left = Relation,
                     Right = other.Relation,
                     UsingColumns = { on }
                 }
@@ -753,7 +793,7 @@ public class DataFrame
 
     private JoinType ToJoinType(string type)
     {
-        if (JoinType.TryParse(type, true, out JoinType jt))
+        if (Enum.TryParse(type, true, out JoinType jt))
         {
             return jt;
         }
@@ -763,11 +803,11 @@ public class DataFrame
 
     public DataFrame CrossTab(string col1, string col2)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Crosstab = new StatCrosstab()
+                Crosstab = new StatCrosstab
                 {
                     Input = Relation,
                     Col1 = col1, Col2 = col2
@@ -778,28 +818,35 @@ public class DataFrame
         return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
     }
 
-    public GroupedData Cube(List<string> cols) => Cube(cols.Select(Col).ToList());
-    
-    public GroupedData Cube(params string[] cols) => Cube(cols.Select(Col).ToList());
+    public GroupedData Cube(List<string> cols)
+    {
+        return Cube(cols.Select(Col).ToList());
+    }
+
+    public GroupedData Cube(params string[] cols)
+    {
+        return Cube(cols.Select(Col).ToList());
+    }
+
     public GroupedData Cube(List<Column> cols)
     {
-        var relation = new Relation()
+        var relation = new Relation
         {
-            GroupMap = new GroupMap()
+            GroupMap = new GroupMap
             {
                 Input = Relation,
-                GroupingExpressions = {(cols.Select(p => p.Expression)) }
+                GroupingExpressions = { cols.Select(p => p.Expression) }
             }
         };
 
-        return new GroupedData(_session, Relation,cols.Select(p => p.Expression), Aggregate.Types.GroupType.Cube );
+        return new GroupedData(_session, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Cube);
     }
 
-    public DataStreamWriter WriteStream() => new DataStreamWriter(_session, this.Relation);
-
+    public DataStreamWriter WriteStream()
+    {
+        return new DataStreamWriter(_session, Relation);
+    }
 }
-
-
 
 public enum JoinType
 {
@@ -810,11 +857,5 @@ public enum JoinType
     RightOuter = 4,
     LeftAnti = 5,
     LeftSemi = 6,
-    Cross = 7,
+    Cross = 7
 }
-
-/*
- * Todo: ApproxQuantiles
- *
- *
- */

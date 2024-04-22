@@ -1,4 +1,3 @@
-
 namespace Spark.Connect.Dotnet.Tests.Sql.Types;
 
 public class StructTypeTests
@@ -15,5 +14,4 @@ public class StructTypeTests
         // var json = schema.Json;
         // Assert.Equal("{\"type\":\"struct\",\"fields\":[{\"name\":\"col_a\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"col_b\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}]}", json);
     }
-    
 }
