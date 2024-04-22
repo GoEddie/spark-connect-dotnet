@@ -65,8 +65,12 @@ jobs:
     # Execute all unit tests in the solution
     - name: Execute unit tests
       working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
-      run: dotnet test
+      run: dotnet test -l:"console;verbosity=detailed"
 
+
+    - name: Pack
+      working-directory: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/
+      run: dotnet pack --no-build --configuration Release --output nupkgs /p:PackageVersion=3.5.1-1
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
       run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration

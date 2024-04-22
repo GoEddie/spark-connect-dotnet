@@ -50,6 +50,12 @@
         <None Remove="spark\connect\expressions.proto"/>
         <None Remove="spark\connect\relations.proto"/>
         <None Remove="spark\connect\types.proto"/>
+        <None Update="LICENSE.txt">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="README.md">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
@@ -68,5 +74,10 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/GoEddie/spark-connect-dotnet</RepositoryUrl>
     </PropertyGroup>
+
+    <ItemGroup>
+     <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
+     <None Include="README.md" Pack="true" PackagePath=""/>
+    </ItemGroup>    
 
 </Project>
