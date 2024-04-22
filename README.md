@@ -14,7 +14,6 @@ The main problem with the original .NET for Apache Spark was that every version 
 
 It doesn't matter, take the code and write your gRPC calls, you don't need the nuget you just need the proto files. This project includes some helpers to make it easier to make the gRPC calls and to mimic the DataFrame API so you can write your spark code like this:
 
-
 ```csharp
 var spark = SparkSession
     .Builder
@@ -59,6 +58,8 @@ client.ExecutePlan(executeRequest, new Metadata());
 
 You will need to build a plan for each of the calls you want to make but the details are all in this repo and the referenced Golang implementation.
 
+If you use this you can create your own `DataFrame` API wrappers for any functions you need.
+
 ### Inspiration
 
 The documentation for Spark Connect is limited at best but there is an example implementation in [GO](https://github.com/apache/spark-connect-go) and that contains examples for many of the gRPC calls to Spark so has been extremely useful. So thanks go to the contributors over in Golang. 
@@ -80,7 +81,15 @@ The documentation for Spark Connect is limited at best but there is an example i
 
 ### Major Features to be implemented
 
-1. Streaming
+1. User Defined Functions
+
+#### UDF Support
+
+Spark 3.5 has added a lot of functions and I think the need for UDF support is getting less and less. With Spark Connect there is no way to create a .NET UDF and use it. There is the possibility that we can use lambda functions and pass those to Spark *but* they would be limited to any captured variables known at runtime and any functions on `Column`, it wouldn't be possible to call any .NET function at all so I am not sure how useful this would be. 
+
+Another possibility is that we can allow people to write UDFs in Python and pass .NET the path and name of the function, we can serialize it and send it over to Spark (Spark Connect supports this) but it would mean writing in Python.
+
+Probably the easiest thing is to allow both options (remember you don't need this library to make the gRPC calls, you can do it yourself) but it would be easier if we provide a nice way to do it.
 
 ### Current Function Status
 

@@ -66,9 +66,11 @@ jobs:
         dotnet-version: '7.0'  # Specify your .NET Core version here
 
     - name: Install dependencies
+      working-directory: src/Spark.Connect.Dotnet/
       run: dotnet restore
 
     - name: Build the project
+      working-directory: src/Spark.Connect.Dotnet/
       run: dotnet build --configuration Release --no-restore
     
     - uses: actions/setup-python@v5
