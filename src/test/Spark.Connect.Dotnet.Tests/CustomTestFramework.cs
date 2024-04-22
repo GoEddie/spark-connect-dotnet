@@ -89,7 +89,10 @@ public class CustomTestFramework : XunitTestFramework
 
             try
             {
-                var result = await base.RunTestCaseAsync(testCase);
+                var task = base.RunTestCaseAsync(testCase);
+                var taskCompleted = Task.WaitAny(new []{task}, TimeSpan.FromSeconds(30));
+                //var result = await base.RunTestCaseAsync(testCase);
+                var result = task.Result;
 
                 var status = result.Failed > 0 
                     ? "FAILURE" 
