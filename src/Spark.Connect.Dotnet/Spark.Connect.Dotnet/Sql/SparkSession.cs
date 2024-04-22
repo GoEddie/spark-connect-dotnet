@@ -1,51 +1,69 @@
+using System.Collections;
+using Apache.Arrow;
+using Apache.Arrow.Ipc;
+using Apache.Arrow.Types;
+using Google.Protobuf;
+using Grpc.Core;
 using Grpc.Net.Client;
+using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.Sql.Streaming;
+using Spark.Connect.Dotnet.Sql.Types;
+using Array = Apache.Arrow.Array;
+using BinaryType = Apache.Arrow.Types.BinaryType;
+using BooleanType = Apache.Arrow.Types.BooleanType;
+using DoubleType = Apache.Arrow.Types.DoubleType;
+using StringType = Apache.Arrow.Types.StringType;
+using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 
 namespace Spark.Connect.Dotnet.Sql;
 
-public class SparkSessionBuilder
-{
-    private string _remote = String.Empty;
-    private SparkSession? _session;
-    private readonly int _planId = 0;
-    public SparkSessionBuilder Remote(string address)
-    {
-        _remote = address;
-        return this;
-    }
-
-    public SparkSession GetOrCreate()
-    {
-        if (_session != null)
-        {
-            return _session;
-        }
-        
-        var channel = GrpcChannel.ForAddress(_remote.Replace("sc://", "http://"), new GrpcChannelOptions(){});
-        Task.Run(() => channel.ConnectAsync());
-        var client = new SparkConnectService.SparkConnectServiceClient(channel);
-
-        _session = new SparkSession(Guid.NewGuid().ToString(), client);
-        return _session;
-    }
-}
-
 public class SparkSession
 {
+    public Metadata Headers { get; }
+    public UserContext UserContext { get; }
+
+    public string Host { get; private set; }
+    
+    public string ClientType { get; }
+    
     protected internal readonly string SessionId;
+    
     protected internal readonly SparkConnectService.SparkConnectServiceClient Client;
+    
     private int _planId = 0;
 
-    protected int GetPlanId() => _planId++;
+    //TODO: Should we be setting plan id everytime we send a new plan?
+    //      - should we be caching existing plans?
+    public int GetPlanId() => _planId++;
 
+    /// <summary>
+    /// Returns a new `SparkSessionBuilder`.
+    /// </summary>
     public static SparkSessionBuilder Builder
     {
         get => new ();
     }
-    
-    public SparkSession(string sessionId, SparkConnectService.SparkConnectServiceClient client)
+
+    /// <summary>
+    /// Creates a new `SparkSession` the normal pattern is to use the `SparkSessionBuilder`.
+    /// </summary>
+    /// <param name="sessionId"></param>
+    /// <param name="url"></param>
+    /// <param name="headers"></param>
+    /// <param name="userContext"></param>
+    /// <param name="clientType"></param>
+    public SparkSession(string sessionId, string url, Metadata headers, UserContext userContext, string clientType = "dotnet")
     {
+        Headers = headers;
+        UserContext = userContext;
         SessionId = sessionId;
-        Client = client;
+        ClientType = clientType;
+        
+        Host = url.Replace("sc://", "http://");
+        var channel = GrpcChannel.ForAddress(Host, new GrpcChannelOptions(){});
+        
+        Task.Run(() => channel.ConnectAsync());
+        Client = new SparkConnectService.SparkConnectServiceClient(channel);
     }
 
     /// <summary>
@@ -58,57 +76,281 @@ public class SparkSession
     }
 #pragma warning restore CS8618
 
+    /// <summary>
+    /// Returns a `DataFrameReader` which is used to read from any supported datasource.
+    /// </summary>
     public DataFrameReader Read => new(this);
     
-    public DataFrame Range(long end)
-    {
-        var result = Task.Run(() => RangeAsync(0, end, 1, 1));
-        result.Wait();
-        return new DataFrame(this, result.Result);
-    }
+    /// <summary>
+    /// Creates a new `DataFrame` which has one column called `id` and is from 0 to `end` rows long.
+    /// </summary>
+    /// <param name="end">What number should the `id` end at?</param>
+    /// <returns>`DataFrame`</returns>
+    public DataFrame Range(long end)=> new (this, RangeInternal(end));
     
-    public DataFrame Range(long start, long end)
-    {
-        var result = Task.Run(() => RangeAsync(start, end, 1, 1));
-        result.Wait();
-        return new DataFrame(this, result.Result);
-    }
+    /// <summary>
+    /// Creates a new `DataFrame` which has one column called `id` and is from `start` to `end` rows long.
+    /// </summary>
+    /// <param name="start">What number should the `id` start at?</param>
+    /// <param name="end">What number should the `id` end at?</param>
+    /// <returns>`DataFrame`</returns>
+    public DataFrame Range(long start, long end) => new (this, RangeInternal(end, start));
     
-    public DataFrame Range(long start, long end, long step)
-    {
-        var result = Task.Run(() => RangeAsync(start, end, step, 1));
-        result.Wait();
-        return new DataFrame(this, result.Result);
-    }
+    /// <summary>
+    /// Creates a new `DataFrame` which has one column called `id` and is from `start` to `end` rows long and id jumps in `step` increments.
+    /// </summary>
+    /// <param name="start">What number should the `id` start at?</param>
+    /// <param name="end">What number should the `id` end at?</param>
+    /// <param name="step">The `id` increment.</param>
+    /// <returns>`DataFrame`</returns>
+    public DataFrame Range(long start, long end, long step) => new (this, RangeInternal(end, start, step));
+
+    /// <summary>
+    /// Creates a new `DataFrame` which has one column called `id` and is from `start` to `end` rows long and id jumps in `step` increments.
+    /// </summary>
+    /// <param name="start">What number should the `id` start at?</param>
+    /// <param name="end">What number should the `id` end at?</param>
+    /// <param name="step">The `id` increment.</param>
+    /// <param name="numPartitions">How many partitions do you want to create in the `DataFrame`?</param>
+    /// <returns>`DataFrame`</returns>
+    public DataFrame Range(long start, long end, long step, int numPartitions) => new (this, RangeInternal(end, start, step, numPartitions));
     
-    public DataFrame Range(long start, long end, long step, int numParitions)
+    /// <summary>
+    /// Used to make the Range Relation - note end and start and the wrong way around as end is the only parameter that is never defaulted.
+    /// </summary>
+    /// <param name="end">What number should the `id` end at?</param>
+    /// <param name="start">What number should the `id` start at?</param>
+    /// <param name="step">The `id` increment.</param>
+    /// <param name="numPartitions">How many partitions do you want to create in the `DataFrame`?</param>
+    /// <returns></returns>
+    protected internal Relation RangeInternal(long end, long start = 0, long step = 1, int numPartitions = 1)
     {
-        var result = Task.Run(() => RangeAsync(start, end, step, numParitions));
-        result.Wait();
-        return new DataFrame(this, result.Result);
-    }
-    
-    protected internal Relation RangeAsync(long start, long end, long step, int numPartitions)
-    {
-        var plan = new Plan
+        return new Relation
         {
-            Root = new Relation
+            Range = new global::Spark.Connect.Range
             {
-                Range = new global::Spark.Connect.Range
+                Start = start,
+                End = end,
+                Step = step,
+                NumPartitions = numPartitions
+            }
+        };
+    }
+
+    /// <summary>
+    /// Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
+    /// </summary>
+    /// <param name="sql">The SPARK SQL Query to execute.</param>
+    /// <returns>`DataFrame`</returns>
+    public DataFrame Sql(string sql)
+    {
+        var task = Task.Run(() => SqlAsync(sql));
+        task.Wait();
+        return task.Result;
+    }
+    
+    /// <summary>
+    /// Async Version of `Sql`. Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
+    /// </summary>
+    /// <param name="sql">The SPARK SQL Query to execute.</param>
+    /// <returns>`DataFrame`</returns>
+    public async Task<DataFrame> SqlAsync(string sql)
+    {
+        var plan = new Plan()
+        {
+            Command = new Command()
+            {
+                SqlCommand = new SqlCommand()
                 {
-                    Start = start,
-                    End = end,
-                    Step = step,
-                    NumPartitions = numPartitions
-                },
-                Common = new RelationCommon
-                {
-                    SourceInfo = $"Range({start}, {end}, {step}, {numPartitions})", PlanId = GetPlanId()
+                    Sql = sql
                 }
             }
         };
 
-        return plan.Root;
+        var (relation, schema) = await GrpcInternal.Exec(Client,  Host, SessionId, plan, Headers, UserContext, ClientType);
+        return new DataFrame(this, relation, schema);
     }
 
+    public DataFrame CreateDataFrame(List<(object, object)> rows)
+    {
+        if (rows.Count == 0)
+        {
+            throw new SparkException("Cannot CreateDataFrame with no rows");
+        }
+        
+        var first = rows.First();
+        
+        var fields = new List<StructField>();
+        fields.Add(new StructField("_1", SparkDataType.FromString(first.Item1.GetType().Name), true));
+        fields.Add(new StructField("_2", SparkDataType.FromString(first.Item2.GetType().Name), true));
+        var schema = new StructType(fields.ToArray());
+        
+        var data = new List<IList<object>>();
+        foreach (var row in rows)
+        {
+            data.Add(new List<object>(){row.Item1, row.Item2});
+        }
+
+        return CreateDataFrame(data, schema);
+    }
+    
+    public DataFrame CreateDataFrame(List<Dictionary<string, object>> rows)
+    {
+        if (rows.Count == 0)
+        {
+            throw new SparkException("Cannot CreateDataFrame with no rows");
+        }
+
+        var first = rows.First();
+        var fields = new List<StructField>();
+        foreach (var key in first.Keys)
+        {
+            fields.Add(new StructField(key, SparkDataType.FromString(first[key].GetType().Name), true));
+        }
+        
+        var schema = new StructType(fields.ToArray());
+        var data = new List<IList<object>>();
+        foreach (var row in rows)
+        {
+            var newRow = new List<object>();
+            
+            foreach (var key in first.Keys)
+            {
+                newRow.Add(row[key]);
+            }
+
+            data.Add(newRow);
+        }
+
+        return CreateDataFrame(data, schema);
+    }
+    
+    public DataFrame CreateDataFrame(IList<IList<object>> data, StructType schema)
+    {
+        var columns = DataToColumns(data);
+        var schemaFields = schema.Fields.Select(field => new Field(field.Name, field.DataType.ToArrowType(), field.Nullable)).ToList();
+        var arrowSchema = new Schema(schemaFields, new List<KeyValuePair<string, string>>());
+        var stream = new MemoryStream();
+        var writer = new ArrowStreamWriter(stream, arrowSchema);
+
+        var batchBuilder = new RecordBatch.Builder();
+        var i = 0;
+        foreach(var schemaCol in schemaFields)
+        {
+            var column = columns[i++];
+            switch (schemaCol.DataType)
+            {
+                case StringType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.String(builder => builder.AppendRange(column)));
+                    break;
+                case Int32Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Int32(builder => builder.AppendRange(column)));
+                    break;
+                case DoubleType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Double(builder => builder.AppendRange(column)));
+                    break;
+                case Int8Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Int8(builder => builder.AppendRange(column)));
+                    break;
+                case Int64Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Int64(builder => builder.AppendRange(column)));
+                    break;
+                case BinaryType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Binary(builder => builder.AppendRange(column)));
+                    break;
+                case BooleanType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Boolean(builder => builder.AppendRange(column)));
+                    break;
+                
+                default:
+                    throw new SparkException($"Need Arrow Type for Builder: {schemaCol.DataType}");
+            }
+        }
+
+        var batch = batchBuilder.Build();
+        
+        writer.WriteStart();
+        writer.WriteRecordBatch(batch);
+        writer.WriteEnd();
+        
+        stream.Position = 0;
+        
+        var createdRelation = new LocalRelation()
+        {
+            Data = ByteString.FromStream(stream)
+        };
+            
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                LocalRelation = createdRelation
+            }
+        };
+        
+        var relation = GrpcInternal.Exec(this, plan);
+        return new DataFrame(this, relation);
+    }
+    
+
+    private dynamic DataToColumns(IList<IList<object>> data)
+    {
+        if (!data.Any())
+        {
+            throw new SparkException("Cannot create a dataframe without any rows");
+        }
+        
+        var firstRow = data.First();
+        var columns = new List<IList>();
+        
+        foreach (var column in firstRow)
+        {
+            var newColumn = CreateGenericList(column.GetType());
+            columns.Add(newColumn);
+        }
+
+        foreach (var row in data)
+        {
+            for (var i = 0; i < columns.Count(); i++)
+            {
+                columns[i].Add(row[i]);
+            }
+        }
+
+        return columns;
+    }
+    
+    private static IList CreateGenericList(Type elementType)
+    {   //ChatGPT generated
+        var listType = typeof(List<>);
+
+        // Make the generic type by using the elementType
+        var constructedListType = listType.MakeGenericType(elementType);
+
+        // Create an instance of the list
+        var instance = (IList)Activator.CreateInstance(constructedListType);
+
+        return instance;
+    }
+
+    /// <summary>
+    /// Does nothing.
+    /// </summary>
+    public void Stop()
+    {
+        
+    }
+    
+    public string Version()
+    {
+        return GrpcInternal.Version(this);
+    }
+
+    public DataStreamReader ReadStream() => new DataStreamReader(this);
+
+    public StreamingQueryManager Streams { get; } = new StreamingQueryManager();
+
+    public DataFrame Table(string name) => this.Read.Table(name);
+    
+    
 }

@@ -1,16 +1,16 @@
 using Google.Protobuf.Collections;
 
-namespace Spark.Connect.Dotnet.Sql;
+namespace Spark.Connect.Dotnet.Sql.Streaming;
 
-public class DataFrameReader
+public class DataStreamReader
 {
     private readonly SparkSession _session;
-    private readonly MapField<string, string> _options = new MapField<string, string>();
+    private readonly MapField<string, string> _options = new();
 
     private string _schema = String.Empty;
     private string _format = String.Empty;
 
-    protected internal DataFrameReader(SparkSession session)
+    protected internal DataStreamReader(SparkSession session)
     {
         _session = session;
     }
@@ -20,19 +20,19 @@ public class DataFrameReader
     ///  you can use this constructor. It is not to be used in the actual code, if you try to then any call is guaranteed to fail.
     /// </summary>
 #pragma warning disable CS8618
-    protected internal DataFrameReader()
+    protected internal DataStreamReader()
     {
         
     }
 #pragma warning restore CS8618
 
-    public DataFrameReader Option(string key, string value)
+    public DataStreamReader Option(string key, string value)
     {
         _options.Add(key, value);
         return this;
     }
     
-    public DataFrameReader Options(List<KeyValuePair<string, string>> options)
+    public DataStreamReader Options(List<KeyValuePair<string, string>> options)
     {
         foreach (var option in options)
         {
@@ -41,7 +41,7 @@ public class DataFrameReader
         return this;
     }
     
-    public DataFrameReader Options(Dictionary<string, string> options)
+    public DataStreamReader Options(Dictionary<string, string> options)
     {
         foreach (var option in options)
         {
@@ -50,16 +50,24 @@ public class DataFrameReader
         return this;
     }
 
-    public DataFrameReader Schema(string schema)
+    public DataStreamReader Schema(string schema)
     {
         _schema = schema;
         return this;
     }
     
-    public DataFrameReader Schema(AnalyzePlanRequest.Types.Schema schema)
+    public DataStreamReader Schema(AnalyzePlanRequest.Types.Schema schema)
     {
         throw new NotImplementedException();
     }
+
+    public DataStreamReader Format(string format)
+    {
+        _format = format;
+        return this;
+    } 
+    
+    public DataFrame Text(string path) => Read(new string[]{path}, "text", _options, _schema);
     
     public DataFrame Json(string path) => Read(new string[]{path}, "json", _options, _schema);
 
@@ -79,7 +87,8 @@ public class DataFrameReader
 
     public DataFrame Load(string path) => Read(new []{path}, _format, _options, _schema);
     public DataFrame Load(params string[] paths) => Read(paths, _format, _options, _schema);
-    public DataFrame Read(string[] paths, string format, MapField<string, string> options, string schema)
+    
+    private DataFrame Read(string[] paths, string format, MapField<string, string> options, string schema)
     {
         var datasource = new Read.Types.DataSource()
         {
@@ -102,68 +111,7 @@ public class DataFrameReader
             {
                 Read = new Read()
                 {
-                    DataSource = datasource
-                }
-            }
-        };
-                                                            //TODO: What do we do here??
-        return new DataFrame(_session, plan.Root, new DataType());
-    }
-
-    public DataFrame Jdbc(string[] paths, string format, MapField<string, string> options, string schema, RepeatedField<string> predicates)
-    {
-        var datasource = new Read.Types.DataSource()
-        {
-            Format = format, Paths = { paths }
-        };
-
-        if (options.Count > 0)
-        {
-            datasource.Options.Add(options);    
-        }
-
-        if (!string.IsNullOrEmpty(schema))
-        {
-            datasource.Schema = schema;
-        }
-
-        foreach (var predicate in predicates)
-        {
-            datasource.Predicates.Add(predicate);
-        }
-
-        var plan = new Plan()
-        {
-            Root = new Relation()
-            {
-                Read = new Read()
-                {
-                    DataSource = datasource
-                }
-            }
-        };
-                                                            
-        return new DataFrame(_session, plan.Root);
-    }
-
-    public DataFrameReader Format(string format)
-    {
-        _format = format;
-        return this;
-    }
-
-    public DataFrame Table(string name)
-    {
-        var plan = new Plan()
-        {
-            Root = new Relation()
-            {
-                Read = new Read()
-                {
-                    NamedTable = new Read.Types.NamedTable()
-                    {
-                        UnparsedIdentifier = name
-                    }
+                    DataSource = datasource, IsStreaming = true
                 }
             }
         };

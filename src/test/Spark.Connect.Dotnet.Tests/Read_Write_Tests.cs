@@ -109,7 +109,7 @@ public class ReadWriteTests : E2ETestBase
         Assert.Equal("hello friend", result[0][3]);
     }
     
-    [Fact]
+    [Fact(Skip = "Needs Avro deployed to server")]
     public async Task Read_And_Write_Avro()
     {
         var df = Spark.Range(10)
@@ -125,6 +125,27 @@ public class ReadWriteTests : E2ETestBase
         
         Assert.Equal(10, result.Count);
         Assert.Null(result[0][0]);
+        Assert.Equal(10.0, result[0][1]);
+        Assert.Equal(false, result[0][2]);
+        Assert.Equal("hello friend", result[0][3]);
+    }
+    
+    [Fact]
+    public async Task Read_Table()
+    {
+        var df = Spark.Range(10)
+            .WithColumn("double_col", Lit(10.0))
+            .WithColumn("bool_col", Lit(false))
+            .WithColumn("string_col", Lit("hello friend"));
+
+        df.CreateOrReplaceTempView("read_table");
+
+
+        var df2 = Spark.Table("read_table");
+        
+        var result = await df2.CollectAsync();
+        
+        Assert.Equal(10, result.Count);
         Assert.Equal(10.0, result[0][1]);
         Assert.Equal(false, result[0][2]);
         Assert.Equal("hello friend", result[0][3]);

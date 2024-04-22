@@ -4,7 +4,7 @@ namespace Spark.Connect.Dotnet.Tests;
 
 public class E2ETestBase
 {
-    protected readonly SparkSession Spark;
+    protected static SparkSession Spark;
     protected readonly string OutputPath;
 
     public E2ETestBase()

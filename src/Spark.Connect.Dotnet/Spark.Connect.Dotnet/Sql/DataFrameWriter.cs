@@ -10,8 +10,8 @@ public class DataFrameWriter
     private readonly MapField<string, string> _options = new MapField<string, string>();
     
     private WriteOperation.Types.SaveMode _saveMode;
-    private string[] _partitionColumnNames;
-    private string _format;
+    private List<string> _partitionColumnNames = new();
+    private string _format = String.Empty;
 
     protected internal DataFrameWriter(SparkSession session, DataFrame what)
     {
@@ -51,10 +51,10 @@ public class DataFrameWriter
         _options.Add(key, value);
         return this;
     }
-
+    
     public DataFrameWriter PartitionBy(params string[] columnNames)
     {
-        _partitionColumnNames = columnNames;
+        _partitionColumnNames = columnNames.ToList();
         return this;
     }
 
@@ -91,11 +91,13 @@ public class DataFrameWriter
                     Source = format,
                     Options = { options },
                     Input = _what.Relation,
+                    PartitioningColumns = { _partitionColumnNames },
+                    
                     Path = path
                 }
             }
         };
         
-        await GrpcInternal.Exec(_session.Client, _session.SessionId, plan);
+        await GrpcInternal.Exec(_session.Client,  _session.Host, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
     } 
 }
