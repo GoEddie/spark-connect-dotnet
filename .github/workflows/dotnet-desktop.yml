@@ -34,15 +34,9 @@ jobs:
       run: pwd
 
     - name: Print current directory listing
-      run: ls -a
+      run: ls -a ./src
 
-    - name: Install dependencies
-      working-directory: ./src/Spark.Connect.Dotnet/
-      run: dotnet restore
-
-    - name: Build the project
-      working-directory: ./src/Spark.Connect.Dotnet/
-      run: dotnet build --configuration Release --no-restore
+    
     
     - uses: actions/setup-python@v5
       with:
@@ -60,6 +54,15 @@ jobs:
     
     - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.1
     
+    - name: Install dependencies
+      working-directory: ./src/Spark.Connect.Dotnet/
+      run: dotnet restore
+
+    - name: Build the project
+      working-directory: ./src/Spark.Connect.Dotnet/
+      run: dotnet build --configuration Release --no-restore
+
+      
     # Execute all unit tests in the solution
     - name: Execute unit tests
       run: dotnet test
