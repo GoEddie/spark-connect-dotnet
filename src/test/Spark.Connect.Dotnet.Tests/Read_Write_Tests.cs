@@ -139,8 +139,7 @@ public class ReadWriteTests : E2ETestBase
             .WithColumn("string_col", Lit("hello friend"));
 
         df.CreateOrReplaceTempView("read_table");
-
-
+        
         var df2 = Spark.Table("read_table");
         
         var result = await df2.CollectAsync();

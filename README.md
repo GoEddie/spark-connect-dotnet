@@ -61,7 +61,7 @@ You will need to build a plan for each of the calls you want to make but the det
 
 ### Inspiration
 
-The documentation for Spark Connect is limited at best but there is an example implementaion in [GO](https://github.com/apache/spark-connect-go) and that contains examples for many of the gRPC calls to Spark so has been extremely useful. So thanks go to the contributors over in Golang. 
+The documentation for Spark Connect is limited at best but there is an example implementation in [GO](https://github.com/apache/spark-connect-go) and that contains examples for many of the gRPC calls to Spark so has been extremely useful. So thanks go to the contributors over in Golang. 
 
 ### Getting Started
 
@@ -72,25 +72,22 @@ The documentation for Spark Connect is limited at best but there is an example i
 
 [Dev Guide](docs/dev-guide.md)
 
-
 ### Deployment scenarios to be tested
 
 1. Local on Windows
 1. Databricks
 1. Synapse Analytics
 
-
 ### Major Features to be implemented
 
-1. All `spark.sql.functions.*` Functions
-1. All Data Reader/Writer Functions
-1. UDF's
 1. Streaming
-1. Debugging jobs (this was one of the original benefits of spark connect)
 
-### Optional Features to be implemented
+### Current Function Status
 
-1. DataLake
+To see how many functions are/are not implemented see [Function Status](docs/function-status.md)
+
+### Optional Features to be implemented
+
 1. TPC Benchmark
 
 ### Questions

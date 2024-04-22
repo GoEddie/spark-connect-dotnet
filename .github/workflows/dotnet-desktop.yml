@@ -60,20 +60,16 @@ jobs:
       Test_Project_Path: src/test                # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
       
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    
+    - uses: actions/setup-dotnet@v1
       with:
-        fetch-depth: 0
+        dotnet-version: '3.1'  # Specify your .NET Core version here
 
-    # Install the .NET Core workload
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+    - name: Install dependencies
+      run: dotnet restore
 
-    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
-    - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v2
+    - name: Build the project
+      run: dotnet build --configuration Release --no-restore
     
     - uses: actions/setup-python@v5
       with:
