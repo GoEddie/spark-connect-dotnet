@@ -662,5 +662,6 @@ fabric.properties
 # End of https://www.toptal.com/developers/gitignore/api/csharp,visualstudio,rider
 
 
-.DS_Store/
+**/.DS_Store
 .idea/
+Spark.Functions.Generator/

@@ -1,0 +1,5 @@
+# Versioning
+
+The nuget packages will follow this schema:
+
+SparkVersion-OurReleaseVersion for example "3.5.1-1" is the first release of this and it supports up to Spark 3.5.1 (backwards compatible to 3.4.0).
