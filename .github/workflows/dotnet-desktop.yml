@@ -82,7 +82,7 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v2
       with:
-        name: NuGet
+        name: NuGet-3.5.1-1
         path: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/nupkgs/*.nupkg
 
     # Decode the base 64 encoded pfx and save the Signing_Certificate
