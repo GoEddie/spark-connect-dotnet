@@ -1,4 +1,4 @@
-name: Spark Dotnet
+name: Spark Dotnet Release
 
 on:
   push:
