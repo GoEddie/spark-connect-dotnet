@@ -75,11 +75,10 @@ The documentation for Spark Connect is limited at best but there is an example i
 
 [Dev Guide](docs/dev-guide.md)
 
-### Deployment scenarios to be tested
+### Deployment scenarios
 
-1. Local on Windows
-1. Databricks
-1. Synapse Analytics
+1. [Databricks](https://the.agilesql.club/2024/01/using-spark-connect-from-.net-to-run-spark-jobs-on-databricks/)
+1. Synapse Analytics - to be tested
 
 ### Major Features to be implemented
 
