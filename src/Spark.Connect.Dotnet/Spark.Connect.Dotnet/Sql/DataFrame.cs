@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices.ComTypes;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
+using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
 using Spark.Connect.Dotnet.Sql.Streaming;
@@ -99,8 +101,7 @@ public class DataFrame
     /// <param name="vertical">Print output rows vertically (one line per column value).</param>
     /// <param name="sessionId">SessionId to make the call on</param>
     /// <param name="client">`SparkConnectServiceClient` client, must already be connected</param>
-    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical,
-        SparkSession session)
+    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical, SparkSession session)
     {
         var showStringPlan = new Plan
         {
@@ -113,8 +114,13 @@ public class DataFrame
             }
         };
 
-        await GrpcInternal.Exec(session.Client, session.Host, session.SessionId, showStringPlan, session.Headers,
-            session.UserContext, session.ClientType);
+        (_, _, var output) = await GrpcInternal.Exec(session.Client, session.Host, session.SessionId, showStringPlan, session.Headers, session.UserContext, session.ClientType);
+        Console.WriteLine(output);
+    }
+
+    public void PrintSchema(int? level = null)
+    {
+        Console.WriteLine(GrpcInternal.TreeString(_session, Relation));
     }
 
     /// <summary>
@@ -206,14 +212,240 @@ public class DataFrame
     public DataFrame Cache()
     {
         return new DataFrame(_session,
-            GrpcInternal.Persist(_session.Client, _session.SessionId, Relation, _session.Headers, _session.UserContext,
-                _session.ClientType, true, "Physical"));
+            GrpcInternal.Persist(_session,  Relation, new StorageLevel
+            {
+                UseMemory = true,
+                UseDisk = true,
+                UseOffHeap = false,
+                Deserialized = true,
+                Replication = 1
+            }));
+    }
+
+    private Dictionary<SparkStorageLevel, StorageLevel> StorageLevels =
+        new Dictionary<SparkStorageLevel, StorageLevel>()
+        {
+            {
+                SparkStorageLevel.None, new StorageLevel()
+                {
+                    UseDisk = false, Deserialized = false, UseMemory = false, UseOffHeap = false
+                }
+            },
+            {
+                SparkStorageLevel.DISK_ONLY, new StorageLevel()
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = false, UseOffHeap = false
+                }
+                
+            },
+                {
+                SparkStorageLevel.DISK_ONLY_2, new StorageLevel()
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = false, UseOffHeap = false, Replication = 2
+                }
+            },
+            {
+                SparkStorageLevel.DISK_ONLY_3, new StorageLevel()
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = false, UseOffHeap = false, Replication = 3
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.MEMORY_ONLY, new StorageLevel()
+                {
+                    UseDisk = false, Deserialized = false, UseMemory = true, UseOffHeap = false
+                }
+            } ,
+            {
+                SparkStorageLevel.MEMORY_ONLY_2, new StorageLevel()
+                {
+                    UseDisk = false, Deserialized = false, UseMemory = true, UseOffHeap = false, Replication = 2
+                }
+            },
+            {
+                SparkStorageLevel.MEMORY_AND_DISK, new StorageLevel()
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = true, UseOffHeap = false
+                }
+            } ,
+            {
+                SparkStorageLevel.MEMORY_AND_DISK_2, new StorageLevel()
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = true, UseOffHeap = false, Replication = 2
+                }
+            },
+            {
+                SparkStorageLevel.OFF_HEAP, new StorageLevel()
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = true, UseOffHeap = true
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.MEMORY_AND_DISK_DESER, new StorageLevel()
+                {
+                    UseDisk = true, Deserialized = true, UseMemory = true, UseOffHeap = false
+                }
+            }
+             
+        };
+    
+    public DataFrame Persist(SparkStorageLevel storageLevel)
+    {
+        return new DataFrame(_session, GrpcInternal.Persist(_session, Relation, StorageLevels[storageLevel]));
     }
 
     public DataFrame Checkpoint()
     {
         throw new NotImplementedException("Not yet implemented in Apache Spark Connect");
     }
+
+    public DataFrame Describe(params string[] cols)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation
+            {
+                Describe = new StatDescribe()
+                {
+                    Input = Relation, 
+                    Cols = { cols }
+                }
+            }
+        };
+     
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+    
+    public DataFrame Distinct(bool withinWatermark = false)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                Deduplicate = new Deduplicate()
+                {
+                    Input = Relation,
+                    AllColumnsAsKeys = true,
+                    WithinWatermark = withinWatermark
+                }
+            }
+        };
+
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+    
+    public DataFrame Drop(params string[] cols)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                Drop = new Drop()
+                {
+                    Input = Relation,
+                    ColumnNames = { cols }
+                }
+            }
+        };
+
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    } 
+    
+    public DataFrame DropDuplicates(params string[] subset)
+    {
+        if (subset.Length == 0)
+        {
+            return Distinct();
+        }
+        
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                Deduplicate = new Deduplicate()
+                {
+                    Input = Relation,
+                    ColumnNames = { subset }
+                }
+            }
+        };
+
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    } 
+    
+    public DataFrame DropDuplicatesWithinWatermark(params string[] subset)
+    {
+        if (subset.Length == 0)
+        {
+            return Distinct(true);
+        }
+        
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                Deduplicate = new Deduplicate()
+                {
+                    Input = Relation,
+                    ColumnNames = { subset },
+                    WithinWatermark = true
+                }
+            }
+        };
+
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    } 
+    
+    public DataFrame Drop(params Column[] cols)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                Drop = new Drop()
+                {
+                    Input = Relation,
+                    Columns = { cols.Select(p => p.Expression) }
+                    
+                }
+            }
+        };
+
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+    
+    public DataFrame DropNa(string how, int? thresh, params string[] subset)
+    {
+        var naDrop = new NADrop()
+        {
+            Input = Relation,
+            Cols = { subset }
+        };
+
+        if (how == "all")
+        {
+            naDrop.MinNonNulls = 1;
+        }
+        
+        if (thresh.HasValue)
+        {
+            naDrop.MinNonNulls = thresh.Value;
+        }
+        
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                DropNa = naDrop
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public IEnumerable<(string Name, string Type)> Dtypes => Schema.Fields.Select(p => (p.Name, p.DataType.SimpleString()));
 
     public DataFrame Coalesce()
     {
@@ -262,6 +494,52 @@ public class DataFrame
     {
         return Repartition(1, cols);
     }
+    
+    public DataFrame RepartitionByRange(int numPartitions, params Column[] cols)
+    {
+        Column WrapSortOrderCols(Column column)
+        {
+            if (column.Expression.SortOrder == null)
+            {
+                var sortOrder = new Expression.Types.SortOrder()
+                {
+                    Child = column.Expression, Direction = Expression.Types.SortOrder.Types.SortDirection.Unspecified, NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
+                };
+            }
+
+            return column;
+        }
+        
+        var sort = cols.Select(p => WrapSortOrderCols(p));
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                RepartitionByExpression = new RepartitionByExpression()
+                {
+                    NumPartitions = numPartitions, Input = Relation, PartitionExprs = { sort.Select(p => p.Expression) }
+                }
+            }
+        };
+
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public DataFrame SortWithinPartitions(params string[] cols)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Sort = new Sort()
+                {
+                    IsGlobal = false, Input = Relation, Order = { ColumnsToSortOrder(cols.Select(Col).ToArray()) }
+                }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
 
     public Column ColRegex(string regex)
     {
@@ -302,7 +580,7 @@ public class DataFrame
 
         return new DataFrame(_session, relation, _schema);
     }
-
+    
     public DataFrame WithColumn(string columnName, Expression column)
     {
         var alias = new Expression.Types.Alias
@@ -319,6 +597,43 @@ public class DataFrame
         relation.WithColumns.Input = Relation;
 
         return new DataFrame(_session, relation, _schema);
+    }
+
+    public DataFrame WithColumns(Dictionary<string, Column> colsMap)
+    {
+        var df = this;
+        foreach (var colMap in colsMap.Keys)
+        {
+            df = df.WithColumn(colMap, colsMap[colMap]);
+        }
+
+        return df;
+    }
+
+    public DataFrame WithColumnsRenamed(Dictionary<string, string> colsMap)
+    {
+        var df = this;
+        foreach (var colMap in colsMap.Keys)
+        {
+            df = df.WithColumnRenamed(colMap, colsMap[colMap]);
+        }
+
+        return df;
+    }
+    public DataFrame WithColumnRenamed(string existing, string newName)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                WithColumnsRenamed = new WithColumnsRenamed()
+                {
+                    Input = Relation, RenameColumnsMap = { { existing, newName } }
+                }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
     }
 
     public DataFrameWriter Write()
@@ -458,7 +773,7 @@ public class DataFrame
                     var s = (StringArray)recordBatch.Column(i);
                     for (var ii = 0; ii < s.Length; ii++)
                     {
-                        rows[ii][i] = s.GetString(i);
+                        rows[ii][i] = s.GetString(0);   //was i
                     }
 
                     break;
@@ -608,7 +923,25 @@ public class DataFrame
         return OrderBy(columns);
     }
 
+    public DataFrame OrderBy(params string[] columns) => OrderBy(columns.Select(Col).ToArray());
     public DataFrame OrderBy(params Column[] columns)
+    {
+        var sortColumns = ColumnsToSortOrder(columns);
+
+        var relation = new Relation
+        {
+            Sort = new Sort
+            {
+                Input = Relation,
+                Order = { sortColumns },
+                IsGlobal = true
+            }
+        };
+
+        return new DataFrame(_session, relation);
+    }
+
+    private static List<Expression.Types.SortOrder> ColumnsToSortOrder(Column[] columns)
     {
         var sortColumns = new List<Expression.Types.SortOrder>();
 
@@ -617,6 +950,16 @@ public class DataFrame
             if (column.Expression.SortOrder != null)
             {
                 sortColumns.Add(column.Expression.SortOrder);
+            }
+
+            if (column.Expression.UnresolvedAttribute != null)
+            {
+                sortColumns.Add(new Expression.Types.SortOrder()
+                {
+                    Child = column.Expression,
+                    Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
+                    NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
+                });
             }
 
             if (column.Expression.UnresolvedFunction != null)
@@ -675,17 +1018,7 @@ public class DataFrame
             }
         }
 
-        var relation = new Relation
-        {
-            Sort = new Sort
-            {
-                Input = Relation,
-                Order = { sortColumns },
-                IsGlobal = false
-            }
-        };
-
-        return new DataFrame(_session, relation);
+        return sortColumns;
     }
 
     public DataFrame OrderBy(List<Column> columns)
@@ -704,8 +1037,7 @@ public class DataFrame
         {
             Root = Relation
         };
-        var output = GrpcInternal.Explain(_session.Client, _session.SessionId, plan, _session.Headers,
-            _session.UserContext, _session.ClientType, extended, mode);
+        var output = GrpcInternal.Explain(_session.Client, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, extended, mode);
 
         if (outputToConsole)
         {
@@ -846,6 +1178,564 @@ public class DataFrame
     {
         return new DataStreamWriter(_session, Relation);
     }
+
+    public DataFrame ExceptAll(DataFrame other)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+                SetOp = new SetOperation()
+                {
+                    ByName = false,
+                    SetOpType = SetOperation.Types.SetOpType.Except,
+                    LeftInput = Relation,
+                    RightInput = other.Relation,
+                    IsAll = true,
+                    AllowMissingColumns = false
+                }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    /// <summary>
+    /// Replace null values. Note if you pass an int, Spark may be expecting a long, it is pretty specific about this.
+    /// </summary>
+    /// <param name="value">Has to be an expression generated by Lit(value)</param>
+    /// <param name="subset"></param>
+    /// <returns></returns>
+    public DataFrame FillNa(Column value, params string[] subset)
+    {
+        if (value.Expression.Literal == null)
+        {
+            throw new SparkException($"The Expression value must be Lit(value)");
+        }
+        
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+                FillNa = new NAFill()
+                {
+                    Input = Relation,
+                    Values = { value.Expression.Literal },
+                    Cols = { subset }
+                }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public DataFrame Where(Column condition) => Filter(condition);
+    
+    public DataFrame Filter(Column condition)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+               Filter = new Filter()
+               {
+                   Condition = condition.Expression,
+                   Input = Relation
+               }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+    
+    public DataFrame Filter(string condition)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+                Filter = new Filter()
+                {
+                    Condition = Expr(condition).Expression,
+                    Input = Relation
+                }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public Row First() => Take(1).FirstOrDefault();
+
+    public IEnumerable<Row> Head(int rows = 1) => Take(rows);
+
+    public IEnumerable<Row> Take(int limit)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+                Limit = new Limit()
+                {
+                    Input = Relation,
+                    Limit_ = limit
+                }
+            }
+        };
+        var dataFrame = new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        var schema = dataFrame.Schema;
+
+        return dataFrame.Collect().Select(p => new Row(schema, p));
+    }
+
+    /// <summary>
+    /// Finding frequent items for columns, possibly with false positives. Using the frequent element count algorithm described in “https://doi.org/10.1145/762471.762473, proposed by Karp, Schenker, and Papadimitriou”.
+    /// </summary>
+    /// <param name="cols"></param>
+    /// <returns></returns>
+    public DataFrame FreqItems(params string[] cols)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+                FreqItems = new StatFreqItems()
+                {
+                    Input = Relation,
+                    Cols = { cols }
+                }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+    
+    /// <summary>
+    /// Finding frequent items for columns, possibly with false positives. Using the frequent element count algorithm described in “https://doi.org/10.1145/762471.762473, proposed by Karp, Schenker, and Papadimitriou”.
+    /// </summary>
+    /// <param name="cols"></param>
+    /// <param name="support">optional, use FreqItems(cols) if you want to use the default 1%</param>
+    /// <returns></returns>
+    public DataFrame FreqItems(double support, params string[] cols)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+                FreqItems = new StatFreqItems()
+                {
+                    Input = Relation,
+                    Cols = { cols },
+                    Support = support
+                }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+    
+    public DataFrame Hint(string hint, params Column[] values)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+                Hint = new Hint()
+                {
+                    Input = Relation,
+                    Name = hint,
+                    Parameters = { values.Select(p => p.Expression) }
+                }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+    
+    public IEnumerable<string> InputFiles()
+    {
+        var plan = new Plan
+        {
+            Root = Relation
+        };
+
+        return GrpcInternal.InputFiles(_session, plan);
+    }
+
+    /// <summary>
+    /// Return a new DataFrame containing rows only in both this DataFrame and another DataFrame. Note that any duplicates are removed. To preserve duplicates use IntersectAll().
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    public DataFrame Intersect(DataFrame other)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+                SetOp = new SetOperation()
+                {
+                     SetOpType = SetOperation.Types.SetOpType.Intersect,
+                     IsAll = false,
+                     ByName = false,
+                     LeftInput = Relation,
+                     RightInput = other.Relation,
+                     AllowMissingColumns = false
+                }
+            }
+        };
+
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+    
+    /// <summary>
+    /// Return a new DataFrame containing rows only in both this DataFrame and another DataFrame. Preserving duplicates.
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    public DataFrame IntersectAll(DataFrame other)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+                SetOp = new SetOperation()
+                {
+                    SetOpType = SetOperation.Types.SetOpType.Intersect,
+                    IsAll = true,
+                    ByName = false,
+                    LeftInput = Relation,
+                    RightInput = other.Relation,
+                    AllowMissingColumns = false
+                }
+            }
+        };
+
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+
+    private Plan Plan() => new ()
+    {
+        Root = Relation
+    };
+    
+    public bool IsEmpty() => Count() == 0;
+
+    public bool IsLocal() => GrpcInternal.IsLocal(_session, Plan());
+
+    public bool IsStreaming() => GrpcInternal.IsStreaming(_session, Plan());
+
+    public DataFrame Unpivot(Column[] ids, Column[] values, string? variableColumnName = null, string? valueColumnName = null)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Unpivot = new Unpivot()
+                {
+                    Input = Relation,
+                    Ids = { ids.Select(p => p.Expression) },
+                    Values = new Unpivot.Types.Values()
+                    {
+                        Values_ = { values.Select(p => p.Expression) }
+                    }
+                }
+            }
+        };
+
+        if (!string.IsNullOrEmpty(variableColumnName))
+        {
+            plan.Root.Unpivot.VariableColumnName = variableColumnName;
+        }
+        
+        if (!string.IsNullOrEmpty(valueColumnName))
+        {
+            plan.Root.Unpivot.ValueColumnName = valueColumnName;
+        }
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public DataFrame Melt(Column[] ids, Column[] values, string? variableColumnName = null, string? valueColumnName = null) => Unpivot(ids, values, variableColumnName, valueColumnName);
+
+    public DataFrame Offset(int num)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Offset = new Offset()
+                {
+                    Input = Relation, Offset_ = num
+                }
+            }
+        };
+            
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public DataFrame RandomSplit(int seed, List<double> weights)
+    {
+        throw new NotImplementedException("PySpark does some work to flip this into Sample");
+    }
+    
+    public DataFrame RandomSplit(List<double> weights)
+    {
+        throw new NotImplementedException("PySpark does some work to flip this into Sample");
+    }
+
+    public DataFrame Sample(bool? withReplacement = null, float? fraction = null, long? seed = null)
+    {
+        var plan = new Plan();
+
+        plan.Root = new Relation()
+        {
+            Sample = new Sample()
+            {
+                Input = Relation, DeterministicOrder = true, LowerBound = 0.0
+            }
+        };
+
+        if (withReplacement.HasValue)
+        {
+            plan.Root.Sample.WithReplacement = withReplacement.Value;
+        }
+
+        if (fraction.HasValue)
+        {
+            plan.Root.Sample.UpperBound = fraction.Value;
+        }
+        else
+        {
+            plan.Root.Sample.UpperBound = 1.0;
+        }
+
+        if (seed.HasValue)
+        {
+            plan.Root.Sample.Seed = seed.Value;
+        }
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public DataFrame SampleBy(Column col, Dictionary<int, double> fractions, long? seed = null)
+    {
+        RepeatedField<StatSampleBy.Types.Fraction> DictionaryToFractions(Dictionary<int,double> dictionary)
+        {
+            var fractions = new RepeatedField<StatSampleBy.Types.Fraction>();
+            foreach (var key in dictionary.Keys.Order())
+            {
+                fractions.Add(new StatSampleBy.Types.Fraction()
+                {
+                    Fraction_ = dictionary[key],
+                    Stratum = Lit(key).Expression.Literal
+                });
+            }
+
+            return fractions;
+        }
+        
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                SampleBy = new StatSampleBy()
+                {
+                    Input = Relation,
+                    Col = col.Expression,
+                    Fractions = { DictionaryToFractions(fractions) }
+                }
+            }
+        };
+
+        if (seed.HasValue)
+        {
+            plan.Root.SampleBy.Seed = seed.Value;
+        }
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public DataFrame Replace(Column to_replace, Column value, params string[] subset)
+    {
+        if (to_replace.Expression?.Literal == null)
+        {
+            throw new SparkException($"to_replace must have been created using Lit");
+        }
+        
+        if (value.Expression?.Literal == null)
+        {
+            throw new SparkException($"value must have been created using Lit");
+        }
+
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Replace = new NAReplace()
+                {
+                    Input = Relation,
+                    Replacements =
+                    {
+                        new NAReplace.Types.Replacement()
+                        {
+                            OldValue = to_replace.Expression.Literal, NewValue = value.Expression.Literal
+                        }
+                    }
+                }
+            }
+        };
+
+        if (subset != null && subset.Any())
+        {
+            plan.Root.Replace.Cols.Add(subset);
+        }
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public GroupedData Rollup(params string[] cols) => Rollup(cols.Select(Col).ToArray());
+
+    public GroupedData Rollup(params Column[] cols)
+    {
+        return new GroupedData(_session, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Rollup);
+    }
+
+    public bool SameSemantics(DataFrame other)
+    {
+        return GrpcInternal.SameSemantics(_session, Relation, other.Relation);
+    }
+
+    public DataFrame SelectExpr(params string[] expr)
+    {
+        if (expr.Length == 0)
+        {
+            throw new SparkException("At least one expression is required when calling SelectExpr");
+        }
+
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Project = new Project()
+                {
+                    Input = Relation,
+                    Expressions = { expr.Select(p => Expr(p).Expression) }
+                }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public int SemanticHash()
+    {
+        return GrpcInternal.SemanticHash(_session, Relation);
+    }
+    
+    public SparkStorageLevelRecord StorageLevel()
+    {
+        var internalStorageLevel = GrpcInternal.StorageLevel(_session, Relation);
+
+        return new SparkStorageLevelRecord(internalStorageLevel.UseDisk, internalStorageLevel.UseMemory,
+            internalStorageLevel.UseOffHeap, internalStorageLevel.Deserialized, internalStorageLevel.Replication);
+    }
+
+    public DataFrame Subtract(DataFrame other)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation()
+            {
+                SetOp = new SetOperation()
+                {
+                    ByName = false,
+                    SetOpType = SetOperation.Types.SetOpType.Except,
+                    LeftInput = Relation,
+                    RightInput = other.Relation,
+                    IsAll = false,
+                    AllowMissingColumns = false
+                }
+            }
+        };
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public DataFrame Summary(params string[] statistics)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Summary = new StatSummary()
+                {
+                    Input = Relation
+                }
+            }
+        };
+
+        if (statistics != null && statistics.Any())
+        {
+            plan.Root.Summary.Statistics.Add(statistics);
+        }
+        
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public IEnumerable<Row> Tail(int num)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Tail = new Tail()
+                {
+                    Input = Relation, Limit = num
+                }
+            }
+        };
+            
+        var df = new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return df.Collect().Select(p => new Row(df.Schema, p));
+    }
+
+    public DataFrame To(StructType schema)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                ToSchema = new ToSchema()
+                {
+                    Input = Relation, Schema = schema.ToDataType()
+                }
+            }
+        };
+            
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+    }
+
+    public DataFrame WithWatermark(string eventTime, string delayThreshold)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                WithWatermark = new WithWatermark()
+                {
+                    Input = Relation, EventTime = eventTime, DelayThreshold = delayThreshold
+                }
+            }
+        };
+            
+        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));  
+    }
+
+    public DataFrameNaFunctions Na => new DataFrameNaFunctions(this);
+    
+    public SparkSession SparkSession => _session;
 }
 
 public enum JoinType
@@ -859,3 +1749,20 @@ public enum JoinType
     LeftSemi = 6,
     Cross = 7
 }
+
+public enum SparkStorageLevel
+{
+    None,
+    DISK_ONLY,
+    DISK_ONLY_2,
+    DISK_ONLY_3,
+    MEMORY_ONLY,
+    MEMORY_ONLY_2,
+    MEMORY_AND_DISK,
+    MEMORY_AND_DISK_2,
+    OFF_HEAP,
+    MEMORY_AND_DISK_DESER,
+}
+
+//Too many types with the same name in the generated code.
+public record SparkStorageLevelRecord(bool useDisk, bool useMemory, bool useOffHeap, bool deserialised, int replication=1);

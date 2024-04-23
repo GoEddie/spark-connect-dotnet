@@ -161,6 +161,6 @@ public class StructField
             return new MapType(FromConnectDataType(type.Map.KeyType), FromConnectDataType(type.Map.ValueType));
         }
 
-        return null;
+        return new VoidType();
     }
 }

@@ -37,4 +37,9 @@ public class Row
 
         return $"Row({data})";
     }
-} //TODO this is where we are!
+
+    public StructType Schema => _schema;
+
+    public object this[int i] => Data[i];
+
+} 

@@ -4,7 +4,7 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class Column
 {
-    protected internal readonly Expression Expression;
+    public readonly Expression Expression;
 
     public Column(Expression expression)
     {

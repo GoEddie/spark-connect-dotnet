@@ -77,6 +77,11 @@ public abstract class SparkDataType
         return new IntegerType();
     }
 
+    public static VoidType VoidType()
+    {
+        return new VoidType();
+    }
+
     public static StructType StructType(params StructField[] fields)
     {
         return new StructType(fields);
@@ -124,6 +129,10 @@ public abstract class SparkDataType
             case "bool":
             case "boolean":
                 return new BooleanType();
+            
+            case "null":
+            case "void":
+                return new VoidType();
         }
 
         if (lower.StartsWith("array"))
@@ -373,5 +382,31 @@ public class ArrayType : SparkDataType
     public override string SimpleString()
     {
         return $"array<{_elementType.SimpleString()}>";
+    }
+}
+
+
+public class VoidType : SparkDataType
+{
+    public VoidType() : base($"Void")
+    {
+    }
+
+    public override DataType ToDataType()
+    {
+        return new DataType
+        {
+            Null = new DataType.Types.NULL()
+        };
+    }
+
+    public override IArrowType ToArrowType()
+    {
+        return NullType.Default;
+    }
+
+    public override string SimpleString()
+    {
+        return $"void>";
     }
 }

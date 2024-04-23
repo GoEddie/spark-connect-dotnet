@@ -250,4 +250,13 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         Source.Select(MapContainsKey(Col("m"), Lit("a"))).Show();
         Source.Select(MapContainsKey(Lit(new Dictionary<string, string> { { "a", "b" } }), Lit("a"))).Show();
     }
+    
+    [Fact]
+    public void Expr_Test()
+    {
+        var str = "id = id";
+        var col = Expr(str);
+        Assert.Equal(str, col.Expression.ExpressionString.Expression);
+
+    }
 }

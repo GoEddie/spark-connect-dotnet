@@ -812,4 +812,15 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("when", false, condition, Lit(value)));
     }
+
+    public static Column Expr(string expression)
+    {
+        return new Column(new Expression()
+        {
+            ExpressionString = new Expression.Types.ExpressionString()
+            {
+                Expression = expression
+            }
+        });
+    }
 }

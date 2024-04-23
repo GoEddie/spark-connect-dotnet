@@ -185,8 +185,7 @@ public class SparkSession
             }
         };
 
-        var (relation, schema) =
-            await GrpcInternal.Exec(Client, Host, SessionId, plan, Headers, UserContext, ClientType);
+        var (relation, schema, output) = await GrpcInternal.Exec(Client, Host, SessionId, plan, Headers, UserContext, ClientType);
         return new DataFrame(this, relation, schema);
     }
 
@@ -214,7 +213,8 @@ public class SparkSession
     }
 
     public DataFrame CreateDataFrame(List<Dictionary<string, object>> rows)
-    {
+    {   
+        //TODO: Need to be able to handle null values
         if (rows.Count == 0)
         {
             throw new SparkException("Cannot CreateDataFrame with no rows");
@@ -258,9 +258,14 @@ public class SparkSession
         foreach (var schemaCol in schemaFields)
         {
             var column = columns[i++];
+            
+            //TODO - if the wrong schema is passed in it creates an obscure message - write a nice error here like
+            // "Data looks like a string but the schema specifies an int32 - is column x correct?"
+            
             switch (schemaCol.DataType)
             {
                 case StringType:
+                    
                     batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
                         arrayBuilder => arrayBuilder.String(builder => builder.AppendRange(column)));
                     break;
@@ -285,8 +290,8 @@ public class SparkSession
                         arrayBuilder => arrayBuilder.Binary(builder => builder.AppendRange(column)));
                     break;
                 case BooleanType:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
-                        arrayBuilder => arrayBuilder.Boolean(builder => builder.AppendRange(column)));
+                    
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Boolean(builder => builder.AppendRange(column)));
                     break;
 
                 default:
@@ -382,4 +387,19 @@ public class SparkSession
     {
         return Read.Table(name);
     }
+
+    private static SparkCatalog _catalog;
+    public SparkCatalog Catalog
+    {
+        get
+        {
+            if (_catalog == null)
+            {
+                _catalog = new SparkCatalog(this);
+            }
+
+            return _catalog;
+            }
+        }
+    
 }
