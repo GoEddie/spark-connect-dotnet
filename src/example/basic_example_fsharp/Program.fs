@@ -1,5 +1,4 @@
-﻿
-open Spark.Connect.Dotnet.Sql
+﻿open Spark.Connect.Dotnet.Sql
 
 let spark = SparkSession.Builder.Remote("http://localhost:15002").GetOrCreate()
 let dataFrame = spark.Range(100)

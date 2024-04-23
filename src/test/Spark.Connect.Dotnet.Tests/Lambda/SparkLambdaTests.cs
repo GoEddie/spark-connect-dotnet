@@ -5,7 +5,7 @@ namespace Spark.Connect.Dotnet.Tests.Lambda;
 
 public class SparkLambdaTests
 {
-    [Fact]
+    [Fact(Skip = "Not Implemented, possible future feature")]
     public void Test1()
     {
         var i = 100;

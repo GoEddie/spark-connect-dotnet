@@ -1,12 +1,14 @@
-
 using Spark.Connect.Dotnet.Sql;
 using static Spark.Connect.Dotnet.Sql.Functions;
+
 namespace Spark.Connect.Dotnet.Tests.FunctionsTests;
 
 public class GeneratedFunctionsTests : E2ETestBase
 {
-    private static Dotnet.Sql.DataFrame Source = Spark.Sql("SELECT array(id, id + 1, id + 2) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(id as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr FROM range(100)");
-    private static Window Window = new Window().OrderBy("id").PartitionBy("id");
+    private static readonly Dotnet.Sql.DataFrame Source = Spark.Sql(
+        "SELECT array(id, id + 1, id + 2) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(id as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr FROM range(100)");
+
+    private static readonly Window Window = new Window().OrderBy("id").PartitionBy("id");
 
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::Sort **/
@@ -40,9 +42,9 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void TryAdd_Test()
     {
-        Source.Select(TryAdd("id","id")).Show();
-        Source.Select(TryAdd(Lit(1),Lit(1))).Show();
-        Source.Select(TryAdd(Col("id"),Col("id"))).Show();
+        Source.Select(TryAdd("id", "id")).Show();
+        Source.Select(TryAdd(Lit(1), Lit(1))).Show();
+        Source.Select(TryAdd(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
@@ -58,27 +60,27 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void TryDivide_Test()
     {
-        Source.Select(TryDivide("id","id")).Show();
-        Source.Select(TryDivide(Lit(1),Lit(1))).Show();
-        Source.Select(TryDivide(Col("id"),Col("id"))).Show();
+        Source.Select(TryDivide("id", "id")).Show();
+        Source.Select(TryDivide(Lit(1), Lit(1))).Show();
+        Source.Select(TryDivide(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void TryMultiply_Test()
     {
-        Source.Select(TryMultiply("id","id")).Show();
-        Source.Select(TryMultiply(Lit(1),Lit(1))).Show();
-        Source.Select(TryMultiply(Col("id"),Col("id"))).Show();
+        Source.Select(TryMultiply("id", "id")).Show();
+        Source.Select(TryMultiply(Lit(1), Lit(1))).Show();
+        Source.Select(TryMultiply(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void TrySubtract_Test()
     {
-        Source.Select(TrySubtract("id","id")).Show();
-        Source.Select(TrySubtract(Lit(1),Lit(1))).Show();
-        Source.Select(TrySubtract(Col("id"),Col("id"))).Show();
+        Source.Select(TrySubtract("id", "id")).Show();
+        Source.Select(TrySubtract(Lit(1), Lit(1))).Show();
+        Source.Select(TrySubtract(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
@@ -130,18 +132,18 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void MaxBy_Test()
     {
-        Source.Select(MaxBy("id","id")).Show();
-        Source.Select(MaxBy(Lit(1),Lit(1))).Show();
-        Source.Select(MaxBy(Col("id"),Col("id"))).Show();
+        Source.Select(MaxBy("id", "id")).Show();
+        Source.Select(MaxBy(Lit(1), Lit(1))).Show();
+        Source.Select(MaxBy(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void MinBy_Test()
     {
-        Source.Select(MinBy("id","id")).Show();
-        Source.Select(MinBy(Lit(1),Lit(1))).Show();
-        Source.Select(MinBy(Col("id"),Col("id"))).Show();
+        Source.Select(MinBy("id", "id")).Show();
+        Source.Select(MinBy(Lit(1), Lit(1))).Show();
+        Source.Select(MinBy(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
@@ -612,81 +614,81 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void RegrAvgx_Test()
     {
-        Source.Select(RegrAvgx("id","id")).Show();
-        Source.Select(RegrAvgx(Lit(1),Lit(1))).Show();
-        Source.Select(RegrAvgx(Col("id"),Col("id"))).Show();
+        Source.Select(RegrAvgx("id", "id")).Show();
+        Source.Select(RegrAvgx(Lit(1), Lit(1))).Show();
+        Source.Select(RegrAvgx(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegrAvgy_Test()
     {
-        Source.Select(RegrAvgy("id","id")).Show();
-        Source.Select(RegrAvgy(Lit(1),Lit(1))).Show();
-        Source.Select(RegrAvgy(Col("id"),Col("id"))).Show();
+        Source.Select(RegrAvgy("id", "id")).Show();
+        Source.Select(RegrAvgy(Lit(1), Lit(1))).Show();
+        Source.Select(RegrAvgy(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegrCount_Test()
     {
-        Source.Select(RegrCount("id","id")).Show();
-        Source.Select(RegrCount(Lit(1),Lit(1))).Show();
-        Source.Select(RegrCount(Col("id"),Col("id"))).Show();
+        Source.Select(RegrCount("id", "id")).Show();
+        Source.Select(RegrCount(Lit(1), Lit(1))).Show();
+        Source.Select(RegrCount(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegrIntercept_Test()
     {
-        Source.Select(RegrIntercept("id","id")).Show();
-        Source.Select(RegrIntercept(Lit(1),Lit(1))).Show();
-        Source.Select(RegrIntercept(Col("id"),Col("id"))).Show();
+        Source.Select(RegrIntercept("id", "id")).Show();
+        Source.Select(RegrIntercept(Lit(1), Lit(1))).Show();
+        Source.Select(RegrIntercept(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegrR2_Test()
     {
-        Source.Select(RegrR2("id","id")).Show();
-        Source.Select(RegrR2(Lit(1),Lit(1))).Show();
-        Source.Select(RegrR2(Col("id"),Col("id"))).Show();
+        Source.Select(RegrR2("id", "id")).Show();
+        Source.Select(RegrR2(Lit(1), Lit(1))).Show();
+        Source.Select(RegrR2(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegrSlope_Test()
     {
-        Source.Select(RegrSlope("id","id")).Show();
-        Source.Select(RegrSlope(Lit(1),Lit(1))).Show();
-        Source.Select(RegrSlope(Col("id"),Col("id"))).Show();
+        Source.Select(RegrSlope("id", "id")).Show();
+        Source.Select(RegrSlope(Lit(1), Lit(1))).Show();
+        Source.Select(RegrSlope(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegrSxx_Test()
     {
-        Source.Select(RegrSxx("id","id")).Show();
-        Source.Select(RegrSxx(Lit(1),Lit(1))).Show();
-        Source.Select(RegrSxx(Col("id"),Col("id"))).Show();
+        Source.Select(RegrSxx("id", "id")).Show();
+        Source.Select(RegrSxx(Lit(1), Lit(1))).Show();
+        Source.Select(RegrSxx(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegrSxy_Test()
     {
-        Source.Select(RegrSxy("id","id")).Show();
-        Source.Select(RegrSxy(Lit(1),Lit(1))).Show();
-        Source.Select(RegrSxy(Col("id"),Col("id"))).Show();
+        Source.Select(RegrSxy("id", "id")).Show();
+        Source.Select(RegrSxy(Lit(1), Lit(1))).Show();
+        Source.Select(RegrSxy(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegrSyy_Test()
     {
-        Source.Select(RegrSyy("id","id")).Show();
-        Source.Select(RegrSyy(Lit(1),Lit(1))).Show();
-        Source.Select(RegrSyy(Col("id"),Col("id"))).Show();
+        Source.Select(RegrSyy("id", "id")).Show();
+        Source.Select(RegrSyy(Lit(1), Lit(1))).Show();
+        Source.Select(RegrSyy(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::Boolean **/
@@ -881,45 +883,45 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Coalesce_Test()
     {
-        Source.Select(Coalesce(new []{"id", "id"})).Show();
-        Source.Select(Coalesce(new []{Lit(180), Lit(180)})).Show();
-        Source.Select(Coalesce(new []{Col("id"), Col("id")})).Show();
+        Source.Select(Coalesce("id", "id")).Show();
+        Source.Select(Coalesce(Lit(180), Lit(180))).Show();
+        Source.Select(Coalesce(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void Corr_Test()
     {
-        Source.Select(Corr("id","id")).Show();
-        Source.Select(Corr(Lit(1),Lit(1))).Show();
-        Source.Select(Corr(Col("id"),Col("id"))).Show();
+        Source.Select(Corr("id", "id")).Show();
+        Source.Select(Corr(Lit(1), Lit(1))).Show();
+        Source.Select(Corr(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void CovarPop_Test()
     {
-        Source.Select(CovarPop("id","id")).Show();
-        Source.Select(CovarPop(Lit(1),Lit(1))).Show();
-        Source.Select(CovarPop(Col("id"),Col("id"))).Show();
+        Source.Select(CovarPop("id", "id")).Show();
+        Source.Select(CovarPop(Lit(1), Lit(1))).Show();
+        Source.Select(CovarPop(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void CovarSamp_Test()
     {
-        Source.Select(CovarSamp("id","id")).Show();
-        Source.Select(CovarSamp(Lit(1),Lit(1))).Show();
-        Source.Select(CovarSamp(Col("id"),Col("id"))).Show();
+        Source.Select(CovarSamp("id", "id")).Show();
+        Source.Select(CovarSamp(Lit(1), Lit(1))).Show();
+        Source.Select(CovarSamp(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::ParamsColumnOrNameFunction::EverythingElse **/
-    [Fact]
+    [Fact(Skip = "Do Manual with Pivot")]
     public void GroupingId_Test()
     {
-        Source.Select(GroupingId(new []{"id", "id"})).Show();
-        Source.Select(GroupingId(new []{Lit(180), Lit(180)})).Show();
-        Source.Select(GroupingId(new []{Col("id"), Col("id")})).Show();
+        Source.Select(GroupingId("id", "id")).Show();
+        Source.Select(GroupingId(Lit(180), Lit(180))).Show();
+        Source.Select(GroupingId(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::NoArgsFunction **/
@@ -958,9 +960,9 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Nanvl_Test()
     {
-        Source.Select(Nanvl("id","id")).Show();
-        Source.Select(Nanvl(Lit(1),Lit(1))).Show();
-        Source.Select(Nanvl(Col("id"),Col("id"))).Show();
+        Source.Select(Nanvl("id", "id")).Show();
+        Source.Select(Nanvl(Lit(1), Lit(1))).Show();
+        Source.Select(Nanvl(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleOptionalArgBasicType::EverythingElse **/
@@ -968,9 +970,8 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Rand_Test()
     {
         Source.Select(Rand()).Show();
-        Source.Select(Rand(1)).Show();        
+        Source.Select(Rand(1)).Show();
         Source.Select(Rand(Lit(180))).Show();
-  
     }
 
     /** GeneratedBy::SingleOptionalArgBasicType::EverythingElse **/
@@ -978,9 +979,8 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Randn_Test()
     {
         Source.Select(Randn()).Show();
-        Source.Select(Randn(1)).Show();        
+        Source.Select(Randn(1)).Show();
         Source.Select(Randn(Lit(180))).Show();
-  
     }
 
     /** GeneratedBy::ColumnOrNameHidingArgTwoType::Int **/
@@ -1066,18 +1066,18 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Greatest_Test()
     {
-        Source.Select(Greatest(new []{"id", "id"})).Show();
-        Source.Select(Greatest(new []{Lit(180), Lit(180)})).Show();
-        Source.Select(Greatest(new []{Col("id"), Col("id")})).Show();
+        Source.Select(Greatest("id", "id")).Show();
+        Source.Select(Greatest(Lit(180), Lit(180))).Show();
+        Source.Select(Greatest(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::ParamsColumnOrNameFunction::EverythingElse **/
     [Fact]
     public void Least_Test()
     {
-        Source.Select(Least(new []{"id", "id"})).Show();
-        Source.Select(Least(new []{Lit(180), Lit(180)})).Show();
-        Source.Select(Least(new []{Col("id"), Col("id")})).Show();
+        Source.Select(Least("id", "id")).Show();
+        Source.Select(Least(Lit(180), Lit(180))).Show();
+        Source.Select(Least(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
@@ -1270,27 +1270,27 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void MakeDate_Test()
     {
-        Source.Select(MakeDate("id","id","id")).Show();
-        Source.Select(MakeDate(Lit(1),Lit(1),Lit(1))).Show();
-        Source.Select(MakeDate(Col("id"),Col("id"),Col("id"))).Show();
+        Source.Select(MakeDate("id", "id", "id")).Show();
+        Source.Select(MakeDate(Lit(1), Lit(1), Lit(1))).Show();
+        Source.Select(MakeDate(Col("id"), Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrName::Date **/
     [Fact]
     public void Datediff_Test()
     {
-        Source.Select(Datediff("dt","dt")).Show();
-        Source.Select(Datediff(Lit(new DateOnly(1980, 04, 01)),Lit(new DateOnly(1980, 04, 01)))).Show();
-        Source.Select(Datediff(Col("dt"),Col("dt"))).Show();
+        Source.Select(Datediff("dt", "dt")).Show();
+        Source.Select(Datediff(Lit(new DateOnly(1980, 04, 01)), Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(Datediff(Col("dt"), Col("dt"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrName::Date **/
     [Fact]
     public void DateDiff_Test()
     {
-        Source.Select(DateDiff("dt","dt")).Show();
-        Source.Select(DateDiff(Lit(new DateOnly(1980, 04, 01)),Lit(new DateOnly(1980, 04, 01)))).Show();
-        Source.Select(DateDiff(Col("dt"),Col("dt"))).Show();
+        Source.Select(DateDiff("dt", "dt")).Show();
+        Source.Select(DateDiff(Lit(new DateOnly(1980, 04, 01)), Lit(new DateOnly(1980, 04, 01)))).Show();
+        Source.Select(DateDiff(Col("dt"), Col("dt"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
@@ -1430,7 +1430,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Crc32_Test()
     {
         Source.Select(Crc32("idbinary")).Show();
-        Source.Select(Crc32(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(Crc32(Lit(new byte[] { 0, 1, 2 }))).Show();
         Source.Select(Crc32(Col("idbinary"))).Show();
     }
 
@@ -1439,7 +1439,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Md5_Test()
     {
         Source.Select(Md5("idbinary")).Show();
-        Source.Select(Md5(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(Md5(Lit(new byte[] { 0, 1, 2 }))).Show();
         Source.Select(Md5(Col("idbinary"))).Show();
     }
 
@@ -1448,7 +1448,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Sha1_Test()
     {
         Source.Select(Sha1("idbinary")).Show();
-        Source.Select(Sha1(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(Sha1(Lit(new byte[] { 0, 1, 2 }))).Show();
         Source.Select(Sha1(Col("idbinary"))).Show();
     }
 
@@ -1456,18 +1456,18 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Hash_Test()
     {
-        Source.Select(Hash(new []{"id", "id"})).Show();
-        Source.Select(Hash(new []{Lit(180), Lit(180)})).Show();
-        Source.Select(Hash(new []{Col("id"), Col("id")})).Show();
+        Source.Select(Hash("id", "id")).Show();
+        Source.Select(Hash(Lit(180), Lit(180))).Show();
+        Source.Select(Hash(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::ParamsColumnOrNameFunction::EverythingElse **/
     [Fact]
     public void Xxhash64_Test()
     {
-        Source.Select(Xxhash64(new []{"id", "id"})).Show();
-        Source.Select(Xxhash64(new []{Lit(180), Lit(180)})).Show();
-        Source.Select(Xxhash64(new []{Col("id"), Col("id")})).Show();
+        Source.Select(Xxhash64("id", "id")).Show();
+        Source.Select(Xxhash64(Lit(180), Lit(180))).Show();
+        Source.Select(Xxhash64(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
@@ -1502,7 +1502,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Base64_Test()
     {
         Source.Select(Base64("idbinary")).Show();
-        Source.Select(Base64(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(Base64(Lit(new byte[] { 0, 1, 2 }))).Show();
         Source.Select(Base64(Col("idbinary"))).Show();
     }
 
@@ -1543,7 +1543,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
-    [Fact]
+    [Fact(Skip = "To be implemented")]
     public void FormatNumber_Test()
     {
         Assert.Fail("To Be Implemented");
@@ -1565,45 +1565,45 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Rlike_Test()
     {
-        Source.Select(Rlike("id","id")).Show();
-        Source.Select(Rlike(Lit(1),Lit(1))).Show();
-        Source.Select(Rlike(Col("id"),Col("id"))).Show();
+        Source.Select(Rlike("id", "id")).Show();
+        Source.Select(Rlike(Lit(1), Lit(1))).Show();
+        Source.Select(Rlike(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void Regexp_Test()
     {
-        Source.Select(Regexp("id","id")).Show();
-        Source.Select(Regexp(Lit(1),Lit(1))).Show();
-        Source.Select(Regexp(Col("id"),Col("id"))).Show();
+        Source.Select(Regexp("id", "id")).Show();
+        Source.Select(Regexp(Lit(1), Lit(1))).Show();
+        Source.Select(Regexp(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegexpLike_Test()
     {
-        Source.Select(RegexpLike("id","id")).Show();
-        Source.Select(RegexpLike(Lit(1),Lit(1))).Show();
-        Source.Select(RegexpLike(Col("id"),Col("id"))).Show();
+        Source.Select(RegexpLike("id", "id")).Show();
+        Source.Select(RegexpLike(Lit(1), Lit(1))).Show();
+        Source.Select(RegexpLike(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegexpCount_Test()
     {
-        Source.Select(RegexpCount("id","id")).Show();
-        Source.Select(RegexpCount(Lit(1),Lit(1))).Show();
-        Source.Select(RegexpCount(Col("id"),Col("id"))).Show();
+        Source.Select(RegexpCount("id", "id")).Show();
+        Source.Select(RegexpCount(Lit(1), Lit(1))).Show();
+        Source.Select(RegexpCount(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void RegexpSubstr_Test()
     {
-        Source.Select(RegexpSubstr("id","id")).Show();
-        Source.Select(RegexpSubstr(Lit(1),Lit(1))).Show();
-        Source.Select(RegexpSubstr(Col("id"),Col("id"))).Show();
+        Source.Select(RegexpSubstr("id", "id")).Show();
+        Source.Select(RegexpSubstr(Lit(1), Lit(1))).Show();
+        Source.Select(RegexpSubstr(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
@@ -1700,18 +1700,18 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Endswith_Test()
     {
-        Source.Select(Endswith("id","id")).Show();
-        Source.Select(Endswith(Lit(1),Lit(1))).Show();
-        Source.Select(Endswith(Col("id"),Col("id"))).Show();
+        Source.Select(Endswith("id", "id")).Show();
+        Source.Select(Endswith(Lit(1), Lit(1))).Show();
+        Source.Select(Endswith(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void Startswith_Test()
     {
-        Source.Select(Startswith("id","id")).Show();
-        Source.Select(Startswith(Lit(1),Lit(1))).Show();
-        Source.Select(Startswith(Col("id"),Col("id"))).Show();
+        Source.Select(Startswith("id", "id")).Show();
+        Source.Select(Startswith(Lit(1), Lit(1))).Show();
+        Source.Select(Startswith(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
@@ -1745,27 +1745,27 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Contains_Test()
     {
-        Source.Select(Contains("id","id")).Show();
-        Source.Select(Contains(Lit(1),Lit(1))).Show();
-        Source.Select(Contains(Col("id"),Col("id"))).Show();
+        Source.Select(Contains("id", "id")).Show();
+        Source.Select(Contains(Lit(1), Lit(1))).Show();
+        Source.Select(Contains(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::ParamsColumnOrNameFunction::EverythingElse **/
     [Fact]
     public void Elt_Test()
     {
-        Source.Select(Elt(new []{"id", "id"})).Show();
-        Source.Select(Elt(new []{Lit(180), Lit(180)})).Show();
-        Source.Select(Elt(new []{Col("id"), Col("id")})).Show();
+        Source.Select(Elt("id", "id")).Show();
+        Source.Select(Elt(Lit(180), Lit(180))).Show();
+        Source.Select(Elt(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void FindInSet_Test()
     {
-        Source.Select(FindInSet("id","id")).Show();
-        Source.Select(FindInSet(Lit(1),Lit(1))).Show();
-        Source.Select(FindInSet(Col("id"),Col("id"))).Show();
+        Source.Select(FindInSet("id", "id")).Show();
+        Source.Select(FindInSet(Lit(1), Lit(1))).Show();
+        Source.Select(FindInSet(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
@@ -1790,36 +1790,36 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Left_Test()
     {
-        Source.Select(Left("id","id")).Show();
-        Source.Select(Left(Lit(1),Lit(1))).Show();
-        Source.Select(Left(Col("id"),Col("id"))).Show();
+        Source.Select(Left("id", "id")).Show();
+        Source.Select(Left(Lit(1), Lit(1))).Show();
+        Source.Select(Left(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void Right_Test()
     {
-        Source.Select(Right("id","id")).Show();
-        Source.Select(Right(Lit(1),Lit(1))).Show();
-        Source.Select(Right(Col("id"),Col("id"))).Show();
+        Source.Select(Right("id", "id")).Show();
+        Source.Select(Right(Lit(1), Lit(1))).Show();
+        Source.Select(Right(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrName::IntArray **/
     [Fact]
     public void MapFromArrays_Test()
     {
-        Source.Select(MapFromArrays("idarray","idarray")).Show();
-        Source.Select(MapFromArrays(Lit(new[] {0, 1, 2}),Lit(new[] {0, 1, 2}))).Show();
-        Source.Select(MapFromArrays(Col("idarray"),Col("idarray"))).Show();
+        Source.Select(MapFromArrays("idarray", "idarray")).Show();
+        Source.Select(MapFromArrays(Lit(new[] { 0, 1, 2 }), Lit(new[] { 0, 1, 2 }))).Show();
+        Source.Select(MapFromArrays(Col("idarray"), Col("idarray"))).Show();
     }
 
     /** GeneratedBy::ParamsColumnOrNameFunction::EverythingElse **/
     [Fact]
     public void Array_Test()
     {
-        Source.Select(Array(new []{"id", "id"})).Show();
-        Source.Select(Array(new []{Lit(180), Lit(180)})).Show();
-        Source.Select(Array(new []{Col("id"), Col("id")})).Show();
+        Source.Select(Array("id", "id")).Show();
+        Source.Select(Array(Lit(180), Lit(180))).Show();
+        Source.Select(Array(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::NoArgsFunction **/
@@ -1842,18 +1842,18 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void ArraysOverlap_Test()
     {
-        Source.Select(ArraysOverlap("idarray","idarray")).Show();
-        Source.Select(ArraysOverlap(Lit(new[] {0, 1, 2}),Lit(new[] {0, 1, 2}))).Show();
-        Source.Select(ArraysOverlap(Col("idarray"),Col("idarray"))).Show();
+        Source.Select(ArraysOverlap("idarray", "idarray")).Show();
+        Source.Select(ArraysOverlap(Lit(new[] { 0, 1, 2 }), Lit(new[] { 0, 1, 2 }))).Show();
+        Source.Select(ArraysOverlap(Col("idarray"), Col("idarray"))).Show();
     }
 
     /** GeneratedBy::ParamsColumnOrNameFunction::EverythingElse **/
     [Fact]
     public void Concat_Test()
     {
-        Source.Select(Concat(new []{"id", "id"})).Show();
-        Source.Select(Concat(new []{Lit(180), Lit(180)})).Show();
-        Source.Select(Concat(new []{Col("id"), Col("id")})).Show();
+        Source.Select(Concat("id", "id")).Show();
+        Source.Select(Concat(Lit(180), Lit(180))).Show();
+        Source.Select(Concat(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::ColumnOrNameHidingArgTwoType::ArrayInt **/
@@ -1897,7 +1897,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void ArrayDistinct_Test()
     {
         Source.Select(ArrayDistinct("idarray")).Show();
-        Source.Select(ArrayDistinct(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayDistinct(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(ArrayDistinct(Col("idarray"))).Show();
     }
 
@@ -1905,27 +1905,27 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void ArrayIntersect_Test()
     {
-        Source.Select(ArrayIntersect("idarray","idarray")).Show();
-        Source.Select(ArrayIntersect(Lit(new[] {0, 1, 2}),Lit(new[] {0, 1, 2}))).Show();
-        Source.Select(ArrayIntersect(Col("idarray"),Col("idarray"))).Show();
+        Source.Select(ArrayIntersect("idarray", "idarray")).Show();
+        Source.Select(ArrayIntersect(Lit(new[] { 0, 1, 2 }), Lit(new[] { 0, 1, 2 }))).Show();
+        Source.Select(ArrayIntersect(Col("idarray"), Col("idarray"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrName::IntArray **/
     [Fact]
     public void ArrayUnion_Test()
     {
-        Source.Select(ArrayUnion("idarray","idarray")).Show();
-        Source.Select(ArrayUnion(Lit(new[] {0, 1, 2}),Lit(new[] {0, 1, 2}))).Show();
-        Source.Select(ArrayUnion(Col("idarray"),Col("idarray"))).Show();
+        Source.Select(ArrayUnion("idarray", "idarray")).Show();
+        Source.Select(ArrayUnion(Lit(new[] { 0, 1, 2 }), Lit(new[] { 0, 1, 2 }))).Show();
+        Source.Select(ArrayUnion(Col("idarray"), Col("idarray"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrName::IntArray **/
     [Fact]
     public void ArrayExcept_Test()
     {
-        Source.Select(ArrayExcept("idarray","idarray")).Show();
-        Source.Select(ArrayExcept(Lit(new[] {0, 1, 2}),Lit(new[] {0, 1, 2}))).Show();
-        Source.Select(ArrayExcept(Col("idarray"),Col("idarray"))).Show();
+        Source.Select(ArrayExcept("idarray", "idarray")).Show();
+        Source.Select(ArrayExcept(Lit(new[] { 0, 1, 2 }), Lit(new[] { 0, 1, 2 }))).Show();
+        Source.Select(ArrayExcept(Col("idarray"), Col("idarray"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::IntArray **/
@@ -1933,7 +1933,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void ArrayCompact_Test()
     {
         Source.Select(ArrayCompact("idarray")).Show();
-        Source.Select(ArrayCompact(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayCompact(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(ArrayCompact(Col("idarray"))).Show();
     }
 
@@ -1951,7 +1951,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Explode_Test()
     {
         Source.Select(Explode("idarray")).Show();
-        Source.Select(Explode(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(Explode(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(Explode(Col("idarray"))).Show();
     }
 
@@ -1960,7 +1960,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Posexplode_Test()
     {
         Source.Select(Posexplode("idarray")).Show();
-        Source.Select(Posexplode(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(Posexplode(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(Posexplode(Col("idarray"))).Show();
     }
 
@@ -1978,7 +1978,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void ExplodeOuter_Test()
     {
         Source.Select(ExplodeOuter("idarray")).Show();
-        Source.Select(ExplodeOuter(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ExplodeOuter(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(ExplodeOuter(Col("idarray"))).Show();
     }
 
@@ -1987,7 +1987,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void PosexplodeOuter_Test()
     {
         Source.Select(PosexplodeOuter("idarray")).Show();
-        Source.Select(PosexplodeOuter(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(PosexplodeOuter(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(PosexplodeOuter(Col("idarray"))).Show();
     }
 
@@ -2023,7 +2023,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Size_Test()
     {
         Source.Select(Size("idarray")).Show();
-        Source.Select(Size(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(Size(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(Size(Col("idarray"))).Show();
     }
 
@@ -2032,7 +2032,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void ArrayMin_Test()
     {
         Source.Select(ArrayMin("idarray")).Show();
-        Source.Select(ArrayMin(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayMin(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(ArrayMin(Col("idarray"))).Show();
     }
 
@@ -2041,7 +2041,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void ArrayMax_Test()
     {
         Source.Select(ArrayMax("idarray")).Show();
-        Source.Select(ArrayMax(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArrayMax(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(ArrayMax(Col("idarray"))).Show();
     }
 
@@ -2050,7 +2050,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void ArraySize_Test()
     {
         Source.Select(ArraySize("idarray")).Show();
-        Source.Select(ArraySize(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(ArraySize(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(ArraySize(Col("idarray"))).Show();
     }
 
@@ -2059,7 +2059,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Cardinality_Test()
     {
         Source.Select(Cardinality("idarray")).Show();
-        Source.Select(Cardinality(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(Cardinality(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(Cardinality(Col("idarray"))).Show();
     }
 
@@ -2068,7 +2068,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Shuffle_Test()
     {
         Source.Select(Shuffle("idarray")).Show();
-        Source.Select(Shuffle(Lit(new[] {0, 1, 2}))).Show();
+        Source.Select(Shuffle(Lit(new[] { 0, 1, 2 }))).Show();
         Source.Select(Shuffle(Col("idarray"))).Show();
     }
 
@@ -2091,7 +2091,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
-    [Fact]
+    [Fact(Skip = "To be implemented")]
     public void MapContainsKey_Test()
     {
         Assert.Fail("To Be Implemented");
@@ -2105,7 +2105,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void MapKeys_Test()
     {
         Source.Select(MapKeys("m")).Show();
-        Source.Select(MapKeys(Lit(new Dictionary<string, int>(){{"a", 100}}))).Show();
+        Source.Select(MapKeys(Lit(new Dictionary<string, int> { { "a", 100 } }))).Show();
         Source.Select(MapKeys(Col("m"))).Show();
     }
 
@@ -2114,7 +2114,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void MapValues_Test()
     {
         Source.Select(MapValues("m")).Show();
-        Source.Select(MapValues(Lit(new Dictionary<string, int>(){{"a", 100}}))).Show();
+        Source.Select(MapValues(Lit(new Dictionary<string, int> { { "a", 100 } }))).Show();
         Source.Select(MapValues(Col("m"))).Show();
     }
 
@@ -2123,7 +2123,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void MapEntries_Test()
     {
         Source.Select(MapEntries("m")).Show();
-        Source.Select(MapEntries(Lit(new Dictionary<string, int>(){{"a", 100}}))).Show();
+        Source.Select(MapEntries(Lit(new Dictionary<string, int> { { "a", 100 } }))).Show();
         Source.Select(MapEntries(Col("m"))).Show();
     }
 
@@ -2140,9 +2140,9 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void ArraysZip_Test()
     {
-        Source.Select(ArraysZip(new[] {"idarray"})).Show();
-        Source.Select(ArraysZip(new []{Lit(new[] {0, 1, 2})})).Show();
-        Source.Select(ArraysZip(new[] {Col("idarray")})).Show();
+        Source.Select(ArraysZip("idarray")).Show();
+        Source.Select(ArraysZip(Lit(new[] { 0, 1, 2 }))).Show();
+        Source.Select(ArraysZip(Col("idarray"))).Show();
     }
 
     /** GeneratedBy::ParamsColumnOrNameFunction::Map **/
@@ -2150,10 +2150,11 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void MapConcat_Test()
     {
         Source.Select(MapConcat("m")).Show();
-        Source.Select(MapConcat(Lit(new Dictionary<string, int>(){{"a", 100}}))).Show();
-        Source.Select(MapConcat(Lit(new Dictionary<string, int>(){{"a", 100}})), Lit(new Dictionary<string, int>(){{"b", 100}})).Show();
+        Source.Select(MapConcat(Lit(new Dictionary<string, int> { { "a", 100 } }))).Show();
+        Source.Select(MapConcat(Lit(new Dictionary<string, int> { { "a", 100 } })),
+            Lit(new Dictionary<string, int> { { "b", 100 } })).Show();
         Source.Select(MapConcat(Col("m"))).Show();
-        Source.Select(MapConcat(Col("m"), Lit(new Dictionary<string, int>(){{"MM", 100}}))).Show();
+        Source.Select(MapConcat(Col("m"), Lit(new Dictionary<string, int> { { "MM", 100 } }))).Show();
     }
 
     /** GeneratedBy::NoArgsFunction **/
@@ -2195,18 +2196,18 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void MakeTimestampNtz_Test()
     {
-        Source.Select(MakeTimestampNtz("id","id","id","id","id","id")).Show();
-        Source.Select(MakeTimestampNtz(Lit(1),Lit(1),Lit(1),Lit(1),Lit(1),Lit(1))).Show();
-        Source.Select(MakeTimestampNtz(Col("id"),Col("id"),Col("id"),Col("id"),Col("id"),Col("id"))).Show();
+        Source.Select(MakeTimestampNtz("id", "id", "id", "id", "id", "id")).Show();
+        Source.Select(MakeTimestampNtz(Lit(1), Lit(1), Lit(1), Lit(1), Lit(1), Lit(1))).Show();
+        Source.Select(MakeTimestampNtz(Col("id"), Col("id"), Col("id"), Col("id"), Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void Ifnull_Test()
     {
-        Source.Select(Ifnull("id","id")).Show();
-        Source.Select(Ifnull(Lit(1),Lit(1))).Show();
-        Source.Select(Ifnull(Col("id"),Col("id"))).Show();
+        Source.Select(Ifnull("id", "id")).Show();
+        Source.Select(Ifnull(Lit(1), Lit(1))).Show();
+        Source.Select(Ifnull(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::EverythingElse **/
@@ -2222,36 +2223,36 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void EqualNull_Test()
     {
-        Source.Select(EqualNull("id","id")).Show();
-        Source.Select(EqualNull(Lit(1),Lit(1))).Show();
-        Source.Select(EqualNull(Col("id"),Col("id"))).Show();
+        Source.Select(EqualNull("id", "id")).Show();
+        Source.Select(EqualNull(Lit(1), Lit(1))).Show();
+        Source.Select(EqualNull(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void Nullif_Test()
     {
-        Source.Select(Nullif("id","id")).Show();
-        Source.Select(Nullif(Lit(1),Lit(1))).Show();
-        Source.Select(Nullif(Col("id"),Col("id"))).Show();
+        Source.Select(Nullif("id", "id")).Show();
+        Source.Select(Nullif(Lit(1), Lit(1))).Show();
+        Source.Select(Nullif(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void Nvl_Test()
     {
-        Source.Select(Nvl("id","id")).Show();
-        Source.Select(Nvl(Lit(1),Lit(1))).Show();
-        Source.Select(Nvl(Col("id"),Col("id"))).Show();
+        Source.Select(Nvl("id", "id")).Show();
+        Source.Select(Nvl(Lit(1), Lit(1))).Show();
+        Source.Select(Nvl(Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
     [Fact]
     public void Nvl2_Test()
     {
-        Source.Select(Nvl2("id","id","id")).Show();
-        Source.Select(Nvl2(Lit(1),Lit(1),Lit(1))).Show();
-        Source.Select(Nvl2(Col("id"),Col("id"),Col("id"))).Show();
+        Source.Select(Nvl2("id", "id", "id")).Show();
+        Source.Select(Nvl2(Lit(1), Lit(1), Lit(1))).Show();
+        Source.Select(Nvl2(Col("id"), Col("id"), Col("id"))).Show();
     }
 
     /** GeneratedBy::SingleArgColumnOrNameFunction::Binary **/
@@ -2259,7 +2260,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void Sha_Test()
     {
         Source.Select(Sha("idbinary")).Show();
-        Source.Select(Sha(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(Sha(Lit(new byte[] { 0, 1, 2 }))).Show();
         Source.Select(Sha(Col("idbinary"))).Show();
     }
 
@@ -2325,7 +2326,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void BitmapCount_Test()
     {
         Source.Select(BitmapCount("idbinary")).Show();
-        Source.Select(BitmapCount(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(BitmapCount(Lit(new byte[] { 0, 1, 2 }))).Show();
         Source.Select(BitmapCount(Col("idbinary"))).Show();
     }
 
@@ -2334,9 +2335,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void BitmapOrAgg_Test()
     {
         Source.Select(BitmapOrAgg("idbinary")).Show();
-        Source.Select(BitmapOrAgg(Lit(new byte[] {0, 1, 2}))).Show();
+        Source.Select(BitmapOrAgg(Lit(new byte[] { 0, 1, 2 }))).Show();
         Source.Select(BitmapOrAgg(Col("idbinary"))).Show();
     }
-
 }
-

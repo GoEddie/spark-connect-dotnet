@@ -13,7 +13,7 @@ public class DataFrameUnionTests : E2ETestBase
         var df3 = df1.Union(df2);
         Assert.Equal(19, df3.Count());
     }
-    
+
     [Fact]
     public void UnionAll()
     {
@@ -23,7 +23,7 @@ public class DataFrameUnionTests : E2ETestBase
         var df3 = df1.Union(df2);
         Assert.Equal(11, df3.Count());
     }
-    
+
     [Fact]
     public void UnionByName()
     {
@@ -31,7 +31,7 @@ public class DataFrameUnionTests : E2ETestBase
         var df2 = Spark.Range(11, 20).WithColumn("ABC", Functions.Lit("SomeText"));
 
         df1 = df1.Select(df1["ABC"], df1["id"]);
-        
+
         var df3 = df1.UnionByName(df2, false);
         Assert.Equal(19, df3.Count());
     }

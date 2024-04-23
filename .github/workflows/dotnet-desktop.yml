@@ -1,46 +1,8 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-# This workflow will build, test, sign and package a WPF or Windows Forms desktop application
-# built on .NET Core.
-# To learn how to migrate your existing application to .NET Core,
-# refer to https://docs.microsoft.com/en-us/dotnet/desktop-wpf/migration/convert-project-from-net-framework
-#
-# To configure this workflow:
-#
-# 1. Configure environment variables
-# GitHub sets default environment variables for every workflow run.
-# Replace the variables relative to your project in the "env" section below.
-#
-# 2. Signing
-# Generate a signing certificate in the Windows Application
-# Packaging Project or add an existing signing certificate to the project.
-# Next, use PowerShell to encode the .pfx file using Base64 encoding
-# by running the following Powershell script to generate the output string:
-#
-# $pfx_cert = Get-Content '.\SigningCertificate.pfx' -Encoding Byte
-# [System.Convert]::ToBase64String($pfx_cert) | Out-File 'SigningCertificate_Encoded.txt'
-#
-# Open the output file, SigningCertificate_Encoded.txt, and copy the
-# string inside. Then, add the string to the repo as a GitHub secret
-# and name it "Base64_Encoded_Pfx."
-# For more information on how to configure your signing certificate for
-# this workflow, refer to https://github.com/microsoft/github-actions-for-desktop-apps#signing
-#
-# Finally, add the signing certificate password to the repo as a secret and name it "Pfx_Key".
-# See "Build the Windows Application Packaging project" below to see how the secret is used.
-#
-# For more information on GitHub Actions, refer to https://github.com/features/actions
-# For a complete CI/CD sample to get started with GitHub Action workflows for Desktop Applications,
-# refer to https://github.com/microsoft/github-actions-for-desktop-apps
-
-name: .NET Core Desktop
+name: Spark Dotnet
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "feature/*", "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -50,30 +12,30 @@ jobs:
 
     strategy:
       matrix:
-        configuration: [Debug, Release]
+        configuration: [Release]
 
-    runs-on: ubuntu-latest  # For a list of available runner types, refer to
-                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    runs-on: ubuntu-latest
 
     env:
       Solution_Name: Spark.Connect.Dotnet                        # Replace with your solution name, i.e. MyWpfApp.sln.
       Test_Project_Path: src/test                # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
       
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+    
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    # Install the .NET Core workload
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
+    - uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: '7.0'  # Specify your .NET Core version here
+    
+    - name: Print current directory
+      run: pwd
 
-    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
-    - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v2
+    - name: Print current directory listing
+      run: ls -a ./src
+
+    
     
     - uses: actions/setup-python@v5
       with:
@@ -89,17 +51,39 @@ jobs:
         spark-version: '3.5.1'
         hadoop-version: '3'
     
+    - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
+
     - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.1
     
+    - name: Install dependencies
+      working-directory: ./src/Spark.Connect.Dotnet/
+      run: dotnet restore
+
+    - name: Build the project
+      working-directory: ./src/Spark.Connect.Dotnet/
+      run: dotnet build --configuration Release --no-restore
+
+
     # Execute all unit tests in the solution
     - name: Execute unit tests
-      run: dotnet test
+      working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
+      run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results.xml"
 
-    # Restore the application to populate the obj folder with RuntimeIdentifiers
-    - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: Test Results
+        path: ./test_results.xml
+
+    - name: Pack
+      working-directory: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/
+      run: dotnet pack --no-build --configuration Release --output nupkgs /p:PackageVersion=3.5.1-${{ github.run_number }}
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: NuGet-3.5.1-${{ github.run_number }}
+        path: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/nupkgs/*.nupkg
 
     # Decode the base 64 encoded pfx and save the Signing_Certificate
     # - name: Decode the pfx

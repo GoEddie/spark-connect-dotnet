@@ -1,4 +1,3 @@
-using Spark.Connect.Dotnet.Sql;
 using static Spark.Connect.Dotnet.Sql.Functions;
 
 namespace Spark.Connect.Dotnet.Tests.DataFrame;

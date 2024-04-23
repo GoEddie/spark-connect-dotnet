@@ -1,5 +1,4 @@
 using System.Text;
-using Apache.Arrow;
 using Google.Protobuf.Collections;
 
 namespace Spark.Connect.Dotnet.Sql;
@@ -8,25 +7,23 @@ public class FunctionsWrapper : FunctionsInternal
 {
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
-                {
-                    
-                }
+                IsUserDefinedFunction = false
             }
         };
     }
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params Expression[] parameters)
+
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct,
+        params Expression[] parameters)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
@@ -38,16 +35,17 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, params Expression[] parameters)
+
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col,
+        params Expression[] parameters)
     {
         var args = new RepeatedField<Expression>();
         args.Add(col.Expression);
         args.AddRange(parameters);
-        
-        return new Expression()
+
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
@@ -59,12 +57,13 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params string[] parameters)
+
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct,
+        params string[] parameters)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
@@ -76,29 +75,31 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, string parameter1, Expression parameter2)
+
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, string parameter1,
+        Expression parameter2)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
                 IsUserDefinedFunction = false,
                 Arguments =
                 {
-                   new Column(parameter1).Expression, parameter2
+                    new Column(parameter1).Expression, parameter2
                 }
             }
         };
     }
-    
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression parameter1, string parameter2)
+
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression parameter1,
+        string parameter2)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
@@ -110,12 +111,13 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column parameter1, Expression parameter2)
+
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column parameter1,
+        Expression parameter2)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
@@ -127,12 +129,13 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression parameter1, Column parameter2)
+
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression parameter1,
+        Column parameter2)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
@@ -144,13 +147,13 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params Column[] parameters)
+
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct,
+        params Column[] parameters)
     {
-        
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
@@ -162,12 +165,12 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
+
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
@@ -179,12 +182,12 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
+
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, string col)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
@@ -196,12 +199,12 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
+
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression col)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
@@ -213,42 +216,44 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
+
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, string value)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
                 IsUserDefinedFunction = false,
                 Arguments =
                 {
-                   col.Expression, new Expression() 
-                                    { Literal = new Expression.Types.Literal()
-                                       {
-                                           String = value
-                                       }
-                                    }
+                    col.Expression, new Expression
+                    {
+                        Literal = new Expression.Types.Literal
+                        {
+                            String = value
+                        }
+                    }
                 }
             }
         };
     }
-    
+
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, string col, Column value)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
                 IsUserDefinedFunction = false,
                 Arguments =
                 {
-                    new Expression() 
-                    { Literal = new Expression.Types.Literal()
+                    new Expression
+                    {
+                        Literal = new Expression.Types.Literal
                         {
                             String = col
                         }
@@ -258,21 +263,21 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
-    
+
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, int value)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
                 IsUserDefinedFunction = false,
                 Arguments =
                 {
-                    col.Expression, new Expression() 
-                    { 
-                        Literal = new Expression.Types.Literal()
+                    col.Expression, new Expression
+                    {
+                        Literal = new Expression.Types.Literal
                         {
                             Integer = value
                         }
@@ -284,18 +289,18 @@ public class FunctionsWrapper : FunctionsInternal
 
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, double value)
     {
-        return new Expression()
+        return new Expression
         {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
                 FunctionName = function,
                 IsDistinct = isDistinct,
                 IsUserDefinedFunction = false,
                 Arguments =
                 {
-                    col.Expression, new Expression()
+                    col.Expression, new Expression
                     {
-                        Literal = new Expression.Types.Literal()
+                        Literal = new Expression.Types.Literal
                         {
                             Double = value
                         }
@@ -306,40 +311,39 @@ public class FunctionsWrapper : FunctionsInternal
     }
 
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, float value)
+    {
+        return new Expression
         {
-            return new Expression()
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                UnresolvedFunction = new Expression.Types.UnresolvedFunction()
+                FunctionName = function,
+                IsDistinct = isDistinct,
+                IsUserDefinedFunction = false,
+                Arguments =
                 {
-                    FunctionName = function,
-                    IsDistinct = isDistinct,
-                    IsUserDefinedFunction = false,
-                    Arguments =
+                    col.Expression, new Expression
                     {
-                        col.Expression, new Expression() 
-                        { 
-                            Literal = new Expression.Types.Literal()
-                            {
-                                Float = value
-                            }
+                        Literal = new Expression.Types.Literal
+                        {
+                            Float = value
                         }
                     }
                 }
-            };
-        }
-    
-    public static string CSharpFunctionName(string functionName) {
-        
+            }
+        };
+    }
+
+    public static string CSharpFunctionName(string functionName)
+    {
         var csName = new StringBuilder();
         var parts = functionName.Split('_');
         foreach (var part in parts)
         {
             csName.Append(part[0].ToString().ToUpperInvariant());
-            if(part.Length > 1)
+            if (part.Length > 1)
                 csName.Append(part.Substring(1));
         }
 
         return csName.ToString();
     }
-    
 }

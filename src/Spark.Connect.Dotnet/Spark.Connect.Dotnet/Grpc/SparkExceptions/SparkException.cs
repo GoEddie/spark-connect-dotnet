@@ -17,12 +17,6 @@ public class SparkException : Exception
         {
             OverrideMessage = rpcExceptionFromRpc.Status.Detail;
         }
-        
-    }
-
-    public override string Message
-    {
-        get => OverrideMessage;
     }
 
     public SparkException(Exception exception) : base(exception.Message, exception)
@@ -32,9 +26,10 @@ public class SparkException : Exception
             OverrideMessage = rpcException.Status.Detail;
         }
     }
-    
+
     public SparkException(string message) : base(message)
     {
-        
     }
+
+    public override string Message => OverrideMessage;
 }
