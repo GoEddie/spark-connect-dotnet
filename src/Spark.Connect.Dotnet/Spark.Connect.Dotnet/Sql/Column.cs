@@ -4,6 +4,7 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class Column
 {
+    private readonly string _name;
     public readonly Expression Expression;
 
     public Column(Expression expression)
@@ -13,9 +14,9 @@ public class Column
 
     public Column(string name)
     {
+        _name = name;
         Expression = new Expression
         {
-            //TODO - is it always an Unresolvedattribute?
             UnresolvedAttribute = new Expression.Types.UnresolvedAttribute
             {
                 UnparsedIdentifier = name
@@ -86,6 +87,11 @@ public class Column
     {
         return BinaryOperation(value, "and");
     }
+    
+    public Column And(Column value)
+    {
+        return BinaryOperation(value, "and");
+    }
 
     public static Column operator |(Column src, bool value)
     {
@@ -93,6 +99,11 @@ public class Column
     }
 
     public Column Or(bool value)
+    {
+        return BinaryOperation(value, "or");
+    }
+    
+    public Column Or(Column value)
     {
         return BinaryOperation(value, "or");
     }
@@ -111,8 +122,18 @@ public class Column
     {
         return src.Multiply(value);
     }
+    
+    public static Column operator *(Column src, Column value)
+    {
+        return src.Multiply(value);
+    }
 
     public Column Multiply(int value)
+    {
+        return BinaryOperation(value, "*");
+    }
+    
+    public Column Multiply(Column value)
     {
         return BinaryOperation(value, "*");
     }
@@ -121,13 +142,28 @@ public class Column
     {
         return src.EqualTo(value);
     }
+    
+    public static Column operator ==(Column src, Column value)
+    {
+        return src.EqualTo(value);
+    }
 
     public Column EqualTo(int value)
     {
         return BinaryOperation(value, "==");
     }
+    
+    public Column EqualTo(Column value)
+    {
+        return BinaryOperation(value, "==");
+    }
 
     public static Column operator !=(Column src, int value)
+    {
+        return src.NotEqualTo(value);
+    }
+    
+    public static Column operator !=(Column src, Column value)
     {
         return src.NotEqualTo(value);
     }
@@ -137,8 +173,19 @@ public class Column
         var equals = BinaryOperation(value, "==");
         return NotOperation(equals);
     }
+    
+    public Column NotEqualTo(Column value)
+    {
+        var equals = BinaryOperation(value, "==");
+        return NotOperation(equals);
+    }
 
     public Column RMultiply(int value)
+    {
+        return BinaryOperation(value, "*", true);
+    }
+    
+    public Column RMultiply(Column value)
     {
         return BinaryOperation(value, "*", true);
     }
@@ -147,8 +194,18 @@ public class Column
     {
         return src.Divide(value);
     }
+    
+    public static Column operator /(Column src, Column value)
+    {
+        return src.Divide(value);
+    }
 
     public Column Divide(int value)
+    {
+        return BinaryOperation(value, "/");
+    }
+    
+    public Column Divide(Column value)
     {
         return BinaryOperation(value, "/");
     }
@@ -157,8 +214,18 @@ public class Column
     {
         return BinaryOperation(value, "/", true);
     }
+    
+    public Column RDivide(Column value)
+    {
+        return BinaryOperation(value, "/", true);
+    }
 
     public static Column operator +(Column src, int value)
+    {
+        return src.Add(value);
+    }
+    
+    public static Column operator +(Column src, Column value)
     {
         return src.Add(value);
     }
@@ -167,13 +234,28 @@ public class Column
     {
         return BinaryOperation(value, "+");
     }
+    
+    public Column Add(Column value)
+    {
+        return BinaryOperation(value, "+");
+    }
 
     public Column RAdd(int value)
     {
         return BinaryOperation(value, "+", true);
     }
+    
+    public Column RAdd(Column value)
+    {
+        return BinaryOperation(value, "+", true);
+    }
 
     public static Column operator -(Column src, int value)
+    {
+        return src.Minus(value);
+    }
+    
+    public static Column operator -(Column src, Column value)
     {
         return src.Minus(value);
     }
@@ -183,7 +265,17 @@ public class Column
         return BinaryOperation(value, "-");
     }
 
+    public Column Minus(Column value)
+    {
+        return BinaryOperation(value, "-");
+    }
+
     public Column RMinus(int value)
+    {
+        return BinaryOperation(value, "-", true);
+    }
+    
+    public Column RMinus(Column value)
     {
         return BinaryOperation(value, "-", true);
     }
@@ -192,8 +284,18 @@ public class Column
     {
         return src.Mod(value);
     }
+    
+    public static Column operator %(Column src, Column value)
+    {
+        return src.Mod(value);
+    }
 
     public Column Mod(int value)
+    {
+        return BinaryOperation(value, "%");
+    }
+    
+    public Column Mod(Column value)
     {
         return BinaryOperation(value, "%");
     }
@@ -202,8 +304,18 @@ public class Column
     {
         return BinaryOperation(value, "%", true);
     }
+    
+    public Column RMod(Column value)
+    {
+        return BinaryOperation(value, "%", true);
+    }
 
     public Column Pow(int value)
+    {
+        return BinaryOperation(value, "power");
+    }
+    
+    public Column Pow(Column value)
     {
         return BinaryOperation(value, "power");
     }
@@ -212,8 +324,58 @@ public class Column
     {
         return BinaryOperation(value, "power", true);
     }
-
+    
+    public Column RPow(Column value)
+    {
+        return BinaryOperation(value, "power", true);
+    }
+    
+    public static Column operator > (Column col, int value)
+    {
+        return col.Gt(value);
+    }
+    
+    public static Column operator > (Column col, Column value)
+    {
+        return col.Gt(value);
+    }
+    public static Column operator < (Column col, int value)
+    {
+        return col.Lt(value);
+    }
+    
+    public static Column operator < (Column col, Column value)
+    {
+        return col.Lt(value);
+    }
+    
+    public static Column operator <= (Column col, Column value)
+    {
+        return col.Le(value);
+    }
+    
+    public static Column operator <= (Column col, int value)
+    {
+        return col.Le(value);
+    }
+    
+    public static Column operator >= (Column col, Column value)
+    {
+        return col.Ge(value);
+    }
+    
+    public static Column operator >= (Column col, int value)
+    {
+        return col.Ge(value);
+    }
+    
+    
     public Column Gt(int value)
+    {
+        return BinaryOperation(value, ">");
+    }
+    
+    public Column Gt(Column value)
     {
         return BinaryOperation(value, ">");
     }
@@ -222,13 +384,28 @@ public class Column
     {
         return BinaryOperation(value, "<");
     }
+    
+    public Column Lt(Column value)
+    {
+        return BinaryOperation(value, "<");
+    }
 
     public Column Ge(int value)
     {
         return BinaryOperation(value, ">=");
     }
+    
+    public Column Ge(Column value)
+    {
+        return BinaryOperation(value, ">=");
+    }
 
     public Column Le(int value)
+    {
+        return BinaryOperation(value, "<=");
+    }
+    
+    public Column Le(Column value)
     {
         return BinaryOperation(value, "<=");
     }
@@ -298,6 +475,33 @@ public class Column
 
         return new Column(expression);
     }
+    
+    private Column BinaryOperation(Column value, string functionName, bool reverse = false)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = functionName,
+                IsUserDefinedFunction = false,
+                IsDistinct = false
+            }
+        };
+        
+
+        if (reverse)
+        {
+            expression.UnresolvedFunction.Arguments.Add(value.Expression);
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+        }
+        else
+        {
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+            expression.UnresolvedFunction.Arguments.Add(value.Expression);
+        }
+
+        return new Column(expression);
+    }
 
     private Column BinaryOperation(bool value, string functionName, bool reverse = false)
     {
@@ -355,6 +559,72 @@ public class Column
         return Cast(SparkDataType.FromString(type));
     }
 
+    public Column IsNull()
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "isnull", IsUserDefinedFunction = false, IsDistinct = false
+            }
+        };
+
+        expression.UnresolvedFunction.Arguments.Add(Expression);
+
+        return new Column(expression);
+    }
+
+    public Column EndsWith(string other)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "endswith", IsUserDefinedFunction = false, IsDistinct = false
+            }
+        };
+        
+        expression.UnresolvedFunction.Arguments.Add(Expression);
+        
+        expression.UnresolvedFunction.Arguments.Add(new Expression()
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                String = other
+            }
+        });
+
+        return new Column(expression);
+    }
+    
+    public Column StartsWith(string other)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "startswith", IsUserDefinedFunction = false, IsDistinct = false
+            }
+        };
+        
+        expression.UnresolvedFunction.Arguments.Add(Expression);
+        
+        expression.UnresolvedFunction.Arguments.Add(new Expression()
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                String = other
+            }
+        });
+
+        return new Column(expression);
+    }
+    
+    public Column Between(Column lowerBound, Column upperBound)
+    {
+        return (this >= lowerBound).And(this <= upperBound);
+    }
+
     /// <summary>
     ///     Otherwise
     /// </summary>
@@ -385,5 +655,139 @@ public class Column
 
         Expression.UnresolvedFunction.Arguments.Add(value.Expression);
         return this;
+    }
+
+    public Column DropFields(params string[] fieldNames)
+    {
+        var lastExpression = Expression;
+        
+        foreach (var field in fieldNames)
+        {
+            var expression = new Expression()
+            {
+                UpdateFields = new Expression.Types.UpdateFields()
+                {
+                    FieldName = field,
+                    StructExpression = lastExpression
+                }
+            };
+
+            lastExpression = expression;
+        }
+
+        return new Column(lastExpression);
+    }
+
+    public Column GetField(string name)
+    {
+        var expression = new Expression()
+        {
+            ExpressionString = new Expression.Types.ExpressionString()
+            {
+                Expression = $"{_name}.{name}"
+            }
+        };
+
+        return new Column(expression);
+    }
+    
+    public Column Like(string other)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "like", IsUserDefinedFunction = false, IsDistinct = false
+            }
+        };
+        
+        expression.UnresolvedFunction.Arguments.Add(Expression);
+        
+        expression.UnresolvedFunction.Arguments.Add(new Expression()
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                String = other
+            }
+        });
+
+        return new Column(expression);
+    }
+    
+    public Column ILike(string other)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "ilike", IsUserDefinedFunction = false, IsDistinct = false
+            }
+        };
+        
+        expression.UnresolvedFunction.Arguments.Add(Expression);
+        
+        expression.UnresolvedFunction.Arguments.Add(new Expression()
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                String = other
+            }
+        });
+
+        return new Column(expression);
+    }
+    
+    public Column RLike(string other)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "rlike", IsUserDefinedFunction = false, IsDistinct = false
+            }
+        };
+        
+        expression.UnresolvedFunction.Arguments.Add(Expression);
+        
+        expression.UnresolvedFunction.Arguments.Add(new Expression()
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                String = other
+            }
+        });
+
+        return new Column(expression);
+    }
+    
+    public Column Substr(int startPos, int length)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "substr", IsUserDefinedFunction = false, IsDistinct = false
+            }
+        };
+        
+        expression.UnresolvedFunction.Arguments.Add(Expression);
+        
+        expression.UnresolvedFunction.Arguments.Add(new Expression()
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                Integer = startPos
+            }
+        });
+
+        expression.UnresolvedFunction.Arguments.Add(new Expression()
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                Integer = length
+            }
+        });
+
+        return new Column(expression);
     }
 }
