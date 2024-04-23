@@ -8,6 +8,10 @@ jobs:
 
   build:
 
+    concurrency:
+      group: ${{ github.ref }}  # Groups all runs of this workflow using the branch name
+      cancel-in-progress: true  # Automatically cancels any previous run of the workflow that is not completed
+
     strategy:
       matrix:
         configuration: [Release]
@@ -80,24 +84,3 @@ jobs:
       with:
         name: NuGet-3.5.1-${{ github.run_number }}
         path: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/nupkgs/*.nupkg
-
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/nupkgs/GOEddie.Spark.Dotnet.3.5.1-${{ github.run_number }}.nupkg
-        asset_name: GOEddie.Spark.Dotnet.3.5.1-${{ github.run_number }}.nupkg
-        asset_content_type: application/zip

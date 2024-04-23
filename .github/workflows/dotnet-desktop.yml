@@ -10,6 +10,11 @@ jobs:
 
   build:
 
+    concurrency:
+      group: ${{ github.ref }}  # Groups all runs of this workflow using the branch name
+      cancel-in-progress: true  # Automatically cancels any previous run of the workflow that is not completed
+
+
     strategy:
       matrix:
         configuration: [Release]
@@ -77,29 +82,11 @@ jobs:
 
     - name: Pack
       working-directory: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/
-      run: dotnet pack --no-build --configuration Release --output nupkgs /p:PackageVersion=3.5.1-${{ github.run_number }}
+      run: dotnet pack --no-build --configuration Release --output nupkgs /p:PackageVersion=3.5.1-beta-${{ github.run_number }}
     
     - name: Upload test results
       uses: actions/upload-artifact@v2
       with:
-        name: NuGet-3.5.1-${{ github.run_number }}
+        name: NuGet-3.5.1-beta-${{ github.run_number }}
         path: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/nupkgs/*.nupkg
 
-    # Decode the base 64 encoded pfx and save the Signing_Certificate
-    # - name: Decode the pfx
-    #   run: |
-    #     $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
-    #     $certificatePath = Join-Path -Path $env:Wap_Project_Directory -ChildPath GitHubActionsWorkflow.pfx
-    #     [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
-
-  
-    # # Remove the pfx
-    # - name: Remove the pfx
-    #   run: Remove-Item -path $env:Wap_Project_Directory\GitHubActionsWorkflow.pfx
-
-    # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
-    # - name: Upload build artifacts
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: MSIX Package
-    #     path: ${{ env.Wap_Project_Directory }}\AppPackages
