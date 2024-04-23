@@ -10,7 +10,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Spark.Connect.Dotnet\Spark.Connect.Dotnet\Spark.Connect.Dotnet.csproj"/>
+      <PackageReference Include="GOEddie.Spark.Dotnet" Version="3.5.1-build.7" />
+      <PackageReference Include="GOEddie.Spark.Dotnet.GrpcClient" Version="3.5.1-build.7" />
     </ItemGroup>
 
 </Project>

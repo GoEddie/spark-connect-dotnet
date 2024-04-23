@@ -67,4 +67,22 @@
         <Protobuf Include="spark\connect\types.proto"/>
     </ItemGroup>
 
+<PropertyGroup>
+        <PackageId>GOEddie.Spark.Dotnet.GrpcClient</PackageId>
+        <Version>3.5.1-build.5</Version>
+        <Authors>GOEddie (Ed Elliott)</Authors>
+        <Company>OSS</Company>
+        <Product>GOEddie Spark Dotnet</Product>
+        <Description>DataFrame API over the Apache Spark gRPC API</Description>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryBranch>main</RepositoryBranch>
+        <RepositoryUrl>https://github.com/GoEddie/spark-connect-dotnet</RepositoryUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+     <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
+     <None Include="README.md" Pack="true" PackagePath=""/>
+    </ItemGroup>    
 </Project>
