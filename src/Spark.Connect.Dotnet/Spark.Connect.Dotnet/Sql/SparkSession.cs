@@ -86,9 +86,7 @@ public class SparkSession
             {
                 try
                 {
-                    Console.WriteLine($"Trying Databricks Query at {DateTime.Now}");
                     Sql("SELECT 'spark-connect-dotnet' as client").Collect();
-                    Console.WriteLine($"Completed Databricks Query at {DateTime.Now}");
                     return;
                 }
                 catch (Exception ex)

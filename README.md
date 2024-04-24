@@ -89,6 +89,52 @@ var (relation, _, _) = await GrpcInternal.Exec(spark.GrpcClient, spark.Host, spa
 var dataFrameFromRelation = new DataFrame(spark, relation);
 dataFrameFromRelation.Show();
 ```
+Output:
+
+```shell
++---+---+-----+
+| id|two|three|
++---+---+-----+
+|  0|  0|    0|
+|  1|  1|  188|
+|  3|  3|  564|
+|  2|  2|  376|
+|  4|  4|  752|
+|  6|  6| 1128|
+|  5|  5|  940|
+|  9|  9| 1692|
+|  8|  8| 1504|
+|  7|  7| 1316|
+| 10| 10| 1880|
+| 13| 13| 2444|
+| 12| 12| 2256|
+| 14| 14| 2632|
+| 11| 11| 2068|
+| 18| 18| 3384|
+| 16| 16| 3008|
+| 17| 17| 3196|
+| 15| 15| 2820|
+| 19| 19| 3572|
++---+---+-----+
+
++---+
+| id|
++---+
+|  0|
+|  1|
+|  2|
+|  3|
+|  4|
+|  5|
+|  6|
+|  7|
+|  8|
+|  9|
++---+
+only showing top 10 rows
+
+```
+
 
 ### Inspiration
 
