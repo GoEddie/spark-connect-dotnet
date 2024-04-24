@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="GOEddie.Spark.Dotnet" Version="3.5.1-build.7" />
-      <PackageReference Include="GOEddie.Spark.Dotnet.GrpcClient" Version="3.5.1-build.7" />
+      <PackageReference Include="GOEddie.Spark.Dotnet" Version="3.5.1-build.12" />
+      <PackageReference Include="GOEddie.Spark.Dotnet.GrpcClient" Version="3.5.1-build.12" />
     </ItemGroup>
 
 </Project>
