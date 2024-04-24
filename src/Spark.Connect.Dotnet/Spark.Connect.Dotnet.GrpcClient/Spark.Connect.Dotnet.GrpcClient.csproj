@@ -78,12 +78,12 @@
         <RepositoryType>git</RepositoryType>
         <RepositoryBranch>main</RepositoryBranch>
         <RepositoryUrl>https://github.com/GoEddie/spark-connect-dotnet</RepositoryUrl>
+        <PackageIcon>logo.png</PackageIcon>
     </PropertyGroup>
 
     <ItemGroup>
      <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
      <None Include="README.md" Pack="true" PackagePath=""/>
      <None Include="logo.png" Pack="true" PackagePath="" />
-     <PackageIcon>logo.png</PackageIcon>
     </ItemGroup>    
 </Project>
