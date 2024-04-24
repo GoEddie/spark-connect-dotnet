@@ -1,10 +1,12 @@
 using System.Collections;
+using System.Security.Cryptography;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
 using Google.Protobuf;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Spark.Connect.Dotnet.Databricks;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Sql.Streaming;
 using Spark.Connect.Dotnet.Sql.Types;
@@ -21,6 +23,8 @@ public class SparkSession
     protected internal readonly SparkConnectService.SparkConnectServiceClient Client;
 
     protected internal readonly string SessionId;
+    
+    private readonly DatabricksConnectionVerification _databricksConnectionVerification;
 
     private int _planId;
 
@@ -32,19 +36,104 @@ public class SparkSession
     /// <param name="headers"></param>
     /// <param name="userContext"></param>
     /// <param name="clientType"></param>
-    public SparkSession(string sessionId, string url, Metadata headers, UserContext userContext,
-        string clientType = "dotnet")
+    /// <param name="databricksConnectionVerification"></param>
+    /// <param name="databricksConnectionMaxVerificationTime"></param>
+    public SparkSession(string sessionId, string url, Metadata headers, UserContext userContext, string clientType,
+        DatabricksConnectionVerification databricksConnectionVerification, TimeSpan databricksConnectionMaxVerificationTime)
     {
         Headers = headers;
         UserContext = userContext;
         SessionId = sessionId;
+        _databricksConnectionVerification = databricksConnectionVerification;
         ClientType = clientType;
 
         Host = url.Replace("sc://", "http://");
         var channel = GrpcChannel.ForAddress(Host, new GrpcChannelOptions());
 
-        Task.Run(() => channel.ConnectAsync());
+        Task.Run(() => channel.ConnectAsync()).Wait();
+        
         Client = new SparkConnectService.SparkConnectServiceClient(channel);
+        VerifyDatabricksClusterRunning(databricksConnectionMaxVerificationTime);
+        
+    }
+
+    private void VerifyDatabricksClusterRunning(TimeSpan databricksConnectionMaxVerificationTime)
+    {
+        // var timer = new Timer(databricksConnectionMaxVerificationTime, () => throw new SparkException($"The databricks cluster was not ready before the timeout"));
+        bool IsPending(string message)
+        {
+            if(message.Contains("state=PENDING", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if(message.Contains("PENDING", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (message.Contains("is not usable", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;    //If terminating then we get this
+            }
+            return false;
+
+        }
+        
+        if (IsDatabricks.Url(Host) && _databricksConnectionVerification == DatabricksConnectionVerification.WaitForCluster)
+        {
+            while (true)
+            {
+                try
+                {
+                    Console.WriteLine($"Trying Databricks Query at {DateTime.Now}");
+                    Sql("SELECT 'spark-connect-dotnet' as client").Collect();
+                    Console.WriteLine($"Completed Databricks Query at {DateTime.Now}");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    if (ex is RpcException r)
+                    {
+                        if (IsPending(r.Status.Detail))
+                        {
+                            Thread.Sleep(1000* 10);
+                            continue;
+                        }
+                    }
+
+                    if (ex is AggregateException a)
+                    {
+                        if(a.InnerExceptions.Any(p => IsPending(p.Message)))
+                        {
+                            Thread.Sleep(1000* 10);
+                            continue;
+                        }
+                    }
+
+                    if (IsPending(ex.Message))
+                    {
+                        Thread.Sleep(1000* 10);
+                        continue;
+                    }
+                    
+                    var inner = ex.InnerException;
+                    
+                    while (inner != null)
+                    {
+                        if (IsPending(inner.Message))
+                        {
+                            Thread.Sleep(1000* 10);
+                            continue;
+                        }
+
+                        inner = inner.InnerException;
+                    }
+
+                    throw;
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -389,6 +478,7 @@ public class SparkSession
     }
 
     private static SparkCatalog _catalog;
+
     public SparkCatalog Catalog
     {
         get
@@ -399,7 +489,7 @@ public class SparkSession
             }
 
             return _catalog;
-            }
         }
-    
+    }
+
 }

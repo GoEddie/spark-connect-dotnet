@@ -61,11 +61,11 @@ jobs:
     - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.1
     
     - name: Install dependencies
-      working-directory: ./src/Spark.Connect.Dotnet/
+      working-directory: ./src
       run: dotnet restore
 
     - name: Build the project
-      working-directory: ./src/Spark.Connect.Dotnet/
+      working-directory: ./src
       run: dotnet build --configuration Release --no-restore
 
 

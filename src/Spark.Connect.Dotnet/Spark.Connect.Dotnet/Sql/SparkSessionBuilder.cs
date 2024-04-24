@@ -6,13 +6,16 @@ public class SparkSessionBuilder
 {
     private string _bearerToken = string.Empty;
 
-    private string _clientType = "goeddie-spark-dotnet";
+    private string _clientType = "goeddie/spark-dotnet";
     private string _clusterId = string.Empty;
 
     private string _remote = string.Empty;
     private SparkSession? _session;
     private string _userId = string.Empty;
     private string _userName = string.Empty;
+
+    private DatabricksConnectionVerification _databricksConnectionVerification = DatabricksConnectionVerification.WaitForCluster;
+    private TimeSpan _databricksConnectionMaxVerificationTime = TimeSpan.FromMinutes(10);
 
     public SparkSessionBuilder Remote(string address)
     {
@@ -25,7 +28,35 @@ public class SparkSessionBuilder
         _bearerToken = bearerToken;
         return this;
     }
+    
+    /// <summary>
+    /// If we detect the host is at databricks *databricks* then by default when the connection is created we loop waiting for the cluster to start. If you don't want this behaviour then set wait to false.
+    /// </summary>
+    /// <param name="wait"></param>
+    /// <returns></returns>
+    public SparkSessionBuilder DatabricksWaitForClusterOnSessionCreate(bool wait)
+    {
+        _databricksConnectionVerification =
+            wait ? DatabricksConnectionVerification.WaitForCluster : DatabricksConnectionVerification.None;
+        return this;
+    }
 
+    /// <summary>
+    /// If we are waiting for databricks clusters, what is the maximum wait time in seconds? The default is ten minutes.
+    /// </summary>
+    /// <param name="minutes"></param>
+    /// <returns></returns>
+    public SparkSessionBuilder DatabricksWaitForClusterMaxTime(int minutes)
+    {
+        _databricksConnectionMaxVerificationTime = TimeSpan.FromMinutes(minutes);
+        return this;
+    }
+
+    /// <summary>
+    /// Sets ClusterID - if ClusterId is in the profile then whichever you call last wins
+    /// </summary>
+    /// <param name="clusterId"></param>
+    /// <returns></returns>
     public SparkSessionBuilder ClusterId(string clusterId)
     {
         _clusterId = clusterId;
@@ -80,8 +111,7 @@ public class SparkSessionBuilder
             return _session;
         }
 
-        _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(),
-            _clientType);
+        _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(), _clientType, _databricksConnectionVerification, _databricksConnectionMaxVerificationTime);
         return _session;
     }
 
@@ -114,4 +144,10 @@ public class SparkSessionBuilder
 
         return headers;
     }
+}
+
+public enum DatabricksConnectionVerification
+{
+    None,
+    WaitForCluster
 }
