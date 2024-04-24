@@ -1,4 +1,6 @@
-﻿using Spark.Connect.Dotnet.Sql;
+﻿using Spark.Connect;
+using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.Sql;
 
 //You will need to configure your databricks tokens and give it a profile name that we can use
 // create a ~/.databrickscfg (you don't need any tools to create one: https://docs.databricks.com/en/dev-tools/cli/profiles.html)
@@ -9,11 +11,25 @@
 //                 .ClusterId("ClusterId")
 //                 .Remote("https://databricksurl.com"));
 
-
-
 var spark = SparkSession.Builder.Profile("M1").DatabricksWaitForClusterMaxTime(2).GetOrCreate();
 var dataFrame = spark.Sql("SELECT id, id as two, id * 188 as three FROM Range(10)");
 var dataFrame2 = spark.Sql("SELECT id, id as two, id * 188 as three FROM Range(20)");
 
 var dataFrame3 = dataFrame.Union(dataFrame2);
 dataFrame3.Show(1000);
+
+//Mix gRPC calls with DataFrame API calls - the gRPC  client is available on the SparkSession:
+var plan = new Plan()
+{
+    Root = new Relation()
+    {
+        Sql = new SQL()
+        {
+            Query = "SELECT * FROM Range(100)"
+        }
+    }
+};
+
+var (relation, _, _) = await GrpcInternal.Exec(spark.GrpcClient, spark.Host, spark.SessionId, plan, spark.Headers, spark.UserContext, spark.ClientType);
+var dataFrameFromRelation = new DataFrame(spark, relation);
+dataFrameFromRelation.Show();

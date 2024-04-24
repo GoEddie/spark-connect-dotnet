@@ -62,6 +62,34 @@ If you use this you can create your own `DataFrame` API wrappers for any functio
 
 There is also no one way or another, if for instance this library gives you everything you need apart from one function call then you can mix using this and making your own gRPC calls. This library intentionally makes everything that you would need to make the gRPC calls public so mixing in your own calls with this library is easy and is probably the best way to use this library, there will always be a new version of Spark and keeping up is going to be hard so this library is a good starting point but you should be prepared to make your own calls.
 
+Because the gRPC objects are available you can do this:
+
+
+```csharp
+var spark = SparkSession.Builder.Profile("M1").DatabricksWaitForClusterMaxTime(2).GetOrCreate();
+var dataFrame = spark.Sql("SELECT id, id as two, id * 188 as three FROM Range(10)");
+var dataFrame2 = spark.Sql("SELECT id, id as two, id * 188 as three FROM Range(20)");
+
+var dataFrame3 = dataFrame.Union(dataFrame2);
+dataFrame3.Show(1000);
+
+//Mix gRPC calls with DataFrame API calls - the gRPC  client is available on the SparkSession:
+var plan = new Plan()
+{
+    Root = new Relation()
+    {
+        Sql = new SQL()
+        {
+            Query = "SELECT * FROM Range(100)"
+        }
+    }
+};
+
+var (relation, _, _) = await GrpcInternal.Exec(spark.GrpcClient, spark.Host, spark.SessionId, plan, spark.Headers, spark.UserContext, spark.ClientType);
+var dataFrameFromRelation = new DataFrame(spark, relation);
+dataFrameFromRelation.Show();
+```
+
 ### Inspiration
 
 The documentation for Spark Connect is limited at best but there is an example implementation in [GO](https://github.com/apache/spark-connect-go) and that contains examples for many of the gRPC calls to Spark so has been extremely useful. So thanks go to the contributors over in Golang. 

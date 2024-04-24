@@ -7,7 +7,7 @@ using Spark.Connect.Dotnet.Sql;
 
 namespace Spark.Connect.Dotnet.Grpc;
 
-internal static class GrpcInternal
+public static class GrpcInternal
 {
     public static string LastPlan = "";
 
@@ -75,7 +75,7 @@ internal static class GrpcInternal
             ClientType = session.ClientType
         };
 
-        var analyzeResponse = session.Client.AnalyzePlan(analyzeRequest, session.Headers);
+        var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return relation;
     }
 
@@ -107,7 +107,7 @@ internal static class GrpcInternal
             ClientType = session.ClientType
         };
 
-        var analyzeResponse = session.Client.AnalyzePlan(analyzeRequest, session.Headers);
+        var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.SparkVersion.Version;
     }
     
@@ -124,7 +124,7 @@ internal static class GrpcInternal
             ClientType = session.ClientType
         };
 
-        var analyzeResponse = session.Client.AnalyzePlan(analyzeRequest, session.Headers);
+        var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.InputFiles.Files.Select(p => p);
     }
     
@@ -141,7 +141,7 @@ internal static class GrpcInternal
             ClientType = session.ClientType
         };
 
-        var analyzeResponse = session.Client.AnalyzePlan(analyzeRequest, session.Headers);
+        var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.IsLocal.IsLocal_;
     }
     
@@ -166,7 +166,7 @@ internal static class GrpcInternal
             analyzeRequest.TreeString.Level = level.Value;
         }
         
-        var analyzeResponse = session.Client.AnalyzePlan(analyzeRequest, session.Headers);
+        var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.TreeString.TreeString_;
     }
     
@@ -187,7 +187,7 @@ internal static class GrpcInternal
         };
 
         
-        var analyzeResponse = session.Client.AnalyzePlan(analyzeRequest, session.Headers);
+        var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.SemanticHash.Result;
     }
     public static StorageLevel StorageLevel(SparkSession session, Relation relation)
@@ -204,7 +204,7 @@ internal static class GrpcInternal
         };
 
         
-        var analyzeResponse = session.Client.AnalyzePlan(analyzeRequest, session.Headers);
+        var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.GetStorageLevel.StorageLevel;
     }
     
@@ -222,7 +222,7 @@ internal static class GrpcInternal
             ClientType = session.ClientType
         };
 
-        var analyzeResponse = session.Client.AnalyzePlan(analyzeRequest, session.Headers);
+        var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.IsStreaming.IsStreaming_;
     }
     
@@ -246,7 +246,7 @@ internal static class GrpcInternal
             ClientType = session.ClientType
         };
 
-        var analyzeResponse = session.Client.AnalyzePlan(analyzeRequest, session.Headers);
+        var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.SameSemantics.Result;
     }
 
@@ -254,7 +254,7 @@ internal static class GrpcInternal
     {
         // Console.WriteLine("** PLAN **");
         // Console.WriteLine(plan);
-        var task = Exec(session.Client, session.Host, session.SessionId, plan, session.Headers, session.UserContext,
+        var task = Exec(session.GrpcClient, session.Host, session.SessionId, plan, session.Headers, session.UserContext,
             session.ClientType);
         task.Wait();
         return task.Result.Item1;
@@ -349,7 +349,7 @@ internal static class GrpcInternal
         {
             try
             {
-                return session.Client.ExecutePlan(executeRequest, session.Headers);
+                return session.GrpcClient.ExecutePlan(executeRequest, session.Headers);
             }
             catch (Exception exception)
             {
@@ -405,7 +405,7 @@ internal static class GrpcInternal
         {
             try
             {
-                return session.Client.ExecutePlan(executeRequest, session.Headers);
+                return session.GrpcClient.ExecutePlan(executeRequest, session.Headers);
             }
             catch (Exception exception)
             {
@@ -532,7 +532,7 @@ internal static class GrpcInternal
         {
             try
             {
-                return session.Client.ExecutePlan(executeRequest, session.Headers);
+                return session.GrpcClient.ExecutePlan(executeRequest, session.Headers);
             }
             catch (Exception exception)
             {
@@ -585,7 +585,7 @@ internal static class GrpcInternal
         {
             try
             {
-                return session.Client.ExecutePlan(executeRequest, session.Headers);
+                return session.GrpcClient.ExecutePlan(executeRequest, session.Headers);
             }
             catch (Exception exception)
             {
@@ -638,7 +638,7 @@ internal static class GrpcInternal
         {
             try
             {
-                return session.Client.ExecutePlan(executeRequest, session.Headers);
+                return session.GrpcClient.ExecutePlan(executeRequest, session.Headers);
             }
             catch (Exception exception)
             {
@@ -688,7 +688,7 @@ internal static class GrpcInternal
         {
             try
             {
-                return session.Client.ExecutePlan(executeRequest, session.Headers);
+                return session.GrpcClient.ExecutePlan(executeRequest, session.Headers);
             }
             catch (Exception exception)
             {

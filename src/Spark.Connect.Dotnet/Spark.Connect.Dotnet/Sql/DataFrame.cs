@@ -29,7 +29,7 @@ public class DataFrame
         _schema = schema;
     }
 
-    protected internal DataFrame(SparkSession session, Relation relation)
+    public DataFrame(SparkSession session, Relation relation)
     {
         _session = session;
         Relation = relation;
@@ -50,7 +50,7 @@ public class DataFrame
                 Root = Relation
             };
 
-            var explain = GrpcInternal.Schema(_session.Client, _session.SessionId, plan, _session.Headers,
+            var explain = GrpcInternal.Schema(_session.GrpcClient, _session.SessionId, plan, _session.Headers,
                 _session.UserContext, _session.ClientType, false, "");
             var structType = new StructType(explain.Struct);
             return structType;
@@ -114,7 +114,7 @@ public class DataFrame
             }
         };
 
-        (_, _, var output) = await GrpcInternal.Exec(session.Client, session.Host, session.SessionId, showStringPlan, session.Headers, session.UserContext, session.ClientType);
+        var (_, _, output) = await GrpcInternal.Exec(session.GrpcClient, session.Host, session.SessionId, showStringPlan, session.Headers, session.UserContext, session.ClientType);
         Console.WriteLine(output);
     }
 
@@ -655,7 +655,7 @@ public class DataFrame
             Root = Relation
         };
 
-        var (batches, schema) = await GrpcInternal.ExecArrowResponse(_session.Client, _session.SessionId, plan,
+        var (batches, schema) = await GrpcInternal.ExecArrowResponse(_session.GrpcClient, _session.SessionId, plan,
             _session.Headers, _session.UserContext, _session.ClientType);
         var rows = new List<object[]>();
 
@@ -829,7 +829,7 @@ public class DataFrame
             }
         };
 
-        await GrpcInternal.Exec(_session.Client, _session.Host, _session.SessionId, plan, _session.Headers,
+        await GrpcInternal.Exec(_session.GrpcClient, _session.Host, _session.SessionId, plan, _session.Headers,
             _session.UserContext, _session.ClientType);
     }
 
@@ -1037,7 +1037,7 @@ public class DataFrame
         {
             Root = Relation
         };
-        var output = GrpcInternal.Explain(_session.Client, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, extended, mode);
+        var output = GrpcInternal.Explain(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, extended, mode);
 
         if (outputToConsole)
         {

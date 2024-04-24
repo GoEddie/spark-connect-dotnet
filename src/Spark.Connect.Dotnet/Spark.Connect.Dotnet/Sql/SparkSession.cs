@@ -20,9 +20,9 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class SparkSession
 {
-    protected internal readonly SparkConnectService.SparkConnectServiceClient Client;
+    public readonly SparkConnectService.SparkConnectServiceClient GrpcClient;
 
-    protected internal readonly string SessionId;
+    public readonly string SessionId;
     
     private readonly DatabricksConnectionVerification _databricksConnectionVerification;
 
@@ -52,7 +52,7 @@ public class SparkSession
 
         Task.Run(() => channel.ConnectAsync()).Wait();
         
-        Client = new SparkConnectService.SparkConnectServiceClient(channel);
+        GrpcClient = new SparkConnectService.SparkConnectServiceClient(channel);
         VerifyDatabricksClusterRunning(databricksConnectionMaxVerificationTime);
         
     }
@@ -165,7 +165,10 @@ public class SparkSession
     public DataFrameReader Read => new(this);
 
     public StreamingQueryManager Streams { get; } = new();
-
+    
+    public GrpcChannel GrpcChannel { get; }
+    
+    
     //TODO: Should we be setting plan id everytime we send a new plan?
     //      - should we be caching existing plans?
     public int GetPlanId()
@@ -274,7 +277,7 @@ public class SparkSession
             }
         };
 
-        var (relation, schema, output) = await GrpcInternal.Exec(Client, Host, SessionId, plan, Headers, UserContext, ClientType);
+        var (relation, schema, output) = await GrpcInternal.Exec(GrpcClient, Host, SessionId, plan, Headers, UserContext, ClientType);
         return new DataFrame(this, relation, schema);
     }
 
