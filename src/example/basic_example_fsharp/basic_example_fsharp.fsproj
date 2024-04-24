@@ -6,11 +6,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Program.fs"/>
+        <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Spark.Connect.Dotnet\Spark.Connect.Dotnet\Spark.Connect.Dotnet.csproj"/>
+      <PackageReference Include="GOEddie.Spark.Dotnet" Version="3.5.1-build.12" />
+      <PackageReference Include="GOEddie.Spark.Dotnet.GrpcClient" Version="3.5.1-build.12" />
     </ItemGroup>
 
 </Project>

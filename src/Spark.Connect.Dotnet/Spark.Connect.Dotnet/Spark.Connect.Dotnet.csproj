@@ -8,7 +8,7 @@
 
     <ItemGroup>
         <PackageReference Include="Apache.Arrow" Version="16.0.0" />
-        <PackageReference Include="Google.Protobuf" Version="3.24.4"/>
+        <PackageReference Include="Google.Protobuf" Version="3.24.4" />
         <PackageReference Include="Grpc.Core.Api" Version="2.62.0" />
         <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
         <PackageReference Include="Grpc.Tools" Version="2.62.0">
@@ -43,13 +43,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="spark\connect\catalog.proto"/>
-        <None Remove="spark\connect\commands.proto"/>
-        <None Remove="spark\connect\common.proto"/>
-        <None Remove="spark\connect\example_plugins.proto"/>
-        <None Remove="spark\connect\expressions.proto"/>
-        <None Remove="spark\connect\relations.proto"/>
-        <None Remove="spark\connect\types.proto"/>
+        <None Remove="spark\connect\catalog.proto" />
+        <None Remove="spark\connect\commands.proto" />
+        <None Remove="spark\connect\common.proto" />
+        <None Remove="spark\connect\example_plugins.proto" />
+        <None Remove="spark\connect\expressions.proto" />
+        <None Remove="spark\connect\relations.proto" />
+        <None Remove="spark\connect\types.proto" />
         <None Update="LICENSE.txt">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
@@ -58,26 +58,29 @@
         </None>
     </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Spark.Connect.Dotnet.GrpcClient\Spark.Connect.Dotnet.GrpcClient.csproj"/>
-    </ItemGroup>
-
 
     <PropertyGroup>
         <PackageId>GOEddie.Spark.Dotnet</PackageId>
-        <Version>3.5.1-1</Version>
+        <Version>3.5.1-build.5</Version>
         <Authors>GOEddie (Ed Elliott)</Authors>
-        <Company>OSS</Company>
         <Product>GOEddie Spark Dotnet</Product>
-        <Description>DataFrame API over the Apache Spark gRPC API</Description>
+        <Description>DataFrame API over the Apache Spark Connect gRPC API</Description>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryBranch>main</RepositoryBranch>
         <RepositoryUrl>https://github.com/GoEddie/spark-connect-dotnet</RepositoryUrl>
+        <PackageIcon>logo.png</PackageIcon>
     </PropertyGroup>
 
     <ItemGroup>
-     <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
-     <None Include="README.md" Pack="true" PackagePath=""/>
+     <None Include="LICENSE.txt" Pack="true" PackagePath="" />
+     <None Include="README.md" Pack="true" PackagePath="" />
+     <None Include="logo.png" Pack="true" PackagePath="" />
     </ItemGroup>    
+
+    <ItemGroup>
+      <ProjectReference Include="..\Spark.Connect.Dotnet.GrpcClient\Spark.Connect.Dotnet.GrpcClient.csproj" />
+    </ItemGroup>
 
 </Project>
