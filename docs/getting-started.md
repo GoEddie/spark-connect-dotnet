@@ -9,7 +9,7 @@
 
 ### 1. Start Spark Connect Server
 
-./sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.4.0
+./sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.1
 
 ### 2. Specify the Spark Connect Server in your app
 
