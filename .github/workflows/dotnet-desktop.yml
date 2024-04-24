@@ -1,8 +1,6 @@
 name: Spark Dotnet
 
 on:
-  push:
-    branches: [ "feature/*" ]
   pull_request:
     branches: [ "main" ]
 
