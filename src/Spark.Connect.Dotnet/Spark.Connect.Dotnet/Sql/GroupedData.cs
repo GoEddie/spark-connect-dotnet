@@ -43,7 +43,7 @@ public class GroupedData
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrame Agg(Dictionary<string, string> exprs)
@@ -134,7 +134,7 @@ public class GroupedData
                 }
             };
 
-            return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+            return new DataFrame(_session, plan.Root);
         }
         
         if (_groupType == Aggregate.Types.GroupType.Pivot)
@@ -154,7 +154,7 @@ public class GroupedData
                 }
             };
 
-            return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+            return new DataFrame(_session, plan.Root);
         }
 
         if (_groupType == Aggregate.Types.GroupType.Rollup)
@@ -173,7 +173,7 @@ public class GroupedData
                 }
             };
 
-            return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+            return new DataFrame(_session, plan.Root);
         }
 
         throw new NotImplementedException();

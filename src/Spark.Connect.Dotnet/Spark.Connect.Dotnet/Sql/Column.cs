@@ -537,7 +537,7 @@ public class Column
         return new Column(expression);
     }
 
-    public Expression Over(Window window)
+    public Expression Over(WindowSpec window)
     {
         return window.ToExpression(Expression);
     }
