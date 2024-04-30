@@ -57,7 +57,7 @@ public class DataFrame
         }
     }
 
-    public List<string> Columns => Schema.FieldNames();
+    public IEnumerable<string> Columns => Schema.FieldNames();
 
     /// <summary>
     ///     Returns a new `DataFrame` by taking the first n rows.
@@ -333,7 +333,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
     
     public DataFrame Drop(params string[] cols)
@@ -350,7 +350,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     } 
     
     public DataFrame DropDuplicates(params string[] subset)
@@ -372,7 +372,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     } 
     
     public DataFrame DropDuplicatesWithinWatermark(params string[] subset)
@@ -395,7 +395,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     } 
     
     public DataFrame Drop(params Column[] cols)
@@ -413,7 +413,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
     
     public DataFrame DropNa(string how, int? thresh, params string[] subset)
@@ -442,7 +442,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public IEnumerable<(string Name, string Type)> Dtypes => Schema.Fields.Select(p => (p.Name, p.DataType.SimpleString()));
@@ -466,7 +466,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrame Repartition(int numPartitions, params Column[] cols)
@@ -487,7 +487,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrame Repartition(params Column[] cols)
@@ -510,7 +510,7 @@ public class DataFrame
             return column;
         }
         
-        var sort = cols.Select(p => WrapSortOrderCols(p));
+        var sort = cols.Select(WrapSortOrderCols);
         var plan = new Plan()
         {
             Root = new Relation()
@@ -522,7 +522,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrame SortWithinPartitions(params string[] cols)
@@ -538,7 +538,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public Column ColRegex(string regex)
@@ -599,7 +599,7 @@ public class DataFrame
         return new DataFrame(_session, relation, _schema);
     }
 
-    public DataFrame WithColumns(Dictionary<string, Column> colsMap)
+    public DataFrame WithColumns(IDictionary<string, Column> colsMap)
     {
         var df = this;
         foreach (var colMap in colsMap.Keys)
@@ -610,7 +610,7 @@ public class DataFrame
         return df;
     }
 
-    public DataFrame WithColumnsRenamed(Dictionary<string, string> colsMap)
+    public DataFrame WithColumnsRenamed(IDictionary<string, string> colsMap)
     {
         var df = this;
         foreach (var colMap in colsMap.Keys)
@@ -633,7 +633,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrameWriter Write()
@@ -643,7 +643,7 @@ public class DataFrame
 
     public List<object[]> Collect()
     {
-        var task = Task.Run(() => CollectAsync());
+        var task = Task.Run(CollectAsync);
         Wait(task);
         return task.Result;
     }
@@ -667,7 +667,7 @@ public class DataFrame
         return rows;
     }
 
-    private static async Task<List<object[]>> ArrowBatchToList(ExecutePlanResponse.Types.ArrowBatch batch)
+    private static async Task<IEnumerable<object[]>> ArrowBatchToList(ExecutePlanResponse.Types.ArrowBatch batch)
     {
         var rows = new List<object[]>();
 
@@ -829,8 +829,7 @@ public class DataFrame
             }
         };
 
-        await GrpcInternal.Exec(_session.GrpcClient, _session.Host, _session.SessionId, plan, _session.Headers,
-            _session.UserContext, _session.ClientType);
+        await GrpcInternal.Exec(_session.GrpcClient, _session.Host, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
     }
 
     public DataFrame Union(DataFrame other)
@@ -918,9 +917,9 @@ public class DataFrame
         return OrderBy(columns);
     }
 
-    public DataFrame Sort(List<Column> columns)
+    public DataFrame Sort(IEnumerable<Column> columns)
     {
-        return OrderBy(columns);
+        return OrderBy(columns.ToArray());
     }
 
     public DataFrame OrderBy(params string[] columns) => OrderBy(columns.Select(Col).ToArray());
@@ -941,7 +940,7 @@ public class DataFrame
         return new DataFrame(_session, relation);
     }
 
-    private static List<Expression.Types.SortOrder> ColumnsToSortOrder(Column[] columns)
+    private static IEnumerable<Expression.Types.SortOrder> ColumnsToSortOrder(Column[] columns)
     {
         var sortColumns = new List<Expression.Types.SortOrder>();
 
@@ -1073,7 +1072,7 @@ public class DataFrame
             }
         };
 
-        var response = new DataFrame(_session, GrpcInternal.Exec(_session, plan)).Collect();
+        var response = new DataFrame(_session, plan.Root).Collect();
         return (double)response[0][0];
     }
 
@@ -1090,7 +1089,7 @@ public class DataFrame
             }
         };
 
-        var response = new DataFrame(_session, GrpcInternal.Exec(_session, plan)).Collect();
+        var response = new DataFrame(_session, plan.Root).Collect();
         return (double)response[0][0];
     }
 
@@ -1099,12 +1098,12 @@ public class DataFrame
         return Join(other, new List<string>(), JoinType.Cross);
     }
 
-    public DataFrame Join(DataFrame other, List<string> on, string how)
+    public DataFrame Join(DataFrame other, IEnumerable<string> on, string how)
     {
         return Join(other, on, ToJoinType(how));
     }
 
-    public DataFrame Join(DataFrame other, List<string> on, JoinType how = JoinType.Unspecified)
+    public DataFrame Join(DataFrame other, IEnumerable<string> on, JoinType how = JoinType.Unspecified)
     {
         var plan = new Plan
         {
@@ -1119,8 +1118,8 @@ public class DataFrame
                 }
             }
         };
-
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        
+        return new DataFrame(_session, plan.Root);
     }
 
     private JoinType ToJoinType(string type)
@@ -1147,10 +1146,10 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
-    public GroupedData Cube(List<string> cols)
+    public GroupedData Cube(IEnumerable<string> cols)
     {
         return Cube(cols.Select(Col).ToList());
     }
@@ -1160,7 +1159,7 @@ public class DataFrame
         return Cube(cols.Select(Col).ToList());
     }
 
-    public GroupedData Cube(List<Column> cols)
+    public GroupedData Cube(IEnumerable<Column> cols)
     {
         var relation = new Relation
         {
@@ -1197,7 +1196,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     /// <summary>
@@ -1226,7 +1225,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrame Where(Column condition) => Filter(condition);
@@ -1245,7 +1244,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
     
     public DataFrame Filter(string condition)
@@ -1262,7 +1261,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public Row First() => Take(1).FirstOrDefault();
@@ -1282,7 +1281,7 @@ public class DataFrame
                 }
             }
         };
-        var dataFrame = new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        var dataFrame = new DataFrame(_session, plan.Root);
         var schema = dataFrame.Schema;
 
         return dataFrame.Collect().Select(p => new Row(schema, p));
@@ -1307,7 +1306,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
     
     /// <summary>
@@ -1331,7 +1330,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
     
     public DataFrame Hint(string hint, params Column[] values)
@@ -1349,7 +1348,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
     
     public IEnumerable<string> InputFiles()
@@ -1385,7 +1384,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
     
     /// <summary>
@@ -1411,7 +1410,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
 
@@ -1454,7 +1453,7 @@ public class DataFrame
             plan.Root.Unpivot.ValueColumnName = valueColumnName;
         }
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrame Melt(Column[] ids, Column[] values, string? variableColumnName = null, string? valueColumnName = null) => Unpivot(ids, values, variableColumnName, valueColumnName);
@@ -1472,7 +1471,7 @@ public class DataFrame
             }
         };
             
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrame RandomSplit(int seed, List<double> weights)
@@ -1516,12 +1515,12 @@ public class DataFrame
             plan.Root.Sample.Seed = seed.Value;
         }
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
-    public DataFrame SampleBy(Column col, Dictionary<int, double> fractions, long? seed = null)
+    public DataFrame SampleBy(Column col, IDictionary<int, double> fractions, long? seed = null)
     {
-        RepeatedField<StatSampleBy.Types.Fraction> DictionaryToFractions(Dictionary<int,double> dictionary)
+        RepeatedField<StatSampleBy.Types.Fraction> DictionaryToFractions(IDictionary<int,double> dictionary)
         {
             var fractions = new RepeatedField<StatSampleBy.Types.Fraction>();
             foreach (var key in dictionary.Keys.Order())
@@ -1554,7 +1553,7 @@ public class DataFrame
             plan.Root.SampleBy.Seed = seed.Value;
         }
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrame Replace(Column to_replace, Column value, params string[] subset)
@@ -1592,7 +1591,7 @@ public class DataFrame
             plan.Root.Replace.Cols.Add(subset);
         }
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public GroupedData Rollup(params string[] cols) => Rollup(cols.Select(Col).ToArray());
@@ -1626,7 +1625,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public int SemanticHash()
@@ -1660,7 +1659,7 @@ public class DataFrame
             }
         };
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrame Summary(params string[] statistics)
@@ -1681,7 +1680,7 @@ public class DataFrame
             plan.Root.Summary.Statistics.Add(statistics);
         }
         
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public IEnumerable<Row> Tail(int num)
@@ -1714,7 +1713,7 @@ public class DataFrame
             }
         };
             
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrame WithWatermark(string eventTime, string delayThreshold)
@@ -1730,7 +1729,7 @@ public class DataFrame
             }
         };
             
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));  
+        return new DataFrame(_session, plan.Root);
     }
 
     public DataFrameNaFunctions Na => new DataFrameNaFunctions(this);

@@ -354,7 +354,9 @@ public class DataFrame_Tests : E2ETestBase
     public void SampleTest()
     {
         var df = Spark.Range(10000);
-        Assert.NotEqual(10000, df.Sample(fraction: 0.3F).Count());
+        var sampled = df.Sample(fraction: 0.3F);
+        Assert.NotEqual(10000, sampled.Count());
+        sampled.Show();
     }
     
     [Fact]

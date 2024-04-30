@@ -97,6 +97,16 @@ public class DataFrameWriter
     {
         Task.Run(() => WriteAsync(_format, path, _options)).Wait();
     }
+    
+    public void Save(string format, string path)
+    {
+        Task.Run(() => WriteAsync(format, path, _options)).Wait();
+    }
+
+    public void Save(string path)
+    {
+        Task.Run(() => WriteAsync(_format, path, _options)).Wait();
+    }
 
     public async Task WriteAsync(string format, string path, MapField<string, string> options)
     {

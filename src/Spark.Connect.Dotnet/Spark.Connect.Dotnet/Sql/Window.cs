@@ -1,23 +1,34 @@
 namespace Spark.Connect.Dotnet.Sql;
 
-public class Window
+public static class Window
+{
+    public static WindowSpec PartitionBy(string col) => new WindowSpec().PartitionBy(col);
+    
+    public static WindowSpec PartitionBy(Column col) => new WindowSpec().PartitionBy(col);
+
+    public static WindowSpec OrderBy(Column col) => new WindowSpec().OrderBy(col);
+
+    public static WindowSpec OrderBy(string col) => new WindowSpec().OrderBy(col);
+}
+
+public class WindowSpec
 {
     private readonly List<Expression.Types.SortOrder> _orderSpec = new();
     private readonly List<Expression> _partitionSpec = new();
 
-    public Window PartitionBy(string col)
+    public WindowSpec PartitionBy(string col)
     {
         _partitionSpec.Add(new Column(col).Expression);
         return this;
     }
 
-    public Window PartitionBy(Column col)
+    public WindowSpec PartitionBy(Column col)
     {
         _partitionSpec.Add(col.Expression);
         return this;
     }
 
-    public Window OrderBy(Column col)
+    public WindowSpec OrderBy(Column col)
     {
         _orderSpec.Add(new Expression.Types.SortOrder
         {
@@ -27,7 +38,7 @@ public class Window
         return this;
     }
 
-    public Window OrderBy(string col)
+    public WindowSpec OrderBy(string col)
     {
         _orderSpec.Add(new Expression.Types.SortOrder
         {
