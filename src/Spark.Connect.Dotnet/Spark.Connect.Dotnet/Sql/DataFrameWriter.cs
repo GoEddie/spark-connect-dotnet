@@ -10,8 +10,11 @@ public class DataFrameWriter
     private readonly DataFrame _what;
     private string _format = string.Empty;
     private List<string> _partitionColumnNames = new();
+    
+    private List<string> _bucketColumnNames = new();
 
     private WriteOperation.Types.SaveMode _saveMode;
+    private int _numBuckets;
 
     protected internal DataFrameWriter(SparkSession session, DataFrame what)
     {
@@ -59,6 +62,13 @@ public class DataFrameWriter
     public DataFrameWriter PartitionBy(params string[] columnNames)
     {
         _partitionColumnNames = columnNames.ToList();
+        return this;
+    }
+    
+    public DataFrameWriter BucketBy(int numBuckets, params string[] columnNames)
+    {
+        _numBuckets = numBuckets;
+        _bucketColumnNames = columnNames.ToList();
         return this;
     }
 
@@ -121,12 +131,20 @@ public class DataFrameWriter
                     Options = { options },
                     Input = _what.Relation,
                     PartitioningColumns = { _partitionColumnNames },
-
                     Path = path
                 }
             }
         };
 
+        if (_bucketColumnNames.Any())
+        {
+            plan.Command.WriteOperation.BucketBy = new WriteOperation.Types.BucketBy()
+            {
+                NumBuckets = _numBuckets,
+                BucketColumnNames = { _bucketColumnNames }
+            };
+        }
+        
         await GrpcInternal.Exec(_session.GrpcClient, _session.Host, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
     }
 }

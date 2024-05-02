@@ -1732,6 +1732,23 @@ public class DataFrame
         return new DataFrame(_session, plan.Root);
     }
 
+    public DataFrame Hint(string what)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                Hint = new Hint()
+                {
+                    Input = Relation,
+                    Name = what
+                }
+            }
+        };
+
+        return new DataFrame(_session, plan.Root);
+    }
+    
     public DataFrameNaFunctions Na => new DataFrameNaFunctions(this);
     
     public SparkSession SparkSession => _session;

@@ -36,8 +36,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col,
-        params Expression[] parameters)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, params Expression[] parameters)
     {
         var args = new RepeatedField<Expression>();
         args.Add(col.Expression);

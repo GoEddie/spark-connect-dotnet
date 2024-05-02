@@ -160,6 +160,16 @@ public class StructField
         {
             return new MapType(FromConnectDataType(type.Map.KeyType), FromConnectDataType(type.Map.ValueType));
         }
+        
+        if(type.Date != null)
+        {
+            return new DateType();
+        }
+
+        if (type.Timestamp != null)
+        {
+            return new TimestampType();
+        }
 
         return new VoidType();
     }

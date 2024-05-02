@@ -3347,7 +3347,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column Array(params string[] cols)
     {
-        return new Column(FunctionWrappedCall("array", false, cols.ToList().Select(Col).ToArray()));
+        return new Column(FunctionWrappedCall("array", false, cols.ToList().Select(Lit).ToArray()));
     }
 
     /// <Summary>

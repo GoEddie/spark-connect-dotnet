@@ -6,11 +6,11 @@ public class E2ETestBase
 {
     protected static SparkSession Spark;
     protected readonly string OutputPath;
-
+    protected readonly string RemotePath;
     public E2ETestBase()
     {
-        var remoteAddress = Environment.GetEnvironmentVariable("SPARK_REMOTE") ?? "http://localhost:15002";
-        Spark = SparkSession.Builder.Remote(remoteAddress).GetOrCreate();
+        RemotePath = Environment.GetEnvironmentVariable("SPARK_REMOTE") ?? "http://localhost:15002";
+        Spark = SparkSession.Builder.Remote(RemotePath).GetOrCreate();
 
         var tempFolder = Path.GetTempPath();
 
