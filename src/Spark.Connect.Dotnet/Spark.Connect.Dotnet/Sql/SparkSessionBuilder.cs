@@ -1,4 +1,5 @@
 using Grpc.Core;
+using Spark.Connect.Dotnet.Grpc;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -14,6 +15,8 @@ public class SparkSessionBuilder
     private string _userId = string.Empty;
     private string _userName = string.Empty;
 
+    private Dictionary<string, string> _conf = new Dictionary<string, string>();
+    
     private DatabricksConnectionVerification _databricksConnectionVerification = DatabricksConnectionVerification.WaitForCluster;
     private TimeSpan _databricksConnectionMaxVerificationTime = TimeSpan.FromMinutes(10);
 
@@ -81,6 +84,12 @@ public class SparkSessionBuilder
         return this;
     }
 
+    public SparkSessionBuilder Config(string key, string value)
+    {
+        _conf[key] = value;
+        return this;
+    }
+
     public SparkSessionBuilder Profile(string profileName)
     {
         var profileData = new DatabricksCfgReader().GetProfile(profileName);
@@ -103,15 +112,20 @@ public class SparkSessionBuilder
 
         return this;
     }
-
+    
     public SparkSession GetOrCreate()
     {
         if (_session != null)
         {
             return _session;
         }
-
+        
         _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(), _clientType, _databricksConnectionVerification, _databricksConnectionMaxVerificationTime);
+        if (_conf.Any())
+        {
+            GrpcInternal.ExecSetConfigCommandResponse(_session, _conf);
+        }
+        
         return _session;
     }
 
@@ -143,6 +157,23 @@ public class SparkSessionBuilder
         }
 
         return headers;
+    }
+}
+
+public class RuntimeConf
+{
+    private readonly SparkSession _session;
+
+    public RuntimeConf(SparkSession session)
+    {
+        _session = session;
+    }
+
+    public IDictionary<string, string> GetAll(string? prefix = null)
+    { 
+        var task =Task.Run(() => GrpcInternal.ExecGetAllConfigCommandResponse(_session, prefix));
+        task.Wait();
+        return task.Result;
     }
 }
 

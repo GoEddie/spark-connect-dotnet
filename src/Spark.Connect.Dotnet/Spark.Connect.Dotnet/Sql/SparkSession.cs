@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Security.Cryptography;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
@@ -15,6 +14,7 @@ using BooleanType = Apache.Arrow.Types.BooleanType;
 using DoubleType = Apache.Arrow.Types.DoubleType;
 using StringType = Apache.Arrow.Types.StringType;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
+using TimestampType = Apache.Arrow.Types.TimestampType;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -23,11 +23,13 @@ public class SparkSession
     public readonly SparkConnectService.SparkConnectServiceClient GrpcClient;
 
     public readonly string SessionId;
-    
+
     private readonly DatabricksConnectionVerification _databricksConnectionVerification;
 
     private int _planId;
 
+    public RuntimeConf Conf => new RuntimeConf(this);
+    
     /// <summary>
     ///     Creates a new `SparkSession` the normal pattern is to use the `SparkSessionBuilder`.
     /// </summary>
@@ -54,7 +56,6 @@ public class SparkSession
         
         GrpcClient = new SparkConnectService.SparkConnectServiceClient(channel);
         VerifyDatabricksClusterRunning(databricksConnectionMaxVerificationTime);
-        
     }
 
     private void VerifyDatabricksClusterRunning(TimeSpan databricksConnectionMaxVerificationTime)
@@ -279,18 +280,20 @@ public class SparkSession
         return new DataFrame(this, relation, schema);
     }
 
-    public DataFrame CreateDataFrame(List<(object, object)> rows)
+    public DataFrame CreateDataFrame(IEnumerable<(object, object)> rows)
     {
-        if (rows.Count == 0)
+        if (!rows.Any())
         {
             throw new SparkException("Cannot CreateDataFrame with no rows");
         }
 
         var first = rows.First();
 
-        var fields = new List<StructField>();
-        fields.Add(new StructField("_1", SparkDataType.FromString(first.Item1.GetType().Name), true));
-        fields.Add(new StructField("_2", SparkDataType.FromString(first.Item2.GetType().Name), true));
+        var fields = new List<StructField>
+        {
+            new StructField("_1", SparkDataType.FromString(first.Item1.GetType().Name), true),
+            new StructField("_2", SparkDataType.FromString(first.Item2.GetType().Name), true)
+        };
         var schema = new StructType(fields.ToArray());
 
         var data = new List<IList<object>>();
@@ -302,10 +305,10 @@ public class SparkSession
         return CreateDataFrame(data, schema);
     }
 
-    public DataFrame CreateDataFrame(List<Dictionary<string, object>> rows)
+    public DataFrame CreateDataFrame(IEnumerable<Dictionary<string, object>> rows)
     {   
         //TODO: Need to be able to handle null values
-        if (rows.Count == 0)
+        if (!rows.Any())
         {
             throw new SparkException("Cannot CreateDataFrame with no rows");
         }
@@ -334,7 +337,7 @@ public class SparkSession
         return CreateDataFrame(data, schema);
     }
 
-    public DataFrame CreateDataFrame(IList<IList<object>> data, StructType schema)
+    public DataFrame CreateDataFrame(IEnumerable<IEnumerable<object>> data, StructType schema)
     {
         var columns = DataToColumns(data);
         var schemaFields = schema.Fields
@@ -344,6 +347,7 @@ public class SparkSession
         var writer = new ArrowStreamWriter(stream, arrowSchema);
 
         var batchBuilder = new RecordBatch.Builder();
+         
         var i = 0;
         foreach (var schemaCol in schemaFields)
         {
@@ -383,7 +387,19 @@ public class SparkSession
                     
                     batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Boolean(builder => builder.AppendRange(column)));
                     break;
+                
+                case Date32Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Date32(builder => builder.AppendRange(column)));
+                    break;
 
+                case TimestampType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Timestamp(builder => builder.AppendRange(column)));
+                    break;
+                
+                case ListType:
+                    throw new NotImplementedException(
+                        $"Currently you can't pass a complex type to CreateDataFrame - use Spark.Sql array, map, etc");
+                    
                 default:
                     throw new SparkException($"Need Arrow Type for Builder: {schemaCol.DataType}");
             }
@@ -415,7 +431,7 @@ public class SparkSession
     }
 
 
-    private dynamic DataToColumns(IList<IList<object>> data)
+    private dynamic DataToColumns(IEnumerable<IEnumerable<object>> data)
     {
         if (!data.Any())
         {
@@ -431,11 +447,14 @@ public class SparkSession
             columns.Add(newColumn);
         }
 
-        foreach (var row in data)
+        foreach (var row in data.Select(d => d.ToList()))
         {
             for (var i = 0; i < columns.Count(); i++)
             {
-                columns[i].Add(row[i]);
+                if (i < row.Count())
+                {
+                    columns[i].Add(row[i]);    
+                }
             }
         }
 

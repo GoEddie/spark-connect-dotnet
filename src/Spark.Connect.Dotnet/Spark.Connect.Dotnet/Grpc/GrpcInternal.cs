@@ -673,6 +673,122 @@ public static class GrpcInternal
 
         return null;
     }
+    
+    
+    public static async Task ExecSetConfigCommandResponse(SparkSession session, IDictionary<string, string> options)
+    {
+        var configRequest = new ConfigRequest()
+        {
+            ClientType = session.ClientType,
+            SessionId = session.SessionId,
+            UserContext = session.UserContext,
+            Operation = new ConfigRequest.Types.Operation()
+            {
+                Set = new ConfigRequest.Types.Set()
+                {
+                    Pairs =
+                    {
+                        options.Select(p => (new KeyValue()
+                        {
+                            Key = p.Key, Value = p.Value
+                        }))
+                    }
+                }
+            }
+        };
+        
+
+        AsyncUnaryCall<ConfigResponse> Exec()
+        {
+            try
+            {
+                return session.GrpcClient.ConfigAsync(configRequest, session.Headers);
+            }
+            catch (Exception exception)
+            {
+                if (exception is AggregateException aggregateException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(aggregateException);
+                }
+
+                if (exception is RpcException rpcException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(rpcException);
+                }
+
+                throw new SparkException(exception);
+            }
+        }
+
+        var response = await Exec();
+        
+        foreach (var warning in response.Warnings)
+        {
+            Console.WriteLine($"Config::Warning: '{warning}'");
+        }
+        
+    }
+    
+    public static async Task<Dictionary<string, string>> ExecGetAllConfigCommandResponse(SparkSession session, string? prefix = null)
+    {
+        var configRequest = new ConfigRequest()
+        {
+            ClientType = session.ClientType,
+            SessionId = session.SessionId,
+            UserContext = session.UserContext,
+            Operation = new ConfigRequest.Types.Operation()
+            {
+                GetAll = new ConfigRequest.Types.GetAll()
+                {
+                    
+                }
+            }
+        };
+
+        if (!string.IsNullOrEmpty(prefix))
+        {
+            configRequest.Operation.GetAll.Prefix = prefix;
+        }
+
+        AsyncUnaryCall<ConfigResponse> Exec()
+        {
+            try
+            {
+                return session.GrpcClient.ConfigAsync(configRequest, session.Headers);
+            }
+            catch (Exception exception)
+            {
+                if (exception is AggregateException aggregateException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(aggregateException);
+                }
+
+                if (exception is RpcException rpcException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(rpcException);
+                }
+
+                throw new SparkException(exception);
+            }
+        }
+
+        var response = await Exec();
+        
+        foreach (var warning in response.Warnings)
+        {
+            Console.WriteLine($"Config::Warning: '{warning}'");
+        }
+
+        var items = new Dictionary<string, string>();
+        foreach (var pair in response.Pairs)
+        {
+            items[pair.Key] = pair.Value;
+        }
+
+        return items;
+    }
+
+    
 
     public static async Task ExecStreamingQueryProcessAvailableCommandResponse(SparkSession session, Plan plan)
     {

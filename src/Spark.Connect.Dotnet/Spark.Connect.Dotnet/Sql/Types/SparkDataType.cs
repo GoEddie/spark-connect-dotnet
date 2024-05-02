@@ -81,6 +81,16 @@ public abstract class SparkDataType
     {
         return new VoidType();
     }
+    
+    public static DateType DateType()
+    {
+        return new DateType();
+    }
+    
+    public static TimestampType TimestampType()
+    {
+        return new TimestampType();
+    }
 
     public static StructType StructType(params StructField[] fields)
     {
@@ -133,6 +143,15 @@ public abstract class SparkDataType
             case "null":
             case "void":
                 return new VoidType();
+            
+            case "timestamp":
+                return new TimestampType();
+            
+            case "timestampntz":
+                return new TimestampNtzType();
+            
+            case "date":
+                return new DateType();
         }
 
         if (lower.StartsWith("array"))
@@ -407,6 +426,84 @@ public class VoidType : SparkDataType
 
     public override string SimpleString()
     {
-        return $"void>";
+        return $"void";
     }
 }
+
+public class DateType : SparkDataType
+{
+    public DateType() : base($"Date")
+    {
+    }
+
+    public override DataType ToDataType()
+    {
+        return new DataType
+        {
+            Date = new DataType.Types.Date()
+        };
+    }
+
+    public override IArrowType ToArrowType()
+    {
+        return Apache.Arrow.Types.Date32Type.Default;
+    }
+
+    public override string SimpleString()
+    {
+        return $"date";
+    }
+}
+
+
+public class TimestampType : SparkDataType
+{
+    public TimestampType() : base($"Timestamp")
+    {
+    }
+
+    public override DataType ToDataType()
+    {
+        return new DataType
+        {
+            Timestamp = new DataType.Types.Timestamp(),
+            
+        };
+    }
+
+    public override IArrowType ToArrowType()
+    {
+        return Apache.Arrow.Types.TimestampType.Default;
+    }
+
+    public override string SimpleString()
+    {
+        return $"timestamp";
+    }
+}
+
+public class TimestampNtzType : SparkDataType
+{
+    public TimestampNtzType() : base($"Timestamp")
+    {
+    }
+
+    public override DataType ToDataType()
+    {
+        return new DataType
+        {
+            TimestampNtz = new DataType.Types.TimestampNTZ()
+        };
+    }
+
+    public override IArrowType ToArrowType()
+    {
+        return Apache.Arrow.Types.TimestampType.Default;
+    }
+
+    public override string SimpleString()
+    {
+        return $"timestampntz";
+    }
+}
+

@@ -1,3 +1,4 @@
+using Apache.Arrow.Types;
 using Google.Protobuf;
 
 namespace Spark.Connect.Dotnet.Sql;
@@ -166,6 +167,17 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Lit(string value)
     {
+        if (String.IsNullOrEmpty(value))
+        {
+            return new Column(new Expression
+            {
+                Literal = new Expression.Types.Literal
+                {
+                    Null = new DataType()
+                }
+            });
+        }
+        
         return new Column(new Expression
         {
             Literal = new Expression.Types.Literal
@@ -177,6 +189,17 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Lit(object o)
     {
+        if (o.GetType().IsArray)
+        {
+            var lits = new List<Column>();
+            foreach (var object_ in (o as Array))
+            {
+                lits.Add(Lit((object)object_));
+            }
+            
+            return Functions.Array(lits.ToArray());
+        }
+        
         return o switch
         {
             int i => Lit(i),
@@ -185,7 +208,7 @@ public partial class Functions : FunctionsWrapper
             float f => Lit(f),
             short s => Lit(s),
             long l => Lit(l),
-
+            
             _ => Lit(o.ToString()) //TODO not great
         };
     }
@@ -249,6 +272,17 @@ public partial class Functions : FunctionsWrapper
             Literal = new Expression.Types.Literal
             {
                 Double = value
+            }
+        });
+    }
+    
+    public static Column Lit(long value)
+    {
+        return new Column(new Expression
+        {
+            Literal = new Expression.Types.Literal
+            {
+                Long = value
             }
         });
     }
@@ -822,5 +856,166 @@ public partial class Functions : FunctionsWrapper
                 Expression = expression
             }
         });
+    }
+
+    public static Column AddMonths(Column start, Column months)
+    {
+        return new Column(FunctionWrappedCall("add_months", false, start, months));
+    }
+    
+    public static Column AddMonths(Column start, int months)  => AddMonths(start, Lit(months));
+    
+    public static Column AddMonths(string start, Column months)  => AddMonths(Col(start), months);
+    public static Column AddMonths(string start, int months) => AddMonths(Col(start), Lit(months));
+
+    public static Column ApproxCountDistinct(Column col, double rsd = 0.05F)
+    {
+        return new Column(FunctionWrappedCall("approx_count_distinct", false, col, rsd));
+    }
+    
+    public static Column ApproxCountDistinct(string col, double rsd = 0.05F)
+    {
+        return new Column(FunctionWrappedCall("approx_count_distinct", false, Col(col), rsd));
+    }
+    
+    public static Column ApproxCountDistinct(string col, Column rsd)
+    {
+        return new Column(FunctionWrappedCall("approx_count_distinct", false, Col(col), rsd));
+    }
+    
+    public static Column ApproxCountDistinct(Column col, Column rsd)
+    {
+        return new Column(FunctionWrappedCall("approx_count_distinct", false, col, rsd));
+    }
+
+    public static Column ApproxPercentile(Column col, float percentage, long accuracy = 10000)
+    {
+        return new Column(FunctionWrappedCall("approx_percentile", false, col, Lit(percentage), Lit(accuracy)));
+    }
+    
+    
+    public static Column ApproxPercentile(Column col, float[] percentages, long accuracy = 10000)
+    {
+        return new Column(FunctionWrappedCall("approx_percentile", false, col, Lit(percentages), Lit(accuracy)));
+    }
+
+    public static Column ApproxPercentile(string col,  float percentage, long accuracy = 10000)
+    {
+        return new Column(FunctionWrappedCall("approx_percentile", false, Col(col), Lit(percentage), Lit(accuracy)));
+    }
+    
+    public static Column ApproxPercentile(Column col, Column percentages, Column accuracy)
+    {
+        return new Column(FunctionWrappedCall("approx_percentile", false, col, percentages, accuracy));
+    }
+    
+    public static Column ArrayJoin(string col, string delimiter, string? nullReplacement = null)
+    {
+        if (String.IsNullOrEmpty(nullReplacement))
+        {
+            return new Column(FunctionWrappedCall("array_join", false, Col(col), Lit(delimiter)));    
+        }
+        
+        return new Column(FunctionWrappedCall("array_join", false, Col(col), Lit(delimiter), Lit(nullReplacement)));
+    }
+    
+    public static Column ArrayJoin(Column col, string delimiter, string? nullReplacement = null)
+    {
+        if (String.IsNullOrEmpty(nullReplacement))
+        {
+            return new Column(FunctionWrappedCall("array_join", false, col, Lit(delimiter)));    
+        }
+        
+        return new Column(FunctionWrappedCall("array_join", false, col, Lit(delimiter), Lit(nullReplacement)));
+    }
+    
+    public static Column ArrayJoin(Column col, Column delimiter)
+    {
+        return new Column(FunctionWrappedCall("array_join", false, col, delimiter));    
+    }
+    
+    public static Column ArrayJoin(Column col, Column delimiter, Column nullReplacement)
+    {
+        return new Column(FunctionWrappedCall("array_join", false, col, delimiter, nullReplacement));    
+    }
+    
+    public static Column ArrayInsert(Column col, int pos, Column value)
+    {
+        return new Column(FunctionWrappedCall("array_insert", false, col, Lit(pos), value));
+    }
+    
+    public static Column ArrayInsert(Column col, Column pos, Column value)
+    {
+        return new Column(FunctionWrappedCall("array_insert", false, col, pos, value));
+    }
+    
+    public static Column ArrayRepeat(Column col, int count)
+    {
+        return new Column(FunctionWrappedCall("array_repeat", false, col, Lit(count)));
+    }
+    
+    public static Column ArrayRepeat(Column col, Column count)
+    {
+        return new Column(FunctionWrappedCall("array_repeat", false, col, count));
+    }
+    
+    public static Column ArrayRepeat(string col, int count)
+    {
+        return new Column(FunctionWrappedCall("array_repeat", false, Col(col), Lit(count)));
+    }
+    
+    public static Column ArrayRepeat(string col, Column count)
+    {
+        return new Column(FunctionWrappedCall("array_repeat", false, Col(col), count));
+    }
+
+    public static Column AssertTrue(Column col, string? errorMessage = null)
+    {
+        return new Column(FunctionWrappedCall("assert_true", false, col, errorMessage));
+    }
+    
+    public static Column BTrim(Column col, string? trim = null)
+    {
+        if (String.IsNullOrEmpty(trim))
+        {
+            return new Column(FunctionWrappedCall("btrim", false, col));    
+        }
+        
+        return new Column(FunctionWrappedCall("btrim", false, col, trim));
+    }
+    
+    public static Column BTrim(string col, string? trim = null)
+    {
+        if (String.IsNullOrEmpty(trim))
+        {
+            return new Column(FunctionWrappedCall("btrim", false, Col(col)));    
+        }
+        
+        return new Column(FunctionWrappedCall("btrim", false, Col(col), trim));
+    }
+
+    public static Column Bucket(int numOfBuckets, Column col)
+    {
+        return new Column(FunctionWrappedCall("bucket", false, Lit(numOfBuckets), col));
+    }
+    
+    public static Column Bucket(int numOfBuckets, string col)
+    {
+        return new Column(FunctionWrappedCall("bucket", false, Lit(numOfBuckets), Col(col)));
+    }
+    
+    public static Column ConcatWs(string sep, params Column[] cols)
+    {
+        return new Column(FunctionWrappedCall("concat_ws", false, Lit(sep), cols.Select(p => p.Expression).ToArray()));
+    }
+
+    public static Column ConcatWs(string sep, params string[] cols)
+    {
+        return new Column(FunctionWrappedCall("concat_ws", false, Lit(sep), cols.Select(p => Col(p).Expression).ToArray()));
+    }
+    
+    public static DataFrame Broadcast(DataFrame src)
+    {
+        return src.Hint("broadcast");
     }
 }
