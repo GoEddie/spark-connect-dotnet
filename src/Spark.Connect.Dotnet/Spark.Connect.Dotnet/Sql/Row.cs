@@ -41,5 +41,42 @@ public class Row
     public StructType Schema => _schema;
 
     public object this[int i] => Data[i];
+    
+    public object[] Values => Data.ToArray();
+    
+    public int Size() => Data.Count;
+    
+    public object Get(int index)
+    {
+        if (index >= Size())
+        {
+            throw new IndexOutOfRangeException($"index ({index}) >= column counts ({Size()})");
+        }
+        
+        if (index < 0)
+        {
+            throw new IndexOutOfRangeException($"index ({index}) < 0)");
+        }
 
+        return Data[index];
+    } 
+    
+    public object Get(string columnName)
+    {
+        var index = 0;
+        foreach (var field in _schema.Fields)
+        {
+            if (field.Name == columnName)
+            {
+                return Data[index];
+            }
+
+            index++;
+        }
+
+        throw new IndexOutOfRangeException(
+            $"Field '{columnName}' was not found in the schema: '{_schema.SimpleString()}'");
+    } 
+    
+    
 } 

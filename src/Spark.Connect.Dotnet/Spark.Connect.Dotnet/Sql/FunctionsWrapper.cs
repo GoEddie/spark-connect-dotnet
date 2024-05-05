@@ -147,8 +147,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct,
-        params Column[] parameters)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params Column[] parameters)
     {
         return new Expression
         {
@@ -164,6 +163,7 @@ public class FunctionsWrapper : FunctionsInternal
             }
         };
     }
+    
 
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col)
     {

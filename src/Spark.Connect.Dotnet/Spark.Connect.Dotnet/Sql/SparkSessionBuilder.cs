@@ -15,7 +15,9 @@ public class SparkSessionBuilder
     private string _userId = string.Empty;
     private string _userName = string.Empty;
 
-    private Dictionary<string, string> _conf = new Dictionary<string, string>();
+    private readonly Dictionary<string, string> _conf = new Dictionary<string, string>();
+    
+    private readonly Dictionary<string, string> _sparkConnectDotnetConf = new Dictionary<string, string>();
     
     private DatabricksConnectionVerification _databricksConnectionVerification = DatabricksConnectionVerification.WaitForCluster;
     private TimeSpan _databricksConnectionMaxVerificationTime = TimeSpan.FromMinutes(10);
@@ -86,6 +88,11 @@ public class SparkSessionBuilder
 
     public SparkSessionBuilder Config(string key, string value)
     {
+        if (key.StartsWith("spark.connect.dotnet.", StringComparison.OrdinalIgnoreCase))
+        {
+            _sparkConnectDotnetConf[key.ToLowerInvariant()] = value.ToLowerInvariant();
+            return this;
+        }
         _conf[key] = value;
         return this;
     }
@@ -120,7 +127,7 @@ public class SparkSessionBuilder
             return _session;
         }
         
-        _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(), _clientType, _databricksConnectionVerification, _databricksConnectionMaxVerificationTime);
+        _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(), _clientType, _databricksConnectionVerification, _databricksConnectionMaxVerificationTime, _sparkConnectDotnetConf);
         if (_conf.Any())
         {
             GrpcInternal.ExecSetConfigCommandResponse(_session, _conf);
@@ -162,10 +169,15 @@ public class SparkSessionBuilder
 
 public class RuntimeConf
 {
+    public IDictionary<string, string> SparkDotnetConnectOptions { get; }
+    public const string SparkDotnetConfigKey = "spark.connect.dotnet.";
+    
     private readonly SparkSession _session;
+    
 
-    public RuntimeConf(SparkSession session)
+    public RuntimeConf(SparkSession session, IDictionary<string, string> sparkDotnetConnectOptions)
     {
+        SparkDotnetConnectOptions = sparkDotnetConnectOptions;
         _session = session;
     }
 
@@ -174,6 +186,66 @@ public class RuntimeConf
         var task =Task.Run(() => GrpcInternal.ExecGetAllConfigCommandResponse(_session, prefix));
         task.Wait();
         return task.Result;
+    }
+
+    public void Set(string key, string value)
+    {
+        if (key.ToLowerInvariant().StartsWith(SparkDotnetConfigKey))
+        {
+            SparkDotnetConnectOptions[key] = value;
+            return;
+        }
+        
+        var dict = new Dictionary<string, string>()
+        {
+            { key, value }
+        };
+        
+        var task =Task.Run(() => GrpcInternal.ExecSetConfigCommandResponse(_session, dict));
+        task.Wait();
+    }
+    
+    public string Get(string key)
+    {
+        if (key.ToLowerInvariant().StartsWith(SparkDotnetConfigKey))
+        {
+            if (!SparkDotnetConnectOptions.ContainsKey(key))
+            {
+                return String.Empty;
+            }
+
+            return SparkDotnetConnectOptions[key];
+        }
+        
+        var task =Task.Run(() => GrpcInternal.ExecGetAllConfigCommandResponse(_session));
+        task.Wait();
+
+        var config = task.Result;
+        return 
+            config.TryGetValue(key, out var value) 
+                ? value 
+                : String.Empty;
+    }
+
+    public bool IsTrue(string key)
+    {
+        var value = Get(key).ToLowerInvariant();
+        if (String.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
+        if (value == "true")
+        {
+            return true;
+        }
+
+        if (value == "1")
+        {
+            return true;
+        }
+
+        return false;
     }
 }
 
