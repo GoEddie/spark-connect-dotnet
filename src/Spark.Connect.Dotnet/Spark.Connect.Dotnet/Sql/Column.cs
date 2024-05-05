@@ -1,3 +1,4 @@
+using System.Xml.Serialization;
 using Spark.Connect.Dotnet.Sql.Types;
 
 namespace Spark.Connect.Dotnet.Sql;
@@ -15,6 +16,20 @@ public class Column
     public Column(string name)
     {
         _name = name;
+
+        if (_name == "*")
+        {
+            Expression = new Expression()
+            {
+                UnresolvedStar = new Expression.Types.UnresolvedStar()
+                {
+
+                }
+            };
+
+            return;
+        }
+        
         Expression = new Expression
         {
             UnresolvedAttribute = new Expression.Types.UnresolvedAttribute
@@ -122,6 +137,26 @@ public class Column
     {
         return src.Multiply(value);
     }
+
+    public static Column operator *(Column src, double right)
+    {
+        return src.Multiply(right);
+    }
+    
+    public static Column operator *(Column src, float right)
+    {
+        return src.Multiply(right);
+    }
+    
+    public static Column operator *(Column src, long right)
+    {
+        return src.Multiply(right);
+    }
+    
+    public static Column operator *(Column src, short right)
+    {
+        return src.Multiply(right);
+    }
     
     public static Column operator *(Column src, Column value)
     {
@@ -129,6 +164,26 @@ public class Column
     }
 
     public Column Multiply(int value)
+    {
+        return BinaryOperation(value, "*");
+    }
+    
+    public Column Multiply(float value)
+    {
+        return BinaryOperation(value, "*");
+    }
+    
+    public Column Multiply(double value)
+    {
+        return BinaryOperation(value, "*");
+    }
+    
+    public Column Multiply(long value)
+    {
+        return BinaryOperation(value, "*");
+    }
+    
+    public Column Multiply(short value)
     {
         return BinaryOperation(value, "*");
     }
@@ -147,7 +202,7 @@ public class Column
     {
         return src.EqualTo(value);
     }
-
+    
     public Column EqualTo(int value)
     {
         return BinaryOperation(value, "==");
@@ -195,12 +250,52 @@ public class Column
         return src.Divide(value);
     }
     
+    public static Column operator /(Column src, float value)
+    {
+        return src.Divide(value);
+    }
+    
+    public static Column operator /(Column src, double value)
+    {
+        return src.Divide(value);
+    }
+    
+    public static Column operator /(Column src, short value)
+    {
+        return src.Divide(value);
+    }
+    
+    public static Column operator /(Column src, long value)
+    {
+        return src.Divide(value);
+    }
+    
     public static Column operator /(Column src, Column value)
     {
         return src.Divide(value);
     }
 
     public Column Divide(int value)
+    {
+        return BinaryOperation(value, "/");
+    }
+    
+    public Column Divide(float value)
+    {
+        return BinaryOperation(value, "/");
+    }
+    
+    public Column Divide(double value)
+    {
+        return BinaryOperation(value, "/");
+    }
+    
+    public Column Divide(short value)
+    {
+        return BinaryOperation(value, "/");
+    }
+    
+    public Column Divide(long value)
     {
         return BinaryOperation(value, "/");
     }
@@ -225,12 +320,52 @@ public class Column
         return src.Add(value);
     }
     
+    public static Column operator +(Column src, float value)
+    {
+        return src.Add(value);
+    }
+    
+    public static Column operator +(Column src, double value)
+    {
+        return src.Add(value);
+    }
+    
+    public static Column operator +(Column src, short value)
+    {
+        return src.Add(value);
+    }
+    
+    public static Column operator +(Column src, long value)
+    {
+        return src.Add(value);
+    }
+    
     public static Column operator +(Column src, Column value)
     {
         return src.Add(value);
     }
 
     public Column Add(int value)
+    {
+        return BinaryOperation(value, "+");
+    }
+    
+    public Column Add(float value)
+    {
+        return BinaryOperation(value, "+");
+    }
+    
+    public Column Add(double value)
+    {
+        return BinaryOperation(value, "+");
+    }
+    
+    public Column Add(short value)
+    {
+        return BinaryOperation(value, "+");
+    }
+    
+    public Column Add(long value)
     {
         return BinaryOperation(value, "+");
     }
@@ -245,6 +380,26 @@ public class Column
         return BinaryOperation(value, "+", true);
     }
     
+    public Column RAdd(float value)
+    {
+        return BinaryOperation(value, "+", true);
+    }
+
+    public Column RAdd(double value)
+    {
+        return BinaryOperation(value, "+", true);
+    }
+
+    public Column RAdd(short value)
+    {
+        return BinaryOperation(value, "+", true);
+    }
+
+    public Column RAdd(long value)
+    {
+        return BinaryOperation(value, "+", true);
+    }
+
     public Column RAdd(Column value)
     {
         return BinaryOperation(value, "+", true);
@@ -255,12 +410,51 @@ public class Column
         return src.Minus(value);
     }
     
+    public static Column operator -(Column src, float value)
+    {
+        return src.Minus(value);
+    }
+    
+    public static Column operator -(Column src, double value)
+    {
+        return src.Minus(value);
+    }
+    
+    public static Column operator -(Column src, short value)
+    {
+        return src.Minus(value);
+    }
+    
+    public static Column operator -(Column src, long value)
+    {
+        return src.Minus(value);
+    }
+    
     public static Column operator -(Column src, Column value)
     {
         return src.Minus(value);
     }
 
     public Column Minus(int value)
+    {
+        return BinaryOperation(value, "-");
+    }
+    public Column Minus(float value)
+    {
+        return BinaryOperation(value, "-");
+    }
+    
+    public Column Minus(double value)
+    {
+        return BinaryOperation(value, "-");
+    }
+    
+    public Column Minus(short value)
+    {
+        return BinaryOperation(value, "-");
+    }
+    
+    public Column Minus(long value)
     {
         return BinaryOperation(value, "-");
     }
@@ -275,12 +469,52 @@ public class Column
         return BinaryOperation(value, "-", true);
     }
     
+    public Column RMinus(float value)
+    {
+        return BinaryOperation(value, "-", true);
+    }
+    
+    public Column RMinus(double value)
+    {
+        return BinaryOperation(value, "-", true);
+    }
+    
+    public Column RMinus(short value)
+    {
+        return BinaryOperation(value, "-", true);
+    }
+    
+    public Column RMinus(long value)
+    {
+        return BinaryOperation(value, "-", true);
+    }
+    
     public Column RMinus(Column value)
     {
         return BinaryOperation(value, "-", true);
     }
 
     public static Column operator %(Column src, int value)
+    {
+        return src.Mod(value);
+    }
+    
+    public static Column operator %(Column src, float value)
+    {
+        return src.Mod(value);
+    }
+    
+    public static Column operator %(Column src, double value)
+    {
+        return src.Mod(value);
+    }
+    
+    public static Column operator %(Column src, short value)
+    {
+        return src.Mod(value);
+    }
+    
+    public static Column operator %(Column src, long value)
     {
         return src.Mod(value);
     }
@@ -295,12 +529,52 @@ public class Column
         return BinaryOperation(value, "%");
     }
     
+    public Column Mod(float value)
+    {
+        return BinaryOperation(value, "%");
+    }
+    
+    public Column Mod(double value)
+    {
+        return BinaryOperation(value, "%");
+    }
+    
+    public Column Mod(short value)
+    {
+        return BinaryOperation(value, "%");
+    }
+    
+    public Column Mod(long value)
+    {
+        return BinaryOperation(value, "%");
+    }
+    
     public Column Mod(Column value)
     {
         return BinaryOperation(value, "%");
     }
 
     public Column RMod(int value)
+    {
+        return BinaryOperation(value, "%", true);
+    }
+    
+    public Column RMod(float value)
+    {
+        return BinaryOperation(value, "%", true);
+    }
+    
+    public Column RMod(double value)
+    {
+        return BinaryOperation(value, "%", true);
+    }
+    
+    public Column RMod(short value)
+    {
+        return BinaryOperation(value, "%", true);
+    }
+    
+    public Column RMod(long value)
     {
         return BinaryOperation(value, "%", true);
     }
@@ -315,12 +589,52 @@ public class Column
         return BinaryOperation(value, "power");
     }
     
+    public Column Pow(float value)
+    {
+        return BinaryOperation(value, "power");
+    }
+    
+    public Column Pow(double value)
+    {
+        return BinaryOperation(value, "power");
+    }
+    
+    public Column Pow(short value)
+    {
+        return BinaryOperation(value, "power");
+    }
+    
+    public Column Pow(long value)
+    {
+        return BinaryOperation(value, "power");
+    }
+    
     public Column Pow(Column value)
     {
         return BinaryOperation(value, "power");
     }
 
     public Column RPow(int value)
+    {
+        return BinaryOperation(value, "power", true);
+    }
+    
+    public Column RPow(float value)
+    {
+        return BinaryOperation(value, "power", true);
+    }
+    
+    public Column RPow(double value)
+    {
+        return BinaryOperation(value, "power", true);
+    }
+    
+    public Column RPow(short value)
+    {
+        return BinaryOperation(value, "power", true);
+    }
+    
+    public Column RPow(long value)
     {
         return BinaryOperation(value, "power", true);
     }
@@ -335,11 +649,51 @@ public class Column
         return col.Gt(value);
     }
     
+    public static Column operator > (Column col, float value)
+    {
+        return col.Gt(value);
+    }
+    
+    public static Column operator > (Column col, double value)
+    {
+        return col.Gt(value);
+    }
+    
+    public static Column operator > (Column col, short value)
+    {
+        return col.Gt(value);
+    }
+    
+    public static Column operator > (Column col, long value)
+    {
+        return col.Gt(value);
+    }
+    
     public static Column operator > (Column col, Column value)
     {
         return col.Gt(value);
     }
     public static Column operator < (Column col, int value)
+    {
+        return col.Lt(value);
+    }
+    
+    public static Column operator < (Column col, float value)
+    {
+        return col.Lt(value);
+    }
+    
+    public static Column operator < (Column col, double value)
+    {
+        return col.Lt(value);
+    }
+    
+    public static Column operator < (Column col, short value)
+    {
+        return col.Lt(value);
+    }
+    
+    public static Column operator < (Column col, long value)
     {
         return col.Lt(value);
     }
@@ -359,6 +713,26 @@ public class Column
         return col.Le(value);
     }
     
+    public static Column operator <= (Column col, float value)
+    {
+        return col.Le(value);
+    }
+    
+    public static Column operator <= (Column col, double value)
+    {
+        return col.Le(value);
+    }
+    
+    public static Column operator <= (Column col, short value)
+    {
+        return col.Le(value);
+    }
+    
+    public static Column operator <= (Column col, long value)
+    {
+        return col.Le(value);
+    }
+    
     public static Column operator >= (Column col, Column value)
     {
         return col.Ge(value);
@@ -369,8 +743,48 @@ public class Column
         return col.Ge(value);
     }
     
+    public static Column operator >= (Column col, float value)
+    {
+        return col.Ge(value);
+    }
+    
+    public static Column operator >= (Column col, double value)
+    {
+        return col.Ge(value);
+    }
+    
+    public static Column operator >= (Column col, short value)
+    {
+        return col.Ge(value);
+    }
+    
+    public static Column operator >= (Column col, long value)
+    {
+        return col.Ge(value);
+    }
+    
     
     public Column Gt(int value)
+    {
+        return BinaryOperation(value, ">");
+    }
+    
+    public Column Gt(float value)
+    {
+        return BinaryOperation(value, ">");
+    }
+    
+    public Column Gt(double value)
+    {
+        return BinaryOperation(value, ">");
+    }
+    
+    public Column Gt(short value)
+    {
+        return BinaryOperation(value, ">");
+    }
+    
+    public Column Gt(long value)
     {
         return BinaryOperation(value, ">");
     }
@@ -385,6 +799,26 @@ public class Column
         return BinaryOperation(value, "<");
     }
     
+    public Column Lt(float value)
+    {
+        return BinaryOperation(value, "<");
+    }
+    
+    public Column Lt(double value)
+    {
+        return BinaryOperation(value, "<");
+    }
+    
+    public Column Lt(short value)
+    {
+        return BinaryOperation(value, "<");
+    }
+    
+    public Column Lt(long value)
+    {
+        return BinaryOperation(value, "<");
+    }
+    
     public Column Lt(Column value)
     {
         return BinaryOperation(value, "<");
@@ -395,12 +829,52 @@ public class Column
         return BinaryOperation(value, ">=");
     }
     
+    public Column Ge(float value)
+    {
+        return BinaryOperation(value, ">=");
+    }
+    
+    public Column Ge(double value)
+    {
+        return BinaryOperation(value, ">=");
+    }
+    
+    public Column Ge(short value)
+    {
+        return BinaryOperation(value, ">=");
+    }
+    
+    public Column Ge(long value)
+    {
+        return BinaryOperation(value, ">=");
+    }
+    
     public Column Ge(Column value)
     {
         return BinaryOperation(value, ">=");
     }
 
     public Column Le(int value)
+    {
+        return BinaryOperation(value, "<=");
+    }
+    
+    public Column Le(float value)
+    {
+        return BinaryOperation(value, "<=");
+    }
+    
+    public Column Le(double value)
+    {
+        return BinaryOperation(value, "<=");
+    }
+    
+    public Column Le(short value)
+    {
+        return BinaryOperation(value, "<=");
+    }
+    
+    public Column Le(long value)
     {
         return BinaryOperation(value, "<=");
     }
@@ -459,6 +933,142 @@ public class Column
             Literal = new Expression.Types.Literal
             {
                 Integer = value
+            }
+        };
+
+        if (reverse)
+        {
+            expression.UnresolvedFunction.Arguments.Add(literal);
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+        }
+        else
+        {
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+            expression.UnresolvedFunction.Arguments.Add(literal);
+        }
+
+        return new Column(expression);
+    }
+    
+    private Column BinaryOperation(short value, string functionName, bool reverse = false)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = functionName,
+                IsUserDefinedFunction = false,
+                IsDistinct = false
+            }
+        };
+
+        var literal = new Expression
+        {
+            Literal = new Expression.Types.Literal
+            {
+                Short = value
+            }
+        };
+
+        if (reverse)
+        {
+            expression.UnresolvedFunction.Arguments.Add(literal);
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+        }
+        else
+        {
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+            expression.UnresolvedFunction.Arguments.Add(literal);
+        }
+
+        return new Column(expression);
+    }
+    
+    private Column BinaryOperation(long value, string functionName, bool reverse = false)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = functionName,
+                IsUserDefinedFunction = false,
+                IsDistinct = false
+            }
+        };
+
+        var literal = new Expression
+        {
+            Literal = new Expression.Types.Literal
+            {
+                Long = value
+            }
+        };
+
+        if (reverse)
+        {
+            expression.UnresolvedFunction.Arguments.Add(literal);
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+        }
+        else
+        {
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+            expression.UnresolvedFunction.Arguments.Add(literal);
+        }
+
+        return new Column(expression);
+    }
+    
+    private Column BinaryOperation(double value, string functionName, bool reverse = false)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = functionName,
+                IsUserDefinedFunction = false,
+                IsDistinct = false
+            }
+        };
+
+        var literal = new Expression
+        {
+            Literal = new Expression.Types.Literal
+            {
+                Double = value
+            }
+        };
+
+        if (reverse)
+        {
+            expression.UnresolvedFunction.Arguments.Add(literal);
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+        }
+        else
+        {
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+            expression.UnresolvedFunction.Arguments.Add(literal);
+        }
+
+        return new Column(expression);
+    }
+    
+    private Column BinaryOperation(float value, string functionName, bool reverse = false)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = functionName,
+                IsUserDefinedFunction = false,
+                IsDistinct = false
+            }
+        };
+
+        var literal = new Expression
+        {
+            Literal = new Expression.Types.Literal
+            {
+                Float = value
             }
         };
 

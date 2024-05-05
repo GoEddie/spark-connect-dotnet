@@ -29,6 +29,7 @@ public class SparkException : Exception
 
     public SparkException(string message) : base(message)
     {
+        OverrideMessage = message;
     }
 
     public override string Message => OverrideMessage;

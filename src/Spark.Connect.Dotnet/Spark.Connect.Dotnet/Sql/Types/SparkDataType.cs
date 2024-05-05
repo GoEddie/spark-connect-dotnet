@@ -47,6 +47,11 @@ public abstract class SparkDataType
         return new BigIntType();
     }
 
+    public static FloatType FloatType()
+    {
+        return new FloatType();
+    }
+    
     public static BigIntType BigIntType()
     {
         return new BigIntType();
@@ -86,6 +91,7 @@ public abstract class SparkDataType
     {
         return new DateType();
     }
+    
     
     public static TimestampType TimestampType()
     {
@@ -135,6 +141,12 @@ public abstract class SparkDataType
 
             case "binary":
                 return new BinaryType();
+            
+            case "double":
+                return new DoubleType();
+            
+            case "float":
+                return new FloatType();
 
             case "bool":
             case "boolean":
@@ -182,6 +194,21 @@ public abstract class SparkDataType
 
         throw new NotImplementedException($"Missing DataType From String: '{type}'");
     }
+
+    public static SparkDataType FromDotNetType(object o) => o switch
+    {
+        int => IntType(),
+        long => LongType(),
+        double => DoubleType(),
+        float => FloatType(),
+        short => ShortType(),
+        string => StringType(),
+        DateTime => TimestampType(),
+        DateOnly => DateType(),
+        byte => ByteType(),
+
+        _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
+    };
 }
 
 public class ByteType : SparkDataType
@@ -201,6 +228,26 @@ public class ByteType : SparkDataType
     public override IArrowType ToArrowType()
     {
         return new Int8Type();
+    }
+}
+
+public class FloatType : SparkDataType
+{
+    public FloatType() : base("Float")
+    {
+    }
+
+    public override DataType ToDataType()
+    {
+        return new DataType
+        {
+            Float = new DataType.Types.Float()
+        };
+    }
+
+    public override IArrowType ToArrowType()
+    {
+        return new Apache.Arrow.Types.FloatType();
     }
 }
 
