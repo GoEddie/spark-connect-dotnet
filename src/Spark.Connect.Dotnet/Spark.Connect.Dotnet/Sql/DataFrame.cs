@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices.ComTypes;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
@@ -39,7 +38,27 @@ public class DataFrame
     ///     Returns the `Column` denoted by name.
     /// </summary>
     /// <param name="name"></param>
-    public Column this[string name] => new(name);
+    public Column this[string name]
+    {
+        get
+        {
+            if (!ValidateThisCallColumnName && !_session.Conf.IsTrue(RuntimeConf.SparkDotnetConfigKey + "validatethiscallcolumnname"))
+            {
+                return new Column(name);
+            }
+            
+            var schema = Schema;
+            if(schema.Fields.All(p => !string.Equals(p.Name, name, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                throw new SparkException(
+                    $"The field '{name}' was not found in the schema: '{schema.SimpleString()}', DataFrame[\"name\"] failed validation");
+            }
+
+            return new Column(name);
+        }
+    }
+
+    public bool ValidateThisCallColumnName { get; set; } = false;
 
     public StructType Schema
     {
@@ -143,8 +162,20 @@ public class DataFrame
                 }
             }
         };
+        
+        RunAnalyze(relation);
 
         return new DataFrame(_session, relation, _schema);
+    }
+
+    private void RunAnalyze(Relation relation)
+    {
+        var plan = new Plan()
+        {
+            Root = relation
+        };
+        
+        GrpcInternal.Schema(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, false, "");
     }
 
     public DataFrame Select(params Expression[] columns)
@@ -160,6 +191,8 @@ public class DataFrame
             }
         };
 
+        RunAnalyze(relation);
+        
         return new DataFrame(_session, relation, _schema);
     }
 
@@ -192,6 +225,8 @@ public class DataFrame
             }
         };
 
+        RunAnalyze(relation);
+        
         return new DataFrame(_session, relation, _schema);
     }
 
@@ -641,23 +676,22 @@ public class DataFrame
         return new DataFrameWriter(_session, this);
     }
 
-    public List<object[]> Collect()
+    public IList<Row> Collect()
     {
         var task = Task.Run(CollectAsync);
         Wait(task);
         return task.Result;
     }
 
-    public async Task<List<object[]>> CollectAsync()
+    public async Task<IList<Row>> CollectAsync()
     {
         var plan = new Plan
         {
             Root = Relation
         };
 
-        var (batches, schema) = await GrpcInternal.ExecArrowResponse(_session.GrpcClient, _session.SessionId, plan,
-            _session.Headers, _session.UserContext, _session.ClientType);
-        var rows = new List<object[]>();
+        var (batches, schema) = await GrpcInternal.ExecArrowResponse(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
+        var rows = new List<Row>();
 
         foreach (var batch in batches)
         {
@@ -667,7 +701,7 @@ public class DataFrame
         return rows;
     }
 
-    private static async Task<IEnumerable<object[]>> ArrowBatchToList(ExecutePlanResponse.Types.ArrowBatch batch)
+    private static async Task<IEnumerable<Row>> ArrowBatchToList(ExecutePlanResponse.Types.ArrowBatch batch)
     {
         var rows = new List<object[]>();
 
@@ -773,7 +807,7 @@ public class DataFrame
                     var s = (StringArray)recordBatch.Column(i);
                     for (var ii = 0; ii < s.Length; ii++)
                     {
-                        rows[ii][i] = s.GetString(0);   //was i
+                        rows[ii][i] = s.GetString(ii);   //was i
                     }
 
                     break;
@@ -786,7 +820,7 @@ public class DataFrame
             }
         }
 
-        return rows;
+        return rows.Select(p => new Row(new StructType(reader.Schema), p));
     }
 
     public void CreateOrReplaceTempView(string name)
@@ -1284,7 +1318,7 @@ public class DataFrame
         var dataFrame = new DataFrame(_session, plan.Root);
         var schema = dataFrame.Schema;
 
-        return dataFrame.Collect().Select(p => new Row(schema, p));
+        return dataFrame.Collect();
     }
 
     /// <summary>

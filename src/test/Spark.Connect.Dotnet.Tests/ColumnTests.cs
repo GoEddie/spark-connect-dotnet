@@ -77,4 +77,29 @@ public class ColumnTests : E2ETestBase
         var df = Spark.Sql("SELECT 'ABCDEFHIJ' a from range(5)");
         df.Select(df["a"].Substr(2, 2)).Show();
     }
+
+    [Fact]
+    public void TypesTests()
+    {
+        var df = Spark.Sql("SELECT * FROM range(100)");
+        var id = Col("id");
+
+        df.Select(id * 1, id * 1F, id * 1d, id / 1, id / 1F, id / 1d, id % 1, id % 1F, id % 1d).Show();
+    }
+    
+    [Fact]
+    public void CollectTests()
+    {
+        var df = Spark.Sql("SELECT *, 'aaa' as col2, 334 * id as col3 FROM range(100)");
+        
+        foreach (var row in df.Collect())
+        {
+            Console.WriteLine(row.Get("col2"));
+            Console.WriteLine(row[2]);
+
+            Assert.Throws<IndexOutOfRangeException>(() => row.Get("FakeColumn"));
+        }
+        
+        
+    }
 }

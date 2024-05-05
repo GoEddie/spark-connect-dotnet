@@ -1,6 +1,5 @@
 # Functions Status
-## Counts
-There are 741 functions, 498 are implemented, 243 still to do 
+
 ## Implemented Functions
 
 | CSharp Name               | Python Name                 |
@@ -71,12 +70,15 @@ There are 741 functions, 498 are implemented, 243 still to do
 | CollectSet                | collect_set                 |
 | Concat                    | concat                      |
 | ConcatWs                  | concat_ws                   |
+| Conv                      | conv                        |
+| ConvertTimezone           | convert_timezone            |
 | Cos                       | cos                         |
 | Cosh                      | cosh                        |
 | Cot                       | cot                         |
 | Count                     | count                       |
 | CountIf                   | count_if                    |
 | Crc32                     | crc32                       |
+| CreateMap                 | create_map                  |
 | Csc                       | csc                         |
 | CumeDist                  | cume_dist                   |
 | Curdate                   | curdate                     |
@@ -87,9 +89,12 @@ There are 741 functions, 498 are implemented, 243 still to do
 | CurrentTimestamp          | current_timestamp           |
 | CurrentTimezone           | current_timezone            |
 | CurrentUser               | current_user                |
+| DateAdd                   | date_add                    |
+| DateSub                   | date_sub                    |
 | DateFormat                | date_format                 |
 | DateFromUnixDate          | date_from_unix_date         |
 | DatePart                  | date_part                   |
+| DateTrunc                 | date_trunc                  |
 | Day                       | day                         |
 | Dayofmonth                | dayofmonth                  |
 | Dayofweek                 | dayofweek                   |
@@ -110,11 +115,14 @@ There are 741 functions, 498 are implemented, 243 still to do
 | Explode                   | explode                     |
 | ExplodeOuter              | explode_outer               |
 | Expm1                     | expm1                       |
+| Expr                      | expr                        |
 | Factorial                 | factorial                   |
+| First                     | first                       |
 | FirstValue                | first_value                 |
 | Flatten                   | flatten                     |
 | Floor                     | floor                       |
 | FormatNumber              | format_number               |
+| FormatString              | format_string               |
 | FromUnixtime              | from_unixtime               |
 | Getbit                    | getbit                      |
 | GetJsonObject             | get_json_object             |
@@ -284,19 +292,7 @@ There are 741 functions, 498 are implemented, 243 still to do
 | BitwiseNOT        | bitwiseNOT          |
 | CallFunction      | call_function       |
 | CallUdf           | call_udf            |
-| Conv              | conv                |
-| ConvertTimezone   | convert_timezone    |
-| CountDistinct     | count_distinct      |
-| CountDistinct     | countDistinct       |
 | CountMinSketch    | count_min_sketch    |
-| CreateMap         | create_map          |
-| DateAdd           | date_add            |
-| Dateadd           | dateadd             |
-| DateSub           | date_sub            |
-| DateTrunc         | date_trunc          |
-| Expr              | expr                |
-| First             | first               |
-| FormatString      | format_string       |
 | FromCsv           | from_csv            |
 | FromJson          | from_json           |
 | FromUtcTimestamp  | from_utc_timestamp  |

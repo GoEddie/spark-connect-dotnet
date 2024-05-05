@@ -438,10 +438,81 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         df.Select(ConcatWs("+", "a", "d")).Show();
         df.Select(ConcatWs("-", Col("a"), Col("d"))).Show();
     }
+
+    [Fact]
+    public void Conv_Test()
+    {
+        var df = Spark.CreateDataFrame(new[]
+        {
+            new []{"010101"}
+        }, "n");
+
+        df = df.Select(Conv("n", 2, 16).Alias("hex"));
+        
+        var rows = df.Collect();
+        Assert.Equal("15", rows.First()[0]);
+        df.Show();
+    }
+
+    [Fact]
+    public void ConvertTimeZone_Test()
+    {
+        var df = Spark.CreateDataFrame(new[] { new[] { "2015-04-08" } }, "dt");
+        df.Select(ConvertTimezone( null,  Lit("America/Los_Angeles"), df["dt"])).Show();
+        df.Select(ConvertTimezone( Lit("UTC"),  Lit("America/Los_Angeles"), df["dt"])).Show();
+        df.Select(ConvertTimezone( null,  Lit("America/Los_Angeles"), CurrentTimestamp())).Show();
+        
+    }
+
+    [Fact]
+    public void CreateMap_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)>{ ("Alice", 2), ("Bob", 5) }, "name", "age");
+        df.Select(CreateMap("name", "age").Alias("map")).Show();
+        df.Select(CreateMap(Col("name"), df["age"]).Alias("map")).Show();
+    }
+
+    [Fact]
+    public void DateAdd_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)> { ("2015-04-08", 2) }, "dt", "add");
+        df.Select(df["*"], DateAdd(df["dt"], 1).Alias("next_date")).Show();
+        df.Select(df["*"], DateAdd("dt", 1).Alias("next_date")).Show();
+    }
     
+    [Fact]
+    public void DateSub_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)> { ("2015-04-08", 2) }, "dt", "add");
+        df.Select(df["*"], DateSub(df["dt"], 1).Alias("last_date")).Show();
+        df.Select(df["*"], DateSub("dt", 1).Alias("last_date")).Show();
+    }
     
+    [Fact]
+    public void DateTrunc_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)> { ("1997-02-28 05:02:11", 0) }, "dt", "ignore");
+        df.Select(df["*"], DateTrunc("year", df["dt"]).Alias("year")).Show();
+        df.Select(df["*"], DateTrunc("year", "dt").Alias("year")).Show();
+    }
     
-    
+    [Fact]
+    public void First_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)> { ("Alice", 2), ("Alice", 90), ("Alice", 23), ("Bob", 5), ("Alice", null) }, "name", "age");
+        df.Show();
+        
+        df = df.OrderBy(df["age"]);
+
+        df.GroupBy(Col("name")).Agg(First("age")).OrderBy("name").Show();
+    }
+
+    [Fact]
+    public void FormatString_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)> { (5, "hello") }, "a", "b");
+        df.Select(FormatString("%d %s", df["a"], df["b"]).Alias("v")).Show();
+    }
     
     static IEnumerable<IEnumerable<object>> ToRows(params object[] objects)
     {   //don't do new on List<>(){} otherwise the child objects get flattened

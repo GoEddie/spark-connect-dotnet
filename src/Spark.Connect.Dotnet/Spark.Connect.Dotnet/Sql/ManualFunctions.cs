@@ -1018,4 +1018,96 @@ public partial class Functions : FunctionsWrapper
     {
         return src.Hint("broadcast");
     }
+
+    public static Column Conv(string col, int fromBase, int toBase) => Conv(Col(col), fromBase, toBase);
+    
+    public static Column Conv(Column col, int fromBase, int toBase)
+    {
+        return new Column(FunctionWrappedCall("conv", false, col, Lit(fromBase), Lit(toBase)));
+    }
+
+    public static Column ConvertTimezone(Column sourceTzColumn, Column targetTz, Column sourceTz)
+    {
+        if (object.ReferenceEquals(null, sourceTzColumn))
+        {
+            return new Column(FunctionWrappedCall("convert_timezone", false, targetTz, sourceTz));    
+        }
+        
+        return new Column(FunctionWrappedCall("convert_timezone", false, sourceTzColumn, targetTz, sourceTz));
+    }
+    
+    public static Column CreateMap(string cola, string colb)
+    {
+        return new Column(FunctionWrappedCall("map", false, cola, colb));
+    }
+    
+    public static Column CreateMap(Column cola, Column colb)
+    {
+        return new Column(FunctionWrappedCall("map", false, cola, colb));
+    }
+    
+    public static Column DateAdd(string start, int days)
+    {
+        return new Column(FunctionWrappedCall("date_add", false, Col(start), Lit(days)));
+    }
+    
+    public static Column DateAdd(Column start, int days)
+    {
+        return new Column(FunctionWrappedCall("date_add", false, start, Lit(days)));
+    }
+    
+    public static Column DateSub(string start, int days)
+    {
+        return new Column(FunctionWrappedCall("date_sub", false, Col(start), Lit(days)));
+    }
+    
+    public static Column DateSub(Column start, int days)
+    {
+        return new Column(FunctionWrappedCall("date_sub", false, start, Lit(days)));
+    }
+    
+    public static Column DateSub(Column start, Column days)
+    {
+        return new Column(FunctionWrappedCall("date_sub", false, start, days));
+    }
+    
+    public static Column DateSub(string start, Column days)
+    {
+        return new Column(FunctionWrappedCall("date_sub", false, Col(start), days));
+    }
+    
+    public static Column DateTrunc(string format, Column timestamp)
+    {
+        return new Column(FunctionWrappedCall("date_trunc", false, Lit(format), timestamp));
+    }
+    public static Column DateTrunc(string format, string timestamp)
+    {
+        return new Column(FunctionWrappedCall("date_trunc", false, Lit(format), Col(timestamp)));
+    }
+    
+    public static Column First(string col)
+    {
+        return new Column(FunctionWrappedCall("first", false, Col(col)));
+    }
+    public static Column First(Column col)
+    {
+        return new Column(FunctionWrappedCall("first", false, col));
+    }
+
+    public static Column FormatString(string format, params Column[] cols)
+    {
+        var newList = new List<Column>();
+        newList.Add(Lit(format));
+        newList.AddRange(cols);
+        return new Column(FunctionWrappedCall("format_string", false, newList.ToArray()));
+    }
+    
+    public static Column FormatString(string format, params string[] cols)
+    {
+        var newList = new List<Column>();
+        newList.Add(Lit(format));
+        newList.AddRange(cols.Select(Col));
+        return new Column(FunctionWrappedCall("format_string", false, newList.ToArray()));
+    }
+    
 }

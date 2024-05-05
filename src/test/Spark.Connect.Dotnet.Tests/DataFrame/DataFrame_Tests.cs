@@ -1,5 +1,7 @@
 using System.Runtime.InteropServices;
 using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
+using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Sql;
 using Spark.Connect.Dotnet.Sql.Types;
 using static Spark.Connect.Dotnet.Sql.Functions;
@@ -400,5 +402,34 @@ public class DataFrame_Tests : E2ETestBase
     {
         var df = Spark.Range(0, 100);
         df.WithColumnRenamed("id", "no longer id").Show();
+    }
+
+    [Fact]
+    public void IndexerAndSelectTest()
+    {
+        var df = Spark.Range(10);
+        
+        //no validation
+        var col = df["DoesNotExist"];
+        
+        //session df validation
+        Spark.Conf.Set("spark.connect.dotnet.validatethiscallcolumnname", "true");
+        Assert.Throws<SparkException>(() => col = df["DoesNotExist"]);
+        
+        //remove session df validation
+        Spark.Conf.Set("spark.connect.dotnet.validatethiscallcolumnname", "false");
+        col = df["DoesNotExist"];
+        
+        //df level validation
+        df.ValidateThisCallColumnName = true;
+        Assert.Throws<SparkException>(() => col = df["DoesNotExist"]);
+
+        //disable df level validation
+        df.ValidateThisCallColumnName = false;
+        col = df["DoesNotExist"];
+        
+        //with no validation spark should fail on plan execute
+        var exception = Assert.Throws<RpcException>(() => df.Select(col));
+        Assert.Contains("[UNRESOLVED_COLUMN.WITH_SUGGESTION] A column or function parameter with name `DoesNotExist` cannot be resolved. Did you mean one of the following? [`id`].", exception.Message);
     }
 }

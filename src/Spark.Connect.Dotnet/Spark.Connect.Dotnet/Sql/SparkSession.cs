@@ -25,11 +25,11 @@ public class SparkSession
     public readonly string SessionId;
 
     private readonly DatabricksConnectionVerification _databricksConnectionVerification;
-
+    
     private int _planId;
 
-    public RuntimeConf Conf => new RuntimeConf(this);
-    
+    public readonly RuntimeConf Conf;
+
     /// <summary>
     ///     Creates a new `SparkSession` the normal pattern is to use the `SparkSessionBuilder`.
     /// </summary>
@@ -40,13 +40,16 @@ public class SparkSession
     /// <param name="clientType"></param>
     /// <param name="databricksConnectionVerification"></param>
     /// <param name="databricksConnectionMaxVerificationTime"></param>
+    /// <param name="sparkConnectDotnetConf"></param>
     public SparkSession(string sessionId, string url, Metadata headers, UserContext userContext, string clientType,
-        DatabricksConnectionVerification databricksConnectionVerification, TimeSpan databricksConnectionMaxVerificationTime)
+        DatabricksConnectionVerification databricksConnectionVerification,
+        TimeSpan databricksConnectionMaxVerificationTime, Dictionary<string, string> sparkConnectDotnetConf)
     {
         Headers = headers;
         UserContext = userContext;
         SessionId = sessionId;
         _databricksConnectionVerification = databricksConnectionVerification;
+        Conf = new RuntimeConf(this, sparkConnectDotnetConf);
         ClientType = clientType;
 
         Host = url.Replace("sc://", "http://");
@@ -280,13 +283,63 @@ public class SparkSession
         return new DataFrame(this, relation, schema);
     }
 
+    /// <summary>
+    /// Pass in a list of tuples, schema is guessed by the type of the first tuple's child types:
+    ///
+    /// CreateDataFrame(new List<object, object>(){
+    ///                     ("tupple", 1), ("another", 2)
+    ///                 });
+    /// </summary>
+    /// <param name="data">List of tuples (2 values)</param>
+    /// <param name="cola">The name of the first column</param>
+    /// <param name="colb">The name of the second column</param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    /// <exception cref="SparkException"></exception>
+    public DataFrame CreateDataFrame(IEnumerable<(object, object)> rows, string cola, string colb)
+    {
+        if (!rows.Any())
+        {
+            throw new SparkException("Cannot CreateDataFrame with no rows");
+        }
+        
+        var first = rows.First();
+
+        var fields = new List<StructField>
+        {
+            new StructField(cola, SparkDataType.FromString(first.Item1.GetType().Name), true),
+            new StructField(colb, SparkDataType.FromString(first.Item2.GetType().Name), true)
+        };
+        var schema = new StructType(fields.ToArray());
+
+        var data = new List<IList<object>>();
+        foreach (var row in rows)
+        {
+            data.Add(new List<object> { row.Item1, row.Item2 });
+        }
+
+        return CreateDataFrame(data, schema);
+    }
+    
+    /// <summary>
+    /// Pass in a list of tuples, schema is guessed by the type of the first tuple's child types:
+    ///
+    /// CreateDataFrame(new List<object, object>(){
+    ///                     ("tupple", 1), ("another", 2)
+    ///                 });
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="schema"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    /// <exception cref="SparkException"></exception>
     public DataFrame CreateDataFrame(IEnumerable<(object, object)> rows)
     {
         if (!rows.Any())
         {
             throw new SparkException("Cannot CreateDataFrame with no rows");
         }
-
+        
         var first = rows.First();
 
         var fields = new List<StructField>
@@ -305,22 +358,40 @@ public class SparkSession
         return CreateDataFrame(data, schema);
     }
 
+    /// <summary>
+    /// Pass in a List of Dictionary<string, type> - the key is used as the name of the field. The schema is guessed at using the first dictionary
+    /// </summary>
+    /// <param name="rows"></param>
+    /// <returns></returns>
+    /// <exception cref="SparkException"></exception>
     public DataFrame CreateDataFrame(IEnumerable<Dictionary<string, object>> rows)
     {   
-        //TODO: Need to be able to handle null values
         if (!rows.Any())
         {
             throw new SparkException("Cannot CreateDataFrame with no rows");
         }
 
         var first = rows.First();
-        var fields = new List<StructField>();
-        foreach (var key in first.Keys)
+        
+        var schema = ParseObjectsToCreateSchema(first.Values.ToList(), first.Keys.ToArray());
+        return CreateDataFrame(rows, schema);
+    }
+    
+    /// <summary>
+    /// Pass in a List of Dictionary<string, type> - the key is used as the name of the field. The schema is passed in explicitly
+    /// </summary>
+    /// <param name="rows"></param>
+    /// <param name="schema"></param>
+    /// <returns></returns>
+    /// <exception cref="SparkException"></exception>
+    public DataFrame CreateDataFrame(IEnumerable<Dictionary<string, object>> rows, StructType schema)
+    {   
+        if (!rows.Any())
         {
-            fields.Add(new StructField(key, SparkDataType.FromString(first[key].GetType().Name), true));
+            throw new SparkException("Cannot CreateDataFrame with no rows");
         }
 
-        var schema = new StructType(fields.ToArray());
+        var first = rows.First();
         var data = new List<IList<object>>();
         foreach (var row in rows)
         {
@@ -337,6 +408,54 @@ public class SparkSession
         return CreateDataFrame(data, schema);
     }
 
+    private static StructType ParseObjectsToCreateSchema(IList row, params string[] colNames)
+    {
+        var fields = new List<StructField>();
+        var usedColNumbers = 0;
+        for (var i=0; i< row.Count; i++)
+        {
+            var type = SparkDataType.FromDotNetType(row[i]);
+            var colName = colNames.Length > i ? colNames[i] : $"_{usedColNumbers++}";
+            
+            fields.Add(new StructField(colName, type, true));
+        }
+
+        var schema = new StructType(fields);
+        return schema;
+    }
+    
+    /// <summary>
+    /// Pass in an IEnumerable of Ienumerable objects, the types are guessed using the first row and if you pass in column names they are used
+    ///     if colNames has fewer columns than the first row column names not in colNames are named _1, _2, etc
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="colNames"></param>
+    /// <returns></returns>
+    public DataFrame CreateDataFrame(IEnumerable<IEnumerable<object>> data, params string[] colNames)
+    {
+        var schema = ParseObjectsToCreateSchema(data.First().ToList(), colNames);
+        return CreateDataFrame(data, schema);
+    }
+    
+    
+    /// <summary>
+    /// Pass in rows and an explicit schema:
+    ///
+    /// CreateDataFrame(new List<object>(){
+    ///                     new List<object>(){"abc", 123, 100.123},
+    ///                     new List<object>(){"def", 456, 200.456},
+    ///                     new List<object>(){"xyz", 999, 999.456},
+    ///                 }, new StructType(
+    ///                         new StructField("col_a", StringType(), true),
+    ///                         new StructField("col_b", IntType(), true),
+    ///                         new StructField("col_c", DoubleType(), true),
+    ///                     ));
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="schema"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    /// <exception cref="SparkException"></exception>
     public DataFrame CreateDataFrame(IEnumerable<IEnumerable<object>> data, StructType schema)
     {
         var columns = DataToColumns(data);
@@ -359,41 +478,37 @@ public class SparkSession
             switch (schemaCol.DataType)
             {
                 case StringType:
-                    
                     batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
                         arrayBuilder => arrayBuilder.String(builder => builder.AppendRange(column)));
                     break;
                 case Int32Type:
                     batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
-                        arrayBuilder => arrayBuilder.Int32(builder => builder.AppendRange(column)));
+                        arrayBuilder => arrayBuilder.Int32(builder => AppendInt(column, builder)));
                     break;
                 case DoubleType:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
-                        arrayBuilder => arrayBuilder.Double(builder => builder.AppendRange(column)));
-                    break;
-                case Int8Type:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
-                        arrayBuilder => arrayBuilder.Int8(builder => builder.AppendRange(column)));
-                    break;
-                case Int64Type:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
-                        arrayBuilder => arrayBuilder.Int64(builder => builder.AppendRange(column)));
-                    break;
-                case BinaryType:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
-                        arrayBuilder => arrayBuilder.Binary(builder => builder.AppendRange(column)));
-                    break;
-                case BooleanType:
-                    
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Boolean(builder => builder.AppendRange(column)));
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Double(builder => AppendDouble(column, builder)));
                     break;
                 
-                case Date32Type:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Date32(builder => builder.AppendRange(column)));
+                case Apache.Arrow.Types.FloatType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Float(builder => AppendFloat(column, builder)));
                     break;
-
+                case Int8Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Binary(builder => AppendByte(column, builder)));
+                    break;
+                case Int64Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Int64(builder => AppendLong(column, builder)));
+                    break;
+                case BinaryType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Binary(builder => AppendByte(column, builder)));
+                    break;
+                case BooleanType:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Boolean(builder => AppendBool(column, builder)));
+                    break;
+                case Date32Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Date32(builder => AppendDateTime(column, builder)));
+                    break;
                 case TimestampType:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Timestamp(builder => builder.AppendRange(column)));
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Timestamp(builder => AppendTimestamp(column, builder)));
                     break;
                 
                 case ListType:
@@ -430,6 +545,141 @@ public class SparkSession
         return new DataFrame(this, relation);
     }
 
+    private static IEnumerable<Int32Array.Builder> AppendInt(dynamic? column, Int32Array.Builder builder)
+    {
+        var list = (List<int?>)column;
+        var retList = new List<Int32Array.Builder>();
+        foreach (var i in list)
+        {
+            retList.Add(builder.Append(i));
+        }
+
+        return retList;
+    }
+    
+    private static IEnumerable<Int64Array.Builder> AppendLong(dynamic? column, Int64Array.Builder builder)
+    {
+        var list = (List<long?>)column;
+        var retList = new List<Int64Array.Builder>();
+        foreach (var i in list)
+        {
+            retList.Add(builder.Append(i));
+        }
+        return retList;
+    }
+    
+    private static IEnumerable<BooleanArray.Builder> AppendBool(dynamic? column, BooleanArray.Builder builder)
+    {
+        var list = (List<bool?>)column;
+        var retList = new List<BooleanArray.Builder>();
+        foreach (var i in list)
+        {
+            if (i.HasValue)
+            {
+                retList.Add(builder.Append(i.Value));    
+            }
+            else
+            {
+                retList.Add(builder.AppendNull());    
+            }
+            
+        }
+        return retList;
+    }
+    
+    private static IEnumerable<Int16Array.Builder> AppendShort(dynamic? column, Int16Array.Builder builder)
+    {
+        var list = (List<short?>)column;
+        var retList = new List<Int16Array.Builder>();
+        foreach (var i in list)
+        {
+            retList.Add(builder.Append(i));
+        }
+        return retList;
+    }
+    
+    private static IEnumerable<BinaryArray.Builder> AppendByte(dynamic? column, BinaryArray.Builder builder)
+    {
+        var list = (List<byte?>)column;
+        var retList = new List<BinaryArray.Builder>();
+        foreach (var i in list)
+        {
+            if (i.HasValue)
+            {
+                retList.Add(builder.Append(i.Value));    
+            }
+
+            else
+            {
+                retList.Add(builder.AppendNull());
+            }
+
+        }
+        return retList;
+    }
+    
+    private static IEnumerable<Date32Array.Builder> AppendDateTime(dynamic? column, Date32Array.Builder builder)
+    {
+        var list = (List<DateTime?>)column;
+        var retList = new List<Date32Array.Builder>();
+        foreach (var i in list)
+        {
+            if (i.HasValue)
+            {
+                retList.Add(builder.Append(i.Value));    
+            }
+
+            else
+            {
+                retList.Add(builder.AppendNull());
+            }
+
+        }
+        return retList;
+    }
+    
+    private static IEnumerable<TimestampArray.Builder> AppendTimestamp(dynamic? column, TimestampArray.Builder builder)
+    {
+        var list = (List<DateTime?>)column;
+        var retList = new List<TimestampArray.Builder>();
+        foreach (var i in list)
+        {
+            if (i.HasValue)
+            {
+                retList.Add(builder.Append(i.Value));    
+            }
+
+            else
+            {
+                retList.Add(builder.AppendNull());
+            }
+
+        }
+        return retList;
+    }
+    
+    private static IEnumerable<FloatArray.Builder> AppendFloat(dynamic? column, FloatArray.Builder builder)
+    {
+        var list = (List<float?>)column;
+        var retList = new List<FloatArray.Builder>();
+        foreach (var i in list)
+        {
+            retList.Add(builder.Append(i));
+        }
+        return retList;
+    }
+    
+    private static IEnumerable<DoubleArray.Builder> AppendDouble(dynamic? column, DoubleArray.Builder builder)
+    {
+        var list = (List<double?>)column;
+        var retList = new List<DoubleArray.Builder>();
+        foreach (var i in list)
+        {
+            retList.Add(builder.Append(i));
+        }
+        return retList;
+    }
+
 
     private dynamic DataToColumns(IEnumerable<IEnumerable<object>> data)
     {
@@ -463,16 +713,34 @@ public class SparkSession
 
     private static IList CreateGenericList(Type elementType)
     {
-        //ChatGPT generated
-        var listType = typeof(List<>);
+        if (elementType == typeof(string))
+        {
+            var listType = typeof(List<>);
+        
+            // Make the generic type by using the elementType
+            var constructedListType = listType.MakeGenericType(elementType);
+            
+            // Create an instance of the list
+            var instance = (IList)Activator.CreateInstance(constructedListType);
 
-        // Make the generic type by using the elementType
-        var constructedListType = listType.MakeGenericType(elementType);
+            return instance;
+        }
+        else
+        {
+            //ChatGPT generated
+            var listType = typeof(List<>);
 
-        // Create an instance of the list
-        var instance = (IList)Activator.CreateInstance(constructedListType);
+            Type nullableType = typeof(Nullable<>).MakeGenericType(elementType);
+        
+            // Make the generic type by using the elementType
+            var constructedListType = listType.MakeGenericType(nullableType);
+            
+            // Create an instance of the list
+            var instance = (IList)Activator.CreateInstance(constructedListType);
 
-        return instance;
+            return instance;
+        }
+        
     }
 
     /// <summary>
