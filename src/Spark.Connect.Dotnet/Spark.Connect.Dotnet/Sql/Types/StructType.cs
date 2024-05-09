@@ -1,6 +1,7 @@
 using Apache.Arrow;
 using Apache.Arrow.Types;
 using Google.Protobuf.Collections;
+using Spark.Connect.Dotnet.Grpc;
 using static Spark.Connect.Dotnet.Sql.Types.SparkDataType;
 
 namespace Spark.Connect.Dotnet.Sql.Types;
@@ -45,6 +46,22 @@ public class StructType : SparkDataType
             var sparkField = new StructField(field.Name, field.DataType, field.IsNullable);
             Fields.Add(sparkField);
         }
+    }
+
+    public StructType(DataType? schema) : base("StructType")
+    {
+        if (schema == null)
+        {
+            throw new SparkException("Did not receive a schema from the gRPC call");
+        }
+
+        Fields = new List<StructField>();
+        
+        foreach (var field in schema.Struct.Fields)
+        {
+            Fields.Add(new StructField(field.Name, field.DataType, field.Nullable));    
+        }
+        
     }
 
     public List<StructField> Fields { get; }
@@ -140,11 +157,12 @@ public class StructField
         ArrowTypeId.String => StringType(),
         ArrowTypeId.Binary => BinaryType(),
         ArrowTypeId.Date32 => DateType(),
+        ArrowTypeId.Date64 => DateType(),
         ArrowTypeId.Timestamp => TimestampType(),
         ArrowTypeId.Struct => StructType(),
-        ArrowTypeId.List => ArrayType(FromArrowType((type as ListType).ValueDataType)),
+        ArrowTypeId.List => ArrayType(FromArrowType((type as ListType).ValueDataType), (type as ListType).ValueField.IsNullable),
         
-        ArrowTypeId.Map => MapType(FromArrowType((type as Apache.Arrow.Types.MapType).KeyField.DataType), FromArrowType((type as Apache.Arrow.Types.MapType).ValueField.DataType)),
+        ArrowTypeId.Map => MapType(FromArrowType((type as Apache.Arrow.Types.MapType).KeyField.DataType), FromArrowType((type as Apache.Arrow.Types.MapType).ValueField.DataType), (type as Apache.Arrow.Types.MapType).ValueField.IsNullable),
         _ => throw new ArgumentOutOfRangeException($"Cannot convert Arrow Type '{type}'")
     };
     
@@ -183,7 +201,7 @@ public class StructField
         if (type.Array != null)
         {
             var elementType = FromConnectDataType(type.Array.ElementType);
-            return new ArrayType(elementType);
+            return new ArrayType(elementType, type.Array.ContainsNull);
         }
 
         if (type.Binary != null)
@@ -203,7 +221,7 @@ public class StructField
 
         if (type.Map != null)
         {
-            return new MapType(FromConnectDataType(type.Map.KeyType), FromConnectDataType(type.Map.ValueType));
+            return new MapType(FromConnectDataType(type.Map.KeyType), FromConnectDataType(type.Map.ValueType), type.Map.ValueContainsNull);
         }
         
         if(type.Date != null)

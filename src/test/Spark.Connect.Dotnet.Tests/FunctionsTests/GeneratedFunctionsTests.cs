@@ -849,6 +849,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public void RowNumber_Test()
     {
         Source.Select(RowNumber().Over(Window)).Show();
+        Source.Select(RowNumber().Over(Window)).Collect();
     }
 
     /** GeneratedBy::NoArgsFunction **/

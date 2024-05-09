@@ -47,10 +47,10 @@ public class WindowSpec
 
         return this;
     }
-
-    public Expression ToExpression(Expression function)
+    
+    public Column ToCol(Expression function)
     {
-        return new Expression()
+        var expression = new Expression()
         {
             Window = new Expression.Types.Window
             {
@@ -62,5 +62,7 @@ public class WindowSpec
                 PartitionSpec = { _partitionSpec }
             }
         };
+
+        return new Column(expression);
     }
 }

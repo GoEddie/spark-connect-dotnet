@@ -252,10 +252,7 @@ public static class GrpcInternal
 
     public static Relation Exec(SparkSession session, Plan plan)
     {
-        // Console.WriteLine("** PLAN **");
-        // Console.WriteLine(plan);
-        var task = Exec(session.GrpcClient, session.Host, session.SessionId, plan, session.Headers, session.UserContext,
-            session.ClientType);
+        var task = Exec(session.GrpcClient, session.Host, session.SessionId, plan, session.Headers, session.UserContext, session.ClientType);
         task.Wait();
         return task.Result.Item1;
     }

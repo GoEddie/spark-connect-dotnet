@@ -537,7 +537,11 @@ public class SparkSession
         {
             Root = new Relation
             {
-                LocalRelation = createdRelation
+                LocalRelation = createdRelation,  
+                Common = new RelationCommon()
+                {
+                   PlanId     = GetPlanId()
+                }
             }
         };
 

@@ -1040,6 +1040,18 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("map", false, cola, colb));
     }
+
+    public static Column CreateMap(IDictionary<string, object> options)
+    {
+        var litOptions = new List<Column>();
+        
+        foreach (var option in options)
+        {
+            litOptions.Add(Lit(option.Key));
+            litOptions.Add(Lit(option.Value));
+        }
+        return new Column(FunctionWrappedCall("map", false, litOptions.ToArray()));
+    }
     
     public static Column CreateMap(Column cola, Column colb)
     {
@@ -1109,5 +1121,24 @@ public partial class Functions : FunctionsWrapper
         newList.AddRange(cols.Select(Col));
         return new Column(FunctionWrappedCall("format_string", false, newList.ToArray()));
     }
+
+    public static Column FromCsv(Column col, Column ddlSchema, IDictionary<string, object>? options = null)
+    {
+        if (options == null)
+        {
+            return new Column(FunctionWrappedCall("from_csv", false, col, ddlSchema));    
+        }
+
+        var mappedOptions = CreateMap(options);
+        return new Column(FunctionWrappedCall("from_csv", false, col, ddlSchema, mappedOptions));
+    }
     
+    /// <Summary>
+    ///     Round
+    ///     Round the given value to `scale` default scale = 0
+    /// </Summary>
+    public static Column Round(string col)
+    {
+        return new Column(FunctionWrappedCall("round", false, Col(col)));
+    }
 }

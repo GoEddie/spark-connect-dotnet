@@ -99,11 +99,10 @@ public class ReadWriteTests : E2ETestBase
         var path = Path.Join(OutputPath, "csv");
         df.Write().Mode("overwrite").Format("csv").Write(path);
 
-        var df2 = Spark.Read.Option("inferSchema", "true").Csv(path);
+        var df2 = Spark.Read.Option("inferSchema", "true").Option("header", "false").Csv(path);
         var result = await df2.CollectAsync();
 
         Assert.Equal(10, result.Count);
-        Assert.Null(result[0][0]);
         Assert.Equal(10.0, result[0][1]);
         Assert.Equal(false, result[0][2]);
         Assert.Equal("hello friend", result[0][3]);

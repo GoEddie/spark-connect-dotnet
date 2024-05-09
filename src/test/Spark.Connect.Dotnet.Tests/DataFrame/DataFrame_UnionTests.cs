@@ -12,6 +12,8 @@ public class DataFrameUnionTests : E2ETestBase
 
         var df3 = df1.Union(df2);
         Assert.Equal(19, df3.Count());
+
+        df3.Collect();
     }
 
     [Fact]
@@ -34,5 +36,7 @@ public class DataFrameUnionTests : E2ETestBase
 
         var df3 = df1.UnionByName(df2, false);
         Assert.Equal(19, df3.Count());
+
+        df3.Collect();
     }
 }
