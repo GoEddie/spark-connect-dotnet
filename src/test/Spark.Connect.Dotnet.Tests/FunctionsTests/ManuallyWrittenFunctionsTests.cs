@@ -512,7 +512,40 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     {
         var df = Spark.CreateDataFrame(new List<(object, object)> { (5, "hello") }, "a", "b");
         df.Select(FormatString("%d %s", df["a"], df["b"]).Alias("v")).Show();
+        df.Select(FormatString("%d %s", df["a"], df["b"]).Alias("v")).Collect();
     }
+    
+    
+    [Fact]
+    public void RoundNoScale_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)> { (5.123, "hello") }, "a", "b");
+        df.Select(Round("a")).Alias("v").Show();
+        df.Select(Round("a")).Alias("v").Collect();
+        
+    }
+
+    
+    [Fact]
+    public void FromCsv_Test()
+    {
+        var data = ToRows(ToRow("1,   2,3"), ToRow("100,200,300"));
+
+        var df = Spark.CreateDataFrame(data, "value");
+        df.Show();
+        df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Show();
+        var rows = df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Collect();
+        var row = rows.First();
+        Console.WriteLine(row);
+        df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Show();
+        df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Collect();
+
+
+
+    }
+
+    
+    
     
     static IEnumerable<IEnumerable<object>> ToRows(params object[] objects)
     {   //don't do new on List<>(){} otherwise the child objects get flattened

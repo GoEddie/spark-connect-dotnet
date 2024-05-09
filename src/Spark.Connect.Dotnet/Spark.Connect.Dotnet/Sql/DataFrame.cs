@@ -1,15 +1,9 @@
 using Apache.Arrow;
-using Apache.Arrow.Ipc;
-using Apache.Arrow.Types;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
 using Spark.Connect.Dotnet.Sql.Streaming;
-using BinaryType = Apache.Arrow.Types.BinaryType;
-using BooleanType = Apache.Arrow.Types.BooleanType;
-using DoubleType = Apache.Arrow.Types.DoubleType;
-using IntegerType = Apache.Arrow.Types.IntegerType;
-using StringType = Apache.Arrow.Types.StringType;
+using Spark.Connect.Dotnet.Sql.Types;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using static Spark.Connect.Dotnet.Sql.Functions;
 
@@ -69,6 +63,11 @@ public class DataFrame
                 Root = Relation
             };
 
+            plan.Root.Common = new RelationCommon()
+            {
+                PlanId = _session.GetPlanId()
+            };
+            
             var explain = GrpcInternal.Schema(_session.GrpcClient, _session.SessionId, plan, _session.Headers,
                 _session.UserContext, _session.ClientType, false, "");
             var structType = new StructType(explain.Struct);
@@ -92,6 +91,10 @@ public class DataFrame
                 Limit = new Limit
                 {
                     Limit_ = num, Input = Relation
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -129,6 +132,10 @@ public class DataFrame
                 ShowString = new ShowString
                 {
                     Truncate = truncate, Input = input, NumRows = numberOfRows, Vertical = vertical
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = session.GetPlanId()
                 }
             }
         };
@@ -173,6 +180,11 @@ public class DataFrame
         var plan = new Plan()
         {
             Root = relation
+        };
+
+        plan.Root.Common = new RelationCommon()
+        {
+            PlanId = _session.GetPlanId()
         };
         
         GrpcInternal.Schema(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, false, "");
@@ -346,6 +358,10 @@ public class DataFrame
                 {
                     Input = Relation, 
                     Cols = { cols }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -364,6 +380,10 @@ public class DataFrame
                     Input = Relation,
                     AllColumnsAsKeys = true,
                     WithinWatermark = withinWatermark
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -381,6 +401,10 @@ public class DataFrame
                 {
                     Input = Relation,
                     ColumnNames = { cols }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -403,6 +427,10 @@ public class DataFrame
                 {
                     Input = Relation,
                     ColumnNames = { subset }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -426,6 +454,10 @@ public class DataFrame
                     Input = Relation,
                     ColumnNames = { subset },
                     WithinWatermark = true
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -443,7 +475,10 @@ public class DataFrame
                 {
                     Input = Relation,
                     Columns = { cols.Select(p => p.Expression) }
-                    
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -473,7 +508,11 @@ public class DataFrame
         {
             Root = new Relation
             {
-                DropNa = naDrop
+                DropNa = naDrop,
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
+                }
             }
         };
         
@@ -497,6 +536,10 @@ public class DataFrame
                 {
                     Input = Relation,
                     NumPartitions = numPartitions
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -518,6 +561,10 @@ public class DataFrame
                     {
                         cols.Select(p => p.Expression)
                     }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -553,6 +600,10 @@ public class DataFrame
                 RepartitionByExpression = new RepartitionByExpression()
                 {
                     NumPartitions = numPartitions, Input = Relation, PartitionExprs = { sort.Select(p => p.Expression) }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -569,6 +620,10 @@ public class DataFrame
                 Sort = new Sort()
                 {
                     IsGlobal = false, Input = Relation, Order = { ColumnsToSortOrder(cols.Select(Col).ToArray()) }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -664,6 +719,10 @@ public class DataFrame
                 WithColumnsRenamed = new WithColumnsRenamed()
                 {
                     Input = Relation, RenameColumnsMap = { { existing, newName } }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -676,6 +735,10 @@ public class DataFrame
         return new DataFrameWriter(_session, this);
     }
 
+    /// <summary>
+    /// Collect the data back to .NET as .NET objects, doesn't currently support List[type] or Struct[type].
+    /// </summary>
+    /// <returns></returns>
     public IList<Row> Collect()
     {
         var task = Task.Run(CollectAsync);
@@ -689,139 +752,31 @@ public class DataFrame
         {
             Root = Relation
         };
-
-        var (batches, schema) = await GrpcInternal.ExecArrowResponse(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
-        var rows = new List<Row>();
-
-        foreach (var batch in batches)
+        plan.Root.Common = new RelationCommon()
         {
-            rows.AddRange(await ArrowBatchToList(batch));
-        }
-
-        return rows;
+            PlanId = _session.GetPlanId()
+        };
+        
+        var (arrowBatches, schema) = await GrpcInternal.ExecArrowResponse(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
+        var arrowWrapper = new ArrowWrapper();
+        return await arrowWrapper.ArrowBatchesToRows(arrowBatches, schema);
     }
 
-    private static async Task<IEnumerable<Row>> ArrowBatchToList(ExecutePlanResponse.Types.ArrowBatch batch)
+    private Schema ToArrowSchema(DataType? schema)
     {
-        var rows = new List<object[]>();
-
-        var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(batch.Data.ToByteArray()));
-        var recordBatch = await reader.ReadNextRecordBatchAsync();
-
-        Logger.WriteLine("arrow: Read record batch with {0} column(s)", recordBatch.ColumnCount);
-
-        for (var i = 0; i < recordBatch.Column(0).Length; i++)
+        var fields = new List<Field>();
+        foreach (var structField in schema.Struct.Fields)
         {
-            rows.Add(new object[reader.Schema.FieldsList.Count]);
+            var sparkType = SparkDataType.FromSparkConnectType(structField.DataType);
+            var arrowType = sparkType.ToArrowType();
+            var field = new Field(structField.Name, arrowType, structField.Nullable);
+            fields.Add(field);    
         }
-
-        for (var i = 0; i < recordBatch.ColumnCount; i++)
-        {
-            switch (reader.Schema.FieldsList[i].DataType)
-            {
-                case BinaryType binaryType:
-                    break;
-                case BooleanType booleanType:
-                    var b = (BooleanArray)recordBatch.Column(i);
-                    for (var ii = 0; ii < b.Length; ii++)
-                    {
-                        rows[ii][i] = b.GetValue(ii)!;
-                    }
-
-                    break;
-                case Date32Type date32Type:
-                    break;
-                case Date64Type date64Type:
-                    break;
-                case DateType dateType:
-                    break;
-                case Decimal128Type decimal128Type:
-                    break;
-                case Decimal256Type decimal256Type:
-                    break;
-                case DictionaryType dictionaryType:
-                    break;
-                case DoubleType doubleType:
-                    var d = (DoubleArray)recordBatch.Column(i);
-                    for (var ii = 0; ii < d.Length; ii++)
-                    {
-                        rows[ii][i] = d.GetValue(ii)!;
-                    }
-
-                    break;
-                case FixedSizeBinaryType fixedSizeBinaryType:
-                    break;
-                case FloatType floatType:
-                    break;
-                case HalfFloatType halfFloatType:
-                    break;
-                case FloatingPointType floatingPointType:
-                    break;
-                case Int16Type int16Type:
-                    break;
-                case Int32Type int32Type:
-                    break;
-                case Int64Type int64Type:
-                    var i64 = (Int64Array)recordBatch.Column(i);
-                    for (var ii = 0; ii < i64.Length; ii++)
-                    {
-                        rows[ii][i] = i64.GetValue(ii)!;
-                    }
-
-                    break;
-                case Int8Type int8Type:
-                    break;
-                case UInt16Type uInt16Type:
-                    break;
-                case UInt32Type uInt32Type:
-                    break;
-                case UInt64Type uInt64Type:
-                    break;
-                case UInt8Type uInt8Type:
-                    break;
-                case IntegerType integerType:
-                    break;
-                case IntervalType intervalType:
-                    break;
-                case NumberType numberType:
-                    break;
-                case Time32Type time32Type:
-                    break;
-                case Time64Type time64Type:
-                    break;
-                case TimestampType timestampType:
-                    break;
-                case TimeType timeType:
-                    break;
-                case FixedWidthType fixedWidthType:
-                    break;
-                case ListType listType:
-                    break;
-                case StructType structType:
-                    break;
-                case NestedType nestedType:
-                    break;
-                case NullType nullType:
-                    break;
-                case StringType stringType:
-                    var s = (StringArray)recordBatch.Column(i);
-                    for (var ii = 0; ii < s.Length; ii++)
-                    {
-                        rows[ii][i] = s.GetString(ii);   //was i
-                    }
-
-                    break;
-                // case UnionType unionType:
-                //     break;
-                case ArrowType arrowType:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        return rows.Select(p => new Row(new StructType(reader.Schema), p));
+        
+        var arrowSchema = new Schema(fields, new List<KeyValuePair<string, string>>());
+        return arrowSchema;
     }
+
 
     public void CreateOrReplaceTempView(string name)
     {
@@ -925,7 +880,7 @@ public class DataFrame
         return new GroupedData(_session, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Groupby);
     }
 
-    public DataFrame Agg(Column exprs)
+    public DataFrame Agg(params Column[] exprs)
     {
         var relation = new Relation
         {
@@ -933,7 +888,7 @@ public class DataFrame
             {
                 Input = Relation,
                 GroupType = Aggregate.Types.GroupType.Groupby,
-                AggregateExpressions = { exprs.Expression }
+                AggregateExpressions = { exprs.Select(p => p.Expression) }
             }
         };
 
@@ -1070,6 +1025,12 @@ public class DataFrame
         {
             Root = Relation
         };
+
+        plan.Root.Common = new RelationCommon()
+        {
+            PlanId = _session.GetPlanId()
+        };
+        
         var output = GrpcInternal.Explain(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, extended, mode);
 
         if (outputToConsole)
@@ -1102,6 +1063,10 @@ public class DataFrame
                 Corr = new StatCorr
                 {
                     Input = Relation, Col1 = col1, Col2 = col2, Method = "pearson"
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1119,6 +1084,10 @@ public class DataFrame
                 Cov = new StatCov
                 {
                     Input = Relation, Col1 = col1, Col2 = col2
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1149,6 +1118,10 @@ public class DataFrame
                     Left = Relation,
                     Right = other.Relation,
                     UsingColumns = { on }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1176,6 +1149,10 @@ public class DataFrame
                 {
                     Input = Relation,
                     Col1 = col1, Col2 = col2
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1226,6 +1203,10 @@ public class DataFrame
                     RightInput = other.Relation,
                     IsAll = true,
                     AllowMissingColumns = false
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1255,6 +1236,10 @@ public class DataFrame
                     Input = Relation,
                     Values = { value.Expression.Literal },
                     Cols = { subset }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1274,6 +1259,10 @@ public class DataFrame
                {
                    Condition = condition.Expression,
                    Input = Relation
+               },
+               Common = new RelationCommon()
+               {
+                   PlanId     = _session.GetPlanId()
                }
             }
         };
@@ -1291,6 +1280,10 @@ public class DataFrame
                 {
                     Condition = Expr(condition).Expression,
                     Input = Relation
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1312,6 +1305,10 @@ public class DataFrame
                 {
                     Input = Relation,
                     Limit_ = limit
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1336,6 +1333,10 @@ public class DataFrame
                 {
                     Input = Relation,
                     Cols = { cols }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1360,6 +1361,10 @@ public class DataFrame
                     Input = Relation,
                     Cols = { cols },
                     Support = support
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1378,6 +1383,10 @@ public class DataFrame
                     Input = Relation,
                     Name = hint,
                     Parameters = { values.Select(p => p.Expression) }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1390,6 +1399,11 @@ public class DataFrame
         var plan = new Plan
         {
             Root = Relation
+        };
+
+        plan.Root.Common = new RelationCommon()
+        {
+            PlanId = _session.GetPlanId()
         };
 
         return GrpcInternal.InputFiles(_session, plan);
@@ -1414,6 +1428,10 @@ public class DataFrame
                      LeftInput = Relation,
                      RightInput = other.Relation,
                      AllowMissingColumns = false
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1440,6 +1458,10 @@ public class DataFrame
                     LeftInput = Relation,
                     RightInput = other.Relation,
                     AllowMissingColumns = false
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1473,6 +1495,10 @@ public class DataFrame
                     {
                         Values_ = { values.Select(p => p.Expression) }
                     }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1501,6 +1527,10 @@ public class DataFrame
                 Offset = new Offset()
                 {
                     Input = Relation, Offset_ = num
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1527,6 +1557,10 @@ public class DataFrame
             Sample = new Sample()
             {
                 Input = Relation, DeterministicOrder = true, LowerBound = 0.0
+            },
+            Common = new RelationCommon()
+            {
+                PlanId     = _session.GetPlanId()
             }
         };
 
@@ -1578,6 +1612,10 @@ public class DataFrame
                     Input = Relation,
                     Col = col.Expression,
                     Fractions = { DictionaryToFractions(fractions) }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1616,6 +1654,10 @@ public class DataFrame
                             OldValue = to_replace.Expression.Literal, NewValue = value.Expression.Literal
                         }
                     }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1655,6 +1697,10 @@ public class DataFrame
                 {
                     Input = Relation,
                     Expressions = { expr.Select(p => Expr(p).Expression) }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1689,6 +1735,10 @@ public class DataFrame
                     RightInput = other.Relation,
                     IsAll = false,
                     AllowMissingColumns = false
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1705,6 +1755,10 @@ public class DataFrame
                 Summary = new StatSummary()
                 {
                     Input = Relation
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1726,6 +1780,10 @@ public class DataFrame
                 Tail = new Tail()
                 {
                     Input = Relation, Limit = num
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1743,6 +1801,10 @@ public class DataFrame
                 ToSchema = new ToSchema()
                 {
                     Input = Relation, Schema = schema.ToDataType()
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1759,6 +1821,10 @@ public class DataFrame
                 WithWatermark = new WithWatermark()
                 {
                     Input = Relation, EventTime = eventTime, DelayThreshold = delayThreshold
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -1776,6 +1842,10 @@ public class DataFrame
                 {
                     Input = Relation,
                     Name = what
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };

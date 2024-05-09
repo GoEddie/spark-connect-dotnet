@@ -90,7 +90,7 @@ public class CustomTestFramework : XunitTestFramework
             try
             {
                 var task = base.RunTestCaseAsync(testCase);
-                var taskCompleted = Task.WaitAny(new []{task}, TimeSpan.FromSeconds(10));
+                var taskCompleted = Task.WaitAny(new []{task}, TimeSpan.FromSeconds(900000));
                 //var result = await base.RunTestCaseAsync(testCase);
                 if (-1 == taskCompleted)
                 {

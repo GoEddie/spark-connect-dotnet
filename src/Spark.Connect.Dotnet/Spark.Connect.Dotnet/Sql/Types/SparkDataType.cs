@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Apache.Arrow;
 using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Grpc;
 
@@ -103,14 +104,14 @@ public abstract class SparkDataType
         return new StructType(fields);
     }
 
-    public static ArrayType ArrayType(SparkDataType elementType)
+    public static ArrayType ArrayType(SparkDataType elementType, bool nullableValues)
     {
-        return new ArrayType(elementType);
+        return new ArrayType(elementType, nullableValues);
     }
 
-    public static MapType MapType(SparkDataType keyType, SparkDataType valueType)
+    public static MapType MapType(SparkDataType keyType, SparkDataType valueType, bool nullableValue)
     {
-        return new MapType(keyType, valueType);
+        return new MapType(keyType, valueType, nullableValue);
     }
 
     public static SparkDataType FromString(string type)
@@ -170,7 +171,7 @@ public abstract class SparkDataType
         {
             var elementType = Regex.Match(lower, "<(.*?)>").Groups[0];
             var elementSparkType = FromString(elementType.Value);
-            return new ArrayType(elementSparkType);
+            return new ArrayType(elementSparkType, true);
         }
 
         if (lower.StartsWith("map"))
@@ -181,7 +182,7 @@ public abstract class SparkDataType
                 var keyType = matches.Groups[0].Value;
                 var valueType = matches.Groups[1].Value;
 
-                return new MapType(FromString(keyType), FromString(valueType));
+                return new MapType(FromString(keyType), FromString(valueType), true);
             }
             catch (Exception ex)
             {
@@ -194,6 +195,7 @@ public abstract class SparkDataType
 
         throw new NotImplementedException($"Missing DataType From String: '{type}'");
     }
+    
 
     public static SparkDataType FromDotNetType(object o) => o switch
     {
@@ -209,6 +211,74 @@ public abstract class SparkDataType
 
         _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
     };
+
+    public static SparkDataType FromSparkConnectType(DataType type) 
+    {
+        if (type.Array != null)
+        {
+            bool nullableValues = type.Array.ContainsNull;
+            return ArrayType(FromSparkConnectType(type.Array.ElementType), nullableValues);
+        }
+
+        if (type.String != null)
+        {
+            return StringType();
+        }
+
+        if (type.Boolean != null)
+        {
+            return BooleanType();
+        }
+
+        if (type.Integer != null)
+        {
+            return IntegerType();
+        }
+
+        if (type.Double != null)
+        {
+            return DoubleType();
+        }
+
+        if (type.Map != null)
+        {
+            var valueType = FromSparkConnectType(type.Map.ValueType);
+            return new MapType(FromSparkConnectType(type.Map.KeyType), valueType, type.Map.ValueContainsNull);
+        }
+
+        if (type.Binary != null)
+        {
+            return new BinaryType();
+        }
+
+        if (type.Long != null)
+        {
+            return new BigIntType();
+        }
+
+        if (type.Date != null)
+        {
+            return new DateType();
+        }
+
+        if (type.Timestamp != null)
+        {
+            return new TimestampType();
+        }
+
+        if (type.TimestampNtz != null)
+        {
+            return new TimestampNtzType();
+        }
+
+        if (type.Struct != null)
+        {
+            return new StructType(type.Struct.Fields);
+        }
+        
+        
+        throw new NotImplementedException();
+    }
 }
 
 public class ByteType : SparkDataType
@@ -395,11 +465,13 @@ public class MapType : SparkDataType
 {
     private readonly SparkDataType _keyType;
     private readonly SparkDataType _valueType;
+    private readonly bool _isNullableValue;
 
-    public MapType(SparkDataType keyType, SparkDataType valueType) : base("Map")
+    public MapType(SparkDataType keyType, SparkDataType valueType, bool isNullableValue) : base("Map")
     {
         _keyType = keyType;
         _valueType = valueType;
+        _isNullableValue = isNullableValue;
     }
 
     public override DataType ToDataType()
@@ -416,17 +488,21 @@ public class MapType : SparkDataType
 
     public override IArrowType ToArrowType()
     {
-        return new DictionaryType(_keyType.ToArrowType(), _valueType.ToArrowType(), false);
+        var keyField = new Field("key", _keyType.ToArrowType(), false);
+        var valueField = new Field("value", _valueType.ToArrowType(), _isNullableValue);
+        return new Apache.Arrow.Types.MapType(keyField, valueField);
     }
 }
 
 public class ArrayType : SparkDataType
 {
     private readonly SparkDataType _elementType;
+    private readonly bool _nullableValues;
 
-    public ArrayType(SparkDataType elementType) : base($"Array<{elementType.TypeName}>")
+    public ArrayType(SparkDataType elementType, bool nullableValues) : base($"Array<{elementType.TypeName}>")
     {
         _elementType = elementType;
+        _nullableValues = nullableValues;
     }
 
     public override DataType ToDataType()
@@ -442,7 +518,9 @@ public class ArrayType : SparkDataType
 
     public override IArrowType ToArrowType()
     {
-        return new ListType(_elementType.ToArrowType());
+        var elementType = _elementType.ToArrowType();
+        var childField = new Field("element", elementType, _nullableValues);
+        return new ListType(childField);
     }
 
     public override string SimpleString()
@@ -514,13 +592,13 @@ public class TimestampType : SparkDataType
         return new DataType
         {
             Timestamp = new DataType.Types.Timestamp(),
-            
         };
     }
 
     public override IArrowType ToArrowType()
     {
-        return Apache.Arrow.Types.TimestampType.Default;
+        var ts = Apache.Arrow.Types.TimestampType.Default;
+        return ts;
     }
 
     public override string SimpleString()
@@ -545,7 +623,7 @@ public class TimestampNtzType : SparkDataType
 
     public override IArrowType ToArrowType()
     {
-        return Apache.Arrow.Types.TimestampType.Default;
+        return new Apache.Arrow.Types.Time64Type(); //Apache.Arrow.Types.TimestampType(timezone: "+00:00");
     }
 
     public override string SimpleString()

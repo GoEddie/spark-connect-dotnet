@@ -1,0 +1,793 @@
+using Apache.Arrow;
+using Apache.Arrow.Ipc;
+using Apache.Arrow.Types;
+using Spark.Connect.Dotnet.Sql.Types;
+using Array = Apache.Arrow.Array;
+using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
+using TimestampType = Apache.Arrow.Types.TimestampType;
+
+namespace Spark.Connect.Dotnet.Sql;
+
+public class ArrowWrapper
+{
+    /// <summary>
+    /// When we receive an Apache Arrow Batch the batch is a set of pointers to a stream of data, we take those pointers and the stream of data
+    ///     and convert them into .NET objects. If you do Collect() on large data it will effect the performance. You should probably avoid doing large collects
+    ///     and instead use this to read and write data via Spark.
+    /// </summary>
+    /// <param name="batches"></param>
+    /// <param name="connectSchema"></param>
+    /// <returns></returns>
+    public async Task<IList<Row>> ArrowBatchesToRows(List<ExecutePlanResponse.Types.ArrowBatch> batches, DataType connectSchema)
+    {
+        var arrowTable = await ArrowBatchesToTable(batches, connectSchema);
+        return ArrowTableToRows(arrowTable);
+    }
+    
+    public IList<Row> ArrowBatchesToRows(List<RecordBatch> batches, Schema arrowSchema)
+    {
+        var arrowTable = Table.TableFromRecordBatches(arrowSchema, batches);
+        return ArrowTableToRows(arrowTable);
+    }
+    
+    private IList<Row> ArrowTableToRows(Table arrowTable)
+    {
+        // This is a pre-created list of empty arrays that will need to be filled
+        List<object[]> rows = CreateRowsOfArrays(arrowTable.ColumnCount, arrowTable.RowCount);
+        for (var columnIndex = 0; columnIndex < arrowTable.ColumnCount; columnIndex++)
+        {
+            var arrowArrays = GetChunksForColumnIndex(columnIndex, arrowTable);
+
+            var readCount = 0;
+            foreach (var arrowArray in arrowArrays)
+            {
+                var visitor = new ArrowVisitor(rows, columnIndex, readCount);
+                arrowArray.Accept(visitor);
+                readCount += arrowArray.Length;
+            }
+        }
+
+        return rows.Select(p => new Row(new StructType(arrowTable.Schema), p)).ToList();
+    }
+
+    private List<IArrowArray> GetChunksForColumnIndex(int index, Table table)
+    {
+        var column = table.Column(index);
+        var arrays = new List<IArrowArray>(column.Data.ArrayCount);
+        for (var i = 0; i < column.Data.ArrayCount; i++)
+        {
+            arrays.Add(column.Data.ArrowArray(i));
+        }
+
+        return arrays;
+    }
+
+    private List<object[]> CreateRowsOfArrays(int columnCount, long rowCount)
+    {
+        if (rowCount > Int32.MaxValue)
+        {
+            Console.WriteLine($"Maximum row count we will convert to .net objects is Int32.MaxValue, you have {rowCount} rows, truncating to {Int32.MaxValue}");
+            rowCount = Int32.MaxValue;
+        }
+        var rows = new List<object[]>();
+        for (var i = 0; i < rowCount; i++)
+        {
+            rows.Add(new object[columnCount]);
+        }
+
+        return rows;
+    }
+
+    public async Task<Table> ArrowBatchesToTable(List<ExecutePlanResponse.Types.ArrowBatch> arrowBatches, DataType connectSchema)
+    {
+        var recordBatches = new List<RecordBatch>();
+        foreach (var batch in arrowBatches)
+        {
+            var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(batch.Data.ToByteArray()));
+            var recordBatch = await reader.ReadNextRecordBatchAsync();
+            
+            recordBatches.Add(recordBatch);
+        }
+
+        var arrowSchema = ToArrowSchema(connectSchema);
+
+        var readSchema = ReadArrowSchema(recordBatches, arrowSchema);
+        
+        return Table.TableFromRecordBatches(readSchema, recordBatches);
+    }
+
+    /// <summary>
+    /// This is a bit odd, there are some datatypes like timestamp that include the timezone in the arrow info but not the spark schema
+    ///     iterate through the spark schema and pull out the actualy datatypes from the arrow data so we are aligned.
+    /// </summary>
+    /// <param name="recordBatches"></param>
+    /// <param name="arrowSchema"></param>
+    /// <returns></returns>
+    private Schema ReadArrowSchema(List<RecordBatch> recordBatches, Schema arrowSchema)
+    {
+        var fields = new List<Field>();
+        var columnCount = arrowSchema.FieldsList.Count();
+        var batch = recordBatches.FirstOrDefault();
+        
+        for (int i = 0; i < columnCount; i++)
+        {
+            var column = batch.Column(i);
+            var existingField = arrowSchema.FieldsList[i];
+            fields.Add(new Field(existingField.Name, column.Data.DataType, existingField.IsNullable, existingField.Metadata));
+        }
+
+        return new Schema(fields, arrowSchema.Metadata);
+    }
+
+    public Schema ToArrowSchema(DataType? schema)
+    {
+        var fields = schema.Struct.Fields.Select(p =>
+            new Field(p.Name, SparkDataType.FromSparkConnectType(p.DataType).ToArrowType(), p.Nullable));
+        var arrowSchema = new Schema(fields, new List<KeyValuePair<string, string>>());
+        return arrowSchema;
+    }
+}
+
+public class ArrowVisitor : 
+    
+    IArrowArrayVisitor<StringArray>,
+    IArrowArrayVisitor<BooleanArray>, 
+    IArrowArrayVisitor<Int8Array>, 
+    IArrowArrayVisitor<Int16Array>,
+    IArrowArrayVisitor<Int32Array>,
+    IArrowArrayVisitor<Int64Array>,
+    IArrowArrayVisitor<UInt8Array>, 
+    IArrowArrayVisitor<UInt16Array>,
+    IArrowArrayVisitor<UInt32Array>,
+    IArrowArrayVisitor<UInt64Array>,
+    IArrowArrayVisitor<DoubleArray>,
+    IArrowArrayVisitor<FloatArray>,
+    IArrowArrayVisitor<TimestampArray>,
+    IArrowArrayVisitor<Date32Array>, 
+    IArrowArrayVisitor<Date64Array>,
+    IArrowArrayVisitor<BinaryArray>,
+    
+    IArrowArrayVisitor<ListArray>, 
+    IArrowArrayVisitor<MapArray>,
+    IArrowArrayVisitor<StructArray>
+
+{
+    public readonly List<object[]> Rows;
+    private readonly int _columnIndex;
+    private readonly int _readCount;
+    public ArrowVisitor(List<object[]> rows, int columnIndex, int readCount)
+    {
+        Rows = rows;
+        _columnIndex = columnIndex;
+        _readCount = readCount;
+    }
+
+    public void Visit(Int32Array array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(StringArray array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array.Cast<string>())
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(Int16Array array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(Int8Array array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(DoubleArray array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(FloatArray array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(TimestampArray array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array.Cast<Int64?>())
+        {
+            if ((array.Data.DataType as TimestampType).Unit == TimeUnit.Millisecond)
+            {
+                Rows[_readCount + rowNumber++][_columnIndex] = item.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(item.Value) : null;    
+            }
+            
+            if ((array.Data.DataType as TimestampType).Unit == TimeUnit.Microsecond)
+            {
+                Rows[_readCount + rowNumber++][_columnIndex] = item.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(item.Value / 1000) : null;
+            }
+            
+            if ((array.Data.DataType as TimestampType).Unit == TimeUnit.Nanosecond)
+            {
+                Rows[_readCount + rowNumber++][_columnIndex] = item.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(item.Value / 1000000) : null;
+            }
+            
+            if ((array.Data.DataType as TimestampType).Unit == TimeUnit.Second)
+            {
+                Rows[_readCount + rowNumber++][_columnIndex] = item.HasValue ? DateTimeOffset.FromUnixTimeSeconds(item.Value) : null;
+            }
+            
+            
+        }
+    }
+    
+    
+    public void Visit(Date32Array array)
+    {
+        var epoch = new DateTime(1970, 1, 1);
+        var rowNumber = 0;
+        foreach (var item in array.Cast<Int32?>())
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item.HasValue ? epoch.AddDays(item.Value) : null;
+        }
+    }
+
+    public void Visit(StructArray array)
+    {
+       
+        var columns = new List<List<object>>();
+        var rows = new List<List<object>>();
+        
+        foreach (var item in array.Fields)
+        {
+            var valueVisitor = new MapValueVisitior();
+            item.Accept(valueVisitor);
+            columns.Add(valueVisitor.Values);
+            Console.WriteLine("what to do here?");
+        }
+        
+        
+        
+        var rowNumber = 0;
+        for (var i = 0; i < array.Length; i++)
+        {
+            var currentRow = new List<object>();
+            var columnNumber = 0;
+            foreach (var column in columns)
+            {
+                currentRow.Add(column[rowNumber + i]);
+            }    
+            
+            rows.Add(currentRow);
+        }
+
+        rowNumber = 0;
+        foreach (var row in rows)
+        {
+            Rows[_readCount + rowNumber] = rows[rowNumber++].ToArray();
+        }
+    }
+
+    public void Visit(Date64Array array)
+    {
+        var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var rowNumber = 0;
+        foreach (var item in array.Cast<Int64?>())
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item.HasValue ? epoch.AddMilliseconds(item.Value) : null;
+        }
+    }
+
+    public void Visit(MapArray array)
+    {
+        var visitor = new MapVisitor(array.ValueOffsets.ToArray());
+        array.KeyValues.Accept(visitor);
+        var dicts = new List<Dictionary<string, object>>(visitor.Items);
+        var rowNumber = 0;
+        foreach (var dict in dicts)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = dict;
+        }
+    }
+
+    public void Visit(UInt8Array array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(UInt16Array array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(UInt32Array array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(Int64Array array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(UInt64Array array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(BinaryArray array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(ListArray array)
+    {
+        var rowNumber = 0;
+        // foreach (var item in array)
+        // {
+        //     Rows[_readCount + rowNumber++][_columnIndex] = item;
+        // }
+    }
+
+    public void Visit(BooleanArray array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(IArrowArray array)
+    {
+        Console.WriteLine("array");
+    }
+}
+
+public class MapVisitor : 
+    IArrowArrayVisitor<StructArray>
+{
+    private readonly int[] _valueOffsets;
+    
+    public List<Dictionary<string, object>> Items = new List<Dictionary<string, object>>();
+
+    public MapVisitor(int[] valueOffsets)
+    {
+        _valueOffsets = valueOffsets;
+        
+    }
+
+    public void Visit(StringArray array)
+    {
+        Console.WriteLine("HERE");
+    }
+
+    public void Visit(StructArray array)
+    {
+        var key = array.Fields.First();
+        var value = array.Fields.Last();
+
+        var keyVisitor = new MapKeyVisitior();
+        var valueVisitor = new MapValueVisitior();
+        
+        key.Accept(keyVisitor);
+        value.Accept(valueVisitor);
+        for (var i = 0; i < _valueOffsets.Length; i++)
+        {
+            var offset = _valueOffsets[i];
+            if (_valueOffsets.Length > i + 1)
+            {
+                var nextOffset = _valueOffsets[i + 1];
+                var keys = keyVisitor.Keys.GetRange(offset, nextOffset - offset);
+                var values = valueVisitor.Values.GetRange(offset, nextOffset - offset);
+                var dict = new Dictionary<string, object>();
+                for (var j = 0; j < nextOffset - offset; j++)
+                {
+                    dict[keys[j]] = values[j];
+                }
+                
+                Items.Add(dict);
+            }
+        }
+        
+        //
+        // for (var i = 0; i < keyVisitor.Keys.Count; i++)
+        // {
+        //     Items.Add(new KeyValuePair<object, object>(keyVisitor.Keys[i], valueVisitor.Values[i]));
+        // }
+    }
+
+    public void Visit(IArrowArray array)
+    {
+        
+    }
+}
+
+public class MapKeyVisitior : 
+        IArrowArrayVisitor<StringArray>
+{
+    public List<string> Keys { get; private set; }
+    
+    public void Visit(StringArray array)
+    {
+        Keys = new List<string>();
+        foreach (var str in array.Cast<string>().ToList())
+        {
+            Keys.Add(str);
+        };
+    }
+
+    public void Visit(IArrowArray array)
+    {
+        
+    }
+}
+
+
+public class MapValueVisitior : 
+    IArrowArrayVisitor<StringArray>, 
+    IArrowArrayVisitor<Int8Array>,
+    IArrowArrayVisitor<Int16Array>,
+    IArrowArrayVisitor<Int32Array>,
+    IArrowArrayVisitor<Int64Array>,
+    IArrowArrayVisitor<UInt8Array>,
+    IArrowArrayVisitor<UInt16Array>,
+    IArrowArrayVisitor<UInt32Array>,
+    IArrowArrayVisitor<UInt64Array>,
+    IArrowArrayVisitor<BooleanArray>,
+    IArrowArrayVisitor<BinaryArray>,
+    IArrowArrayVisitor<TimestampArray>,
+    IArrowArrayVisitor<Date32Array>,
+    IArrowArrayVisitor<Date64Array>,
+    IArrowArrayVisitor<MapArray>,
+    IArrowArrayVisitor<ListArray>,
+    IArrowArrayVisitor<StructArray>
+{
+    public List<object> Values { get; private set; }
+
+    public MapValueVisitior()
+    {
+        this.Values = new List<object>();
+    }
+    
+    public void Visit(StringArray array)
+    {
+        
+        foreach (var str in array.Cast<string>().ToList())
+        {
+            Values.Add(str);
+        };
+    }
+
+    public void Visit(Int8Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(Int16Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(Int32Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(Int64Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(UInt8Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(UInt16Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(UInt32Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(UInt64Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(BooleanArray array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(BinaryArray array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(TimestampArray array)
+    {
+        foreach (var item in array.Cast<Int64?>())
+        {
+            Values.Add(item.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(item.Value / 1000) : null);
+        }
+    }
+
+    public void Visit(Date32Array array)
+    {
+        foreach (var item in array.Cast<Int32?>())
+        {
+            Values.Add(item.HasValue ? DateTimeOffset.FromUnixTimeSeconds(item.Value) : null);
+        }
+    }
+
+    public void Visit(Date64Array array)
+    {
+        foreach (var item in array.Cast<Int64?>())
+        {
+            Values.Add(item.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(item.Value) : null);
+        }
+    }
+
+    public void Visit(MapArray array)
+    {
+        throw new NotImplementedException($"Cannot have a dict of values of dict, could be implemented");
+    }
+
+    public void Visit(ListArray array)
+    {
+        
+    }
+
+    public void Visit(StructArray array)
+    {
+        Console.WriteLine("HERE!!!!");
+    }
+
+    public void Visit(IArrowArray array)
+    {
+        Console.WriteLine("New Row??");
+    }
+}
+
+
+public class StructValueVisitior : 
+    IArrowArrayVisitor<StringArray>, 
+    IArrowArrayVisitor<Int8Array>,
+    IArrowArrayVisitor<Int16Array>,
+    IArrowArrayVisitor<Int32Array>,
+    IArrowArrayVisitor<Int64Array>,
+    IArrowArrayVisitor<UInt8Array>,
+    IArrowArrayVisitor<UInt16Array>,
+    IArrowArrayVisitor<UInt32Array>,
+    IArrowArrayVisitor<UInt64Array>,
+    IArrowArrayVisitor<BooleanArray>,
+    IArrowArrayVisitor<BinaryArray>,
+    IArrowArrayVisitor<TimestampArray>,
+    IArrowArrayVisitor<Date32Array>,
+    IArrowArrayVisitor<Date64Array>,
+    IArrowArrayVisitor<MapArray>,
+    IArrowArrayVisitor<ListArray>,
+    IArrowArrayVisitor<StructArray>
+{
+    public List<object> Values { get; private set; }
+
+    public StructValueVisitior()
+    {
+        this.Values = new List<object>();
+    }
+    
+    public void Visit(StringArray array)
+    {
+        foreach (var str in array.Cast<string>().ToList())
+        {
+            Values.Add(str);
+        };
+    }
+
+    public void Visit(Int8Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(Int16Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(Int32Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(Int64Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(UInt8Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(UInt16Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(UInt32Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(UInt64Array array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(BooleanArray array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(BinaryArray array)
+    {
+        foreach (var item in array)
+        {
+            Values.Add(item);
+        }
+    }
+
+    public void Visit(TimestampArray array)
+    {
+        foreach (var item in array.Cast<Int64?>())
+        {
+            Values.Add(item.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(item.Value / 1000) : null);
+        }
+    }
+
+    public void Visit(Date32Array array)
+    {
+        foreach (var item in array.Cast<Int32?>())
+        {
+            Values.Add(item.HasValue ? DateTimeOffset.FromUnixTimeSeconds(item.Value) : null);
+        }
+    }
+
+    public void Visit(Date64Array array)
+    {
+        foreach (var item in array.Cast<Int64?>())
+        {
+            Values.Add(item.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(item.Value) : null);
+        }
+    }
+
+    public void Visit(MapArray array)
+    {
+        throw new NotImplementedException($"Cannot have a dict of values of dict, could be implemented");
+    }
+
+    public void Visit(ListArray array)
+    {
+        
+    }
+
+    public void Visit(StructArray array)
+    {
+        Console.WriteLine("HERE!!!!");
+    }
+
+    public void Visit(IArrowArray array)
+    {
+        Console.WriteLine("New Row??");
+    }
+}

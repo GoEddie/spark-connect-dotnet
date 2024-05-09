@@ -13,6 +13,18 @@ public class Row
         Data = data.ToList();
     }
 
+    public static Row FromMsDataFrameRow(StructType schema, IEnumerable<KeyValuePair<string, object>> objects)
+    {
+        var data = new List<object>();
+        // format is a dictionary of values, iterate and pull out the values.
+        foreach (var pair in objects)
+        {
+            data.Add(pair.Value);
+        }
+
+        return new Row(schema, data);
+    }
+    
     public Row(params Tuple<string, object>[] data)
     {
         var fields = new List<StructField>();

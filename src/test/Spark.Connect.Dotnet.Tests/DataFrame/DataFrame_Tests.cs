@@ -432,4 +432,24 @@ public class DataFrame_Tests : E2ETestBase
         var exception = Assert.Throws<RpcException>(() => df.Select(col));
         Assert.Contains("[UNRESOLVED_COLUMN.WITH_SUGGESTION] A column or function parameter with name `DoesNotExist` cannot be resolved. Did you mean one of the following? [`id`].", exception.Message);
     }
+
+    [Fact]
+    public void Collect_Tests()
+    {
+        var source = Spark.Sql("SELECT array(id, id + 1, id + 2, null, 88) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(id as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr, 'year' as year_string, struct('a', 1) as struct_  FROM range(100)");
+        
+        var rows = source.Collect();
+        Console.WriteLine(rows);
+    }
+    
+    [Fact]
+    public void Agg_Tests()
+    {
+        var df = Spark.CreateDataFrame(new (object, object)[] { (2, "Alice"), (5, "Bob") }, "age", "name");
+        df.Agg(Max("age"), Min("age"), Count("*")).Show();
+        var rows = df.Agg(Max("age"), Min("age"), Count("*")).Collect();
+        Assert.Equal(rows[0][0], 5);
+        Assert.Equal(rows[0][1], 2);
+        Assert.Equal(rows[0][2], 2L);
+    }
 }
