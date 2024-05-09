@@ -198,12 +198,52 @@ public class Column
         return src.EqualTo(value);
     }
     
+    public static Column operator ==(Column src, float value)
+    {
+        return src.EqualTo(value);
+    }
+    
+    public static Column operator ==(Column src, double value)
+    {
+        return src.EqualTo(value);
+    }
+    
+    public static Column operator ==(Column src, bool value)
+    {
+        return src.EqualTo(value);
+    }
+    
+    public static Column operator ==(Column src, long value)
+    {
+        return src.EqualTo(value);
+    }
+    
     public static Column operator ==(Column src, Column value)
     {
         return src.EqualTo(value);
     }
     
     public Column EqualTo(int value)
+    {
+        return BinaryOperation(value, "==");
+    }
+    
+    public Column EqualTo(float value)
+    {
+        return BinaryOperation(value, "==");
+    }
+    
+    public Column EqualTo(double value)
+    {
+        return BinaryOperation(value, "==");
+    }
+    
+    public Column EqualTo(bool value)
+    {
+        return BinaryOperation(value, "==");
+    }
+    
+    public Column EqualTo(long value)
     {
         return BinaryOperation(value, "==");
     }
@@ -218,12 +258,56 @@ public class Column
         return src.NotEqualTo(value);
     }
     
+    public static Column operator !=(Column src, long value)
+    {
+        return src.NotEqualTo(value);
+    }
+    
+    public static Column operator !=(Column src, float value)
+    {
+        return src.NotEqualTo(value);
+    }
+    
+    public static Column operator !=(Column src, double value)
+    {
+        return src.NotEqualTo(value);
+    }
+    
+    public static Column operator !=(Column src, bool value)
+    {
+        return src.NotEqualTo(value);
+    }
+    
     public static Column operator !=(Column src, Column value)
     {
         return src.NotEqualTo(value);
     }
 
     public Column NotEqualTo(int value)
+    {
+        var equals = BinaryOperation(value, "==");
+        return NotOperation(equals);
+    }
+    
+    public Column NotEqualTo(float value)
+    {
+        var equals = BinaryOperation(value, "==");
+        return NotOperation(equals);
+    }
+    
+    public Column NotEqualTo(double value)
+    {
+        var equals = BinaryOperation(value, "==");
+        return NotOperation(equals);
+    }
+    
+    public Column NotEqualTo(bool value)
+    {
+        var equals = BinaryOperation(value, "==");
+        return NotOperation(equals);
+    }
+    
+    public Column NotEqualTo(long value)
     {
         var equals = BinaryOperation(value, "==");
         return NotOperation(equals);
@@ -1147,9 +1231,9 @@ public class Column
         return new Column(expression);
     }
 
-    public Expression Over(WindowSpec window)
+    public Column Over(WindowSpec window)
     {
-        return window.ToExpression(Expression);
+        return window.ToCol(Expression);
     }
 
     public Column Cast(SparkDataType type)

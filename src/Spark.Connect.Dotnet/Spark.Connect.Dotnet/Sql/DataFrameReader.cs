@@ -138,6 +138,10 @@ public class DataFrameReader
                 Read = new Read
                 {
                     DataSource = datasource
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -175,6 +179,10 @@ public class DataFrameReader
                 Read = new Read
                 {
                     DataSource = datasource
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -200,6 +208,10 @@ public class DataFrameReader
                     {
                         UnparsedIdentifier = name
                     }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
                 }
             }
         };

@@ -123,6 +123,7 @@
 | Floor                     | floor                       |
 | FormatNumber              | format_number               |
 | FormatString              | format_string               |
+| FromCsv                   | from_csv                    |
 | FromUnixtime              | from_unixtime               |
 | Getbit                    | getbit                      |
 | GetJsonObject             | get_json_object             |
@@ -289,11 +290,9 @@
 |-------------------|---------------------|
 | AesDecrypt        | aes_decrypt         |
 | AesEncrypt        | aes_encrypt         |
-| BitwiseNOT        | bitwiseNOT          |
 | CallFunction      | call_function       |
 | CallUdf           | call_udf            |
 | CountMinSketch    | count_min_sketch    |
-| FromCsv           | from_csv            |
 | FromJson          | from_json           |
 | FromUtcTimestamp  | from_utc_timestamp  |
 | Get               | get                 |

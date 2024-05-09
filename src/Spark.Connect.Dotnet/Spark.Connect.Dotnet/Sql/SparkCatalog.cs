@@ -420,6 +420,10 @@ public class SparkCatalog
             Catalog = new Catalog()
             {
 
+            },
+            Common = new RelationCommon()
+            {
+                PlanId     = _sparkSession.GetPlanId()
             }
         }
     };
