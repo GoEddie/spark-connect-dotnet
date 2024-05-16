@@ -2,11 +2,16 @@ using System.Text;
 using Apache.Arrow;
 using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Sql;
+using Xunit.Abstractions;
 
 namespace Spark.Connect.Dotnet.Tests.Arrow;
 
 public class ApacheArrowToRowsTests : E2ETestBase
 {
+    
+    public ApacheArrowToRowsTests(ITestOutputHelper logger) : base(logger)
+    {
+    }
     
     [Fact]
     public async Task CanConvertInt32Arrow_ToInt()

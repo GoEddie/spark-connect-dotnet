@@ -1,9 +1,14 @@
+using Xunit.Abstractions;
 using static Spark.Connect.Dotnet.Sql.Functions;
 
 namespace Spark.Connect.Dotnet.Tests.DataFrame;
 
 public class DataFrameGroupByTests : E2ETestBase
 {
+    public DataFrameGroupByTests(ITestOutputHelper logger) : base(logger)
+    {
+    }
+    
     [Fact]
     public void UnionTest()
     {

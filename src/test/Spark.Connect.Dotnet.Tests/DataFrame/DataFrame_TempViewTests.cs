@@ -1,7 +1,13 @@
+using Xunit.Abstractions;
+
 namespace Spark.Connect.Dotnet.Tests.DataFrame;
 
 public class DataFrameTempViewTests : E2ETestBase
 {
+    public DataFrameTempViewTests(ITestOutputHelper logger) : base(logger)
+    {
+    }
+    
     [Fact]
     public void CreateOrReplaceTempViewTest()
     {

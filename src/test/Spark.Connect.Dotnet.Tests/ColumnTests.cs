@@ -9,7 +9,7 @@ using static SparkDataType;
 
 public class ColumnTests : E2ETestBase
 {
-    public ColumnTests(ITestOutputHelper testOutputHelper)
+    public ColumnTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
     {
     }
 

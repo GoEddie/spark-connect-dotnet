@@ -48,7 +48,6 @@ message Expression {
     CommonInlineUserDefinedFunction common_inline_user_defined_function = 15;
     CallFunction call_function = 16;
     NamedArgumentExpression named_argument_expression = 17;
-    GetColumnByOrdinal get_column_by_ordinal = 18;
 
     // This field is used to mark extensions to the protocol. When plugins generate arbitrary
     // relations they can add them here. During the planning the correct resolution is done.
@@ -148,6 +147,16 @@ message Expression {
       // If this is set, Server will use Catalyst parser to parse this string to DataType.
       string type_str = 3;
     }
+
+    // (Optional) The expression evaluation mode.
+    EvalMode eval_mode = 4;
+
+    enum EvalMode {
+      EVAL_MODE_UNSPECIFIED = 0;
+      EVAL_MODE_LEGACY = 1;
+      EVAL_MODE_ANSI = 2;
+      EVAL_MODE_TRY = 3;
+    }
   }
 
   message Literal {
@@ -229,15 +238,6 @@ message Expression {
     optional bool is_metadata_column = 3;
   }
 
-  // An unresolved attribute that is represented by its column index.
-  message GetColumnByOrdinal {
-    // (Required) 0-based column index.
-    int32 ordinal = 1;
-
-    // (Optional) The id of corresponding connect plan.
-    optional int64 plan_id = 2;
-  }
-
   // An unresolved function is not explicitly bound to one explicit function, but the function
   // is resolved during analysis following Sparks name resolution rules.
   message UnresolvedFunction {
@@ -271,6 +271,9 @@ message Expression {
     // If set, it should end with '.*' and will be parsed by 'parseAttributeName'
     // in the server side.
     optional string unparsed_target = 1;
+
+    // (Optional) The id of corresponding connect plan.
+    optional int64 plan_id = 2;
   }
 
   // Represents all of the input attributes to a given relational operator, for example in

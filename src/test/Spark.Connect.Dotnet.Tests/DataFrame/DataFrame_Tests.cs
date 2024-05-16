@@ -1,9 +1,8 @@
-using System.Runtime.InteropServices;
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Sql;
 using Spark.Connect.Dotnet.Sql.Types;
+using Xunit.Abstractions;
 using static Spark.Connect.Dotnet.Sql.Functions;
 using static Spark.Connect.Dotnet.Sql.Types.SparkDataType;
 
@@ -11,6 +10,10 @@ namespace Spark.Connect.Dotnet.Tests.DataFrame;
 
 public class DataFrame_Tests : E2ETestBase
 {
+    public DataFrame_Tests(ITestOutputHelper logger) : base(logger)
+    {
+    }
+    
     [Fact]
     public void AliasTest()
     {

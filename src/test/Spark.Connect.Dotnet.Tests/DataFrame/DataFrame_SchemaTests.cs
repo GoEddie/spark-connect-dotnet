@@ -1,5 +1,6 @@
 using Spark.Connect.Dotnet.Sql;
 using Spark.Connect.Dotnet.Sql.Types;
+using Xunit.Abstractions;
 using static Spark.Connect.Dotnet.Sql.Types.SparkDataType;
 
 
@@ -7,6 +8,10 @@ namespace Spark.Connect.Dotnet.Tests.DataFrame;
 
 public class DataFrame_SchemaTests : E2ETestBase
 {
+    public DataFrame_SchemaTests(ITestOutputHelper logger) : base(logger)
+    {
+    }
+    
     [Fact]
     public void Schema_SimpleString_Test()
     {

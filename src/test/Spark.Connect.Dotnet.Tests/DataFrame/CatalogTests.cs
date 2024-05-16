@@ -1,7 +1,13 @@
+using Xunit.Abstractions;
+
 namespace Spark.Connect.Dotnet.Tests.DataFrame;
 
 public class CatalogTests : E2ETestBase
 {
+    public CatalogTests(ITestOutputHelper logger) : base(logger)
+    {
+    }
+    
     [Fact]
     public void CurrentCatalog_Test()
     {

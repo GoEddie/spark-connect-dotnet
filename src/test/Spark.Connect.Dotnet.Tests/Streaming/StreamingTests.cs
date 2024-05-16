@@ -1,9 +1,14 @@
+using Xunit.Abstractions;
 using static Spark.Connect.Dotnet.Sql.Functions;
 
 namespace Spark.Connect.Dotnet.Tests.Streaming;
 
 public class StreamingTests : E2ETestBase
 {
+    public StreamingTests(ITestOutputHelper logger) : base(logger)
+    {
+    }
+    
     [Fact]
     public void Writer()
     {

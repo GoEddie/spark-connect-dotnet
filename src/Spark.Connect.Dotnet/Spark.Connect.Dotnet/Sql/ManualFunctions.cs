@@ -1,5 +1,8 @@
 using Apache.Arrow.Types;
 using Google.Protobuf;
+using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.Sql.Types;
+using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -174,6 +177,12 @@ public partial class Functions : FunctionsWrapper
                 Literal = new Expression.Types.Literal
                 {
                     Null = new DataType()
+                    {
+                        String = new DataType.Types.String()
+                        {
+                            
+                        }
+                    }
                 }
             });
         }
@@ -189,6 +198,17 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Lit(object o)
     {
+        if (o is null)
+        {
+            return new Column(new Expression
+            {
+                Literal = new Expression.Types.Literal
+                {
+                    Null = new DataType()
+                }
+            });
+        }
+        
         if (o.GetType().IsArray)
         {
             var lits = new List<Column>();
@@ -272,6 +292,17 @@ public partial class Functions : FunctionsWrapper
             Literal = new Expression.Types.Literal
             {
                 Double = value
+            }
+        });
+    }
+    
+    public static Column Lit(float value)
+    {
+        return new Column(new Expression
+        {
+            Literal = new Expression.Types.Literal
+            {
+                Float = value
             }
         });
     }
@@ -1101,11 +1132,22 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("first", false, Col(col)));
     }
+    
     public static Column First(Column col)
     {
         return new Column(FunctionWrappedCall("first", false, col));
     }
-
+    
+    public static Column Last(Column col)
+    {
+        return new Column(FunctionWrappedCall("last", false, col));
+    }
+    
+    public static Column Last(string col)
+    {
+        return new Column(FunctionWrappedCall("last", false, Col(col)));
+    }
+    
     public static Column FormatString(string format, params Column[] cols)
     {
         var newList = new List<Column>();
@@ -1133,6 +1175,443 @@ public partial class Functions : FunctionsWrapper
         return new Column(FunctionWrappedCall("from_csv", false, col, ddlSchema, mappedOptions));
     }
     
+    public static Column FromJson(Column col, Column ddlSchema, IDictionary<string, object>? options = null)
+    {
+        if (options == null)
+        {
+            return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema));    
+        }
+
+        var mappedOptions = CreateMap(options);
+        return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema, mappedOptions));
+    }
+    
+    /// <summary>
+    /// ddlSchema is a string with a DDL schema in such as "COLNAME INT, ANOTHERCOL STRING"
+    /// </summary>
+    /// <param name="col"></param>
+    /// <param name="ddlSchema"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public static Column FromJson(Column col, string ddlSchema, IDictionary<string, object>? options = null)
+    {
+        if (options == null)
+        {
+            return new Column(FunctionWrappedCall("from_json", false, col, Lit(ddlSchema)));    
+        }
+
+        var mappedOptions = CreateMap(options);
+        return new Column(FunctionWrappedCall("from_json", false, col, Lit(ddlSchema), mappedOptions));
+    }
+    
+    /// <summary>
+    /// Column with the json value in, a schema as a StructType, or ArrayType of StructType
+    /// </summary>
+    /// <param name="col"></param>
+    /// <param name="schema"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public static Column FromJson(Column col, StructType schema, IDictionary<string, object>? options = null)
+    {
+        var ddlSchema = Lit(schema.Json());
+        
+        if (options == null)
+        {
+            return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema));    
+        }
+
+        var mappedOptions = CreateMap(options);
+        return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema, mappedOptions));
+    }
+
+    public static Column FromUtcTimestamp(string timestamp, string tz)
+    {
+        return new Column(FunctionWrappedCall("from_utc_timestamp", false, Lit(timestamp), Lit(tz)));
+    }
+    
+    public static Column FromUtcTimestamp(Column timestamp, Column tz)
+    {
+        return new Column(FunctionWrappedCall("from_utc_timestamp", false, timestamp, tz));
+    }
+
+    public static Column Grouping(string col) => Grouping(Col(col));
+
+    public static Column Grouping(Column col) => new Column(FunctionWrappedCall("grouping", false, col));
+
+    public static Column JsonTuple(Column col, params string[] fields)
+    {
+        return new Column(FunctionWrappedCall("json_tuple", false, col, fields.Select(p => Lit(p).Expression).ToArray()));
+    }
+    
+    public static Column JsonTuple(string col, params string[] fields)
+    {
+        return new Column(FunctionWrappedCall("json_tuple", false, Col(col), fields.Select(p => Lit(p).Expression).ToArray()));
+    }
+
+    public static Column Lag(Column col, int offset, object defaultValue)
+    {
+        return new Column(FunctionWrappedCall("lag", false, col, Lit(offset), Lit(defaultValue)));
+    }
+    
+    public static Column Lag(string col, int offset, object defaultValue)
+    {
+        return new Column(FunctionWrappedCall("lag", false, Col(col), Lit(offset), Lit(defaultValue)));
+    }
+    
+    public static Column Lag(Column col, int offset)
+    {
+        return new Column(FunctionWrappedCall("lag", false, col, Lit(offset)));
+    }
+    
+    public static Column Lag(string col, int offset)
+    {
+        return new Column(FunctionWrappedCall("lag", false, Col(col), Lit(offset)));
+    }
+
+    
+    public static Column Lag(Column col)
+    {
+        return new Column(FunctionWrappedCall("lag", false, col));
+    }
+    
+    public static Column Lag(string col)
+    {
+        return new Column(FunctionWrappedCall("lag", false, Col(col)));
+    }
+    
+    public static Column Lead(Column col, int offset, object defaultValue)
+    {
+        return new Column(FunctionWrappedCall("lead", false, col, Lit(offset), Lit(defaultValue)));
+    }
+    
+    public static Column Lead(string col, int offset, object defaultValue)
+    {
+        return new Column(FunctionWrappedCall("lead", false, Col(col), Lit(offset), Lit(defaultValue)));
+    }
+    
+    public static Column Lead(Column col, int offset)
+    {
+        return new Column(FunctionWrappedCall("lead", false, col, Lit(offset)));
+    }
+    
+    public static Column Lead(string col, int offset)
+    {
+        return new Column(FunctionWrappedCall("lead", false, Col(col), Lit(offset)));
+    }
+
+    
+    public static Column Lead(Column col)
+    {
+        return new Column(FunctionWrappedCall("lead", false, col));
+    }
+    
+    public static Column Lead(string col)
+    {
+        return new Column(FunctionWrappedCall("lead", false, Col(col)));
+    }
+
+    public static Column Levenshtein(string left, string right, int? threshold = null) => Levenshtein(Col(left), Col(right), threshold);
+    public static Column Levenshtein(Column left, Column right, int? threshold = null)
+    {
+        if (!threshold.HasValue)
+        {
+            return new Column(FunctionWrappedCall("levenshtein", false, left, right));
+        }
+        
+        return new Column(FunctionWrappedCall("levenshtein", false, left, right, Lit(threshold.Value)));
+    }
+
+    public static Column Like(string col, string pattern, string? escape = null) => Like(Col(col), Lit(pattern), escape == null ? null : Lit(escape));
+
+    public static Column Like(Column col, Column pattern, Column? escape = null)
+    {
+        if (Object.Equals(null, escape))
+        {
+            return new Column(FunctionWrappedCall("like", false, col, pattern));
+        }
+        
+        return new Column(FunctionWrappedCall("like", false, col, pattern, escape));
+    }
+
+    /// <summary>
+    /// Find the occurence of substr in col - the PySpark docs say that pos is 0-based but you need to use 1 for the first char
+    /// </summary>
+    /// <param name="substr"></param>
+    /// <param name="col"></param>
+    /// <param name="pos"></param>
+    /// <returns>Column</returns>
+    public static Column Locate(string substr, string col, int? pos = null) => Locate(substr, Col(col), pos);
+    
+    /// <summary>
+    /// Find the occurence of substr in col - the PySpark docs say that pos is 0-based but you need to use 1 for the first char
+    /// </summary>
+    /// <param name="substr"></param>
+    /// <param name="col"></param>
+    /// <param name="pos"></param>
+    /// <returns>Column</returns>
+    public static Column Locate(string substr, Column col, int? pos = null) => Locate(Lit(substr), col, pos);
+    
+    /// <summary>
+    /// Find the occurence of substr in col - the PySpark docs say that pos is 0-based but you need to use 1 for the first char
+    /// </summary>
+    /// <param name="substr"></param>
+    /// <param name="col"></param>
+    /// <param name="pos"></param>
+    /// <returns>Column</returns>
+    public static Column Locate(Column substr, Column col, int? pos = null)
+    {
+        if (pos.HasValue)
+        {
+            return new Column(FunctionWrappedCall("locate", false, substr, col, Lit(pos.Value)));    
+        }
+        
+        return new Column(FunctionWrappedCall("locate", false, substr, col));
+    }
+
+    public static Column LPad(string col, int len, string pad) => LPad(Col(col), len, pad);
+    
+    public static Column LPad(Column col, int len, string pad) => new (FunctionWrappedCall("lpad", false, col, Lit(len), Lit(pad)));
+
+    public static Column MakeDtInterval() => new(FunctionWrappedCall("make_dt_interval", false));
+
+    public static Column MakeDtInterval(string day) => MakeDtInterval(Col(day));
+
+    public static Column MakeDtInterval(Column day) => new(FunctionWrappedCall("make_dt_interval", false, day));
+    
+    public static Column MakeDtInterval(string day, string hour) => MakeDtInterval(Col(day), Col(hour));
+    
+    public static Column MakeDtInterval(Column day, Column hour) => new(FunctionWrappedCall("make_dt_interval", false, day, hour));
+    
+    public static Column MakeDtInterval(string day, string hour, string minute) => MakeDtInterval(Col(day), Col(hour), Col(minute));
+    
+    public static Column MakeDtInterval(Column day, Column hour, Column minute) => new(FunctionWrappedCall("make_dt_interval", false, day, hour, minute));
+    
+    public static Column MakeDtInterval(string day, string hour, string minute, double seconds) => MakeDtInterval(Col(day), Col(hour), Col(minute));
+    
+    public static Column MakeDtInterval(Column day, Column hour, Column minute, Column seconds) => new(FunctionWrappedCall("make_dt_interval", false, day, hour, minute, seconds));
+
+    public static Column MakeTimestamp(string years, string months, string days, string hours, string mins, string secs,
+        string? timezone = null) => MakeTimestamp(Col(years), Col(months), Col(days), Col(hours), Col(mins), Col(secs),
+        timezone == null ? null : Col(timezone));
+
+    public static Column MakeTimestamp(Column years, Column months, Column days, Column hours, Column mins, Column secs, Column? timezone = null)
+    {
+        if (Object.Equals(null, timezone))
+        {
+            return new(FunctionWrappedCall("make_timestamp", false, years, months, days, hours, mins, secs ));
+        }
+        
+        return new(FunctionWrappedCall("make_timestamp", false, years, months, days, hours, mins, secs , timezone));
+    }
+    
+    public static Column MakeTimestampLtz(string years, string months, string days, string hours, string mins, string secs,
+        string? timezone = null) => MakeTimestampLtz(Col(years), Col(months), Col(days), Col(hours), Col(mins), Col(secs),
+        timezone == null ? null : Col(timezone));
+
+    public static Column MakeTimestampLtz(Column years, Column months, Column days, Column hours, Column mins, Column secs, Column? timezone = null)
+    {
+        if (Object.Equals(null, timezone))
+        {
+            return new(FunctionWrappedCall("make_timestamp_ltz", false, years, months, days, hours, mins, secs ));
+        }
+        
+        return new(FunctionWrappedCall("make_timestamp_ltz", false, years, months, days, hours, mins, secs , timezone));
+    }
+    
+    /// <summary>
+    /// col is the name of the column to apply the mask to
+    /// </summary>
+    /// <param name="col"></param>
+    /// <param name="upperChar"></param>
+    /// <param name="lowerChar"></param>
+    /// <param name="digitChar"></param>
+    /// <param name="otherChar"></param>
+    /// <returns></returns>
+    public static Column Mask(string col, string upperChar=null, string lowerChar=null, string digitChar=null, string otherChar=null)
+    {
+        if (string.IsNullOrEmpty(upperChar))
+        {
+            upperChar = "X";
+        }
+
+        if (string.IsNullOrEmpty(lowerChar))
+        {
+            lowerChar = "x";
+        }
+
+        if (string.IsNullOrEmpty(digitChar))
+        {
+            digitChar = "n";
+        }
+
+        return Mask(Col(col), Lit(upperChar), Lit(lowerChar), Lit(digitChar), Lit(otherChar));
+    }
+    
+    /// <summary>
+    /// To use the default specify null instead of a column
+    /// </summary>
+    /// <param name="col"></param>
+    /// <param name="upperChar"></param>
+    /// <param name="lowerChar"></param>
+    /// <param name="digitChar"></param>
+    /// <param name="otherChar"></param>
+    /// <returns></returns>
+    public static Column Mask(Column col, Column upperChar=null, Column lowerChar=null, Column digitChar=null, Column otherChar=null)
+    {
+        if (Object.Equals(null, upperChar))
+        {
+            upperChar = Lit("X");
+        }
+        
+        if (Object.Equals(null, lowerChar))
+        {
+            lowerChar = Lit("x");
+        }
+        
+        if (Object.Equals(null, digitChar))
+        {
+            digitChar = Lit("n");
+        }
+        
+        if (Object.Equals(null, otherChar))
+        {
+            otherChar = Lit(null as string);
+        }
+
+        if (upperChar.Expression.Literal.String == null)
+        {
+            throw new SparkException("upperChar must be a Lit(\"string\"), cannot be any other type (including char!)");
+        }
+        
+        if (lowerChar.Expression.Literal.String == null)
+        {
+            throw new SparkException("lowerChar must be a Lit(\"string\"), cannot be any other type (including char!)");
+        }
+        
+        if (digitChar.Expression.Literal.String == null)
+        {
+            throw new SparkException("digitChar must be a Lit(\"string\"), cannot be any other type (including char!)");
+        }
+        
+        if (otherChar.Expression.Literal.String == null)
+        {
+            throw new SparkException("otherChar must be a Lit(\"string\"), cannot be any other type (including char!)");
+        }
+        
+        return new Column(FunctionWrappedCall("mask", false, col, upperChar, lowerChar, digitChar, otherChar));
+    }
+
+    public static Column MonthsBetween(string date1Col, string date2Col, bool? roundOff = null) => MonthsBetween(Col(date1Col), Col(date2Col), roundOff);
+    
+    public static Column MonthsBetween(Column date1Col, Column date2Col, bool? roundOff = null)
+    {
+        if (roundOff.HasValue)
+        {
+            return new Column(FunctionWrappedCall("months_between", false, date1Col, date2Col, Lit(roundOff.Value)));    
+        }
+        
+        return new Column(FunctionWrappedCall("months_between", false, date1Col, date2Col));
+    }
+
+    public static Column NthValue(string col, int offset, bool? ignoreNulls = null) => NthValue(Col(col), offset, ignoreNulls);
+    
+    public static Column NthValue(Column col, int offset, bool? ignoreNulls = null)  => NthValue(col, Lit(offset), ignoreNulls);
+
+    public static Column NthValue(Column col, Column offset, bool? ignoreNulls = null)
+    {
+        if (ignoreNulls.HasValue)
+        {
+            return new Column(FunctionWrappedCall("nth_value", false, col, offset, Lit(ignoreNulls.Value)));  
+        }
+        
+        return new Column(FunctionWrappedCall("nth_value", false, col, offset));
+    }
+    
+    public static Column Ntile(int n) => new Column(FunctionWrappedCall("ntile", false, Lit(n)));
+
+
+    public static Column Overlay(string src, string replace, int pos, int? len = null) => Overlay(Col(src), Col(replace), Lit(pos), len.HasValue ? Lit(len.Value) : null);
+    
+    public static Column Overlay(Column src, Column replace, int pos, int? len = null) => Overlay(src, replace, Lit(pos), len.HasValue ? Lit(len.Value) : null);
+
+    public static Column Overlay(Column src, Column replace, Column pos, Column? len = null)
+    {
+        if (Object.Equals(null, len))
+        {
+            return new Column(FunctionWrappedCall("overlay", false, src, replace, pos));
+        }
+        
+        return new Column(FunctionWrappedCall("overlay", false, src, replace, pos, len));
+    }
+
+    public static Column Percentile(string col, float[] percentage, int frequency) => Percentile(Col(col), Lit(percentage), Lit(frequency));
+    
+    public static Column Percentile(string col, float percentage, int frequency) => Percentile(Col(col), Lit(percentage), Lit(frequency));
+    
+    public static Column Percentile(Column col, float[] percentage, int frequency) => Percentile(col, Lit(percentage), Lit(frequency));
+    
+    public static Column Percentile(Column col, float percentage, int frequency) => Percentile(col, Lit(percentage), Lit(frequency));
+
+    public static Column Percentile(Column col, Column percentage, Column frequency)
+    {
+        return new Column(FunctionWrappedCall("percentile", false, col, percentage, frequency));
+    }
+    
+    public static Column PercentileApprox(string col, float[] percentage, int accuracy) => Percentile(Col(col), Lit(percentage), Lit(accuracy));
+    
+    public static Column PercentileApprox(string col, float percentage, int accuracy) => Percentile(Col(col), Lit(percentage), Lit(accuracy));
+    
+    public static Column PercentileApprox(Column col, float[] percentage, int accuracy) => Percentile(col, Lit(percentage), Lit(accuracy));
+    
+    public static Column PercentileApprox(Column col, float percentage, int accuracy) => Percentile(col, Lit(percentage), Lit(accuracy));
+
+    public static Column PercentileApprox(Column col, Column percentage, Column accuracy)
+    {
+        return new Column(FunctionWrappedCall("percentile_approx", false, col, percentage, accuracy));
+    }
+
+    public static Column ParseUrl(string urlCol, string partToExtractCol, string? keyCol = null) => ParseUrl(Col(urlCol), Col(partToExtractCol), keyCol == null ? null : Col(keyCol));
+
+    public static Column ParseUrl(Column col, Column partToExtract, Column? key = null)
+    {
+        if (Object.Equals(null, key))
+        {
+            return new Column(FunctionWrappedCall("parse_url", false, col, partToExtract));
+        }
+        
+        return new Column(FunctionWrappedCall("parse_url", false, col, partToExtract, key));
+    }
+
+    public static Column Position(string substrColumn, string strColumn, string? startColumn = null) => Position(Col(substrColumn), Col(strColumn), startColumn == null ? null : Col(startColumn));
+    
+    public static Column Position(Column substrColumn, Column strColumn, Column? startColumn = null)
+    {
+        if (Object.Equals(null, startColumn))
+        {
+            return new Column(FunctionWrappedCall("position", false, substrColumn, strColumn));
+        }
+        
+        return new Column(FunctionWrappedCall("position", false, substrColumn, strColumn, startColumn));
+    }
+
+    public static Column PrintF(string format, params string[] cols) => PrintF(Col(format), cols.Select(Col).ToArray());
+    public static Column PrintF(Column format, params Column[] cols)
+    {
+        return new Column(FunctionWrappedCall("printf", false, cols.Prepend(format).ToArray()));
+    }
+    
+    public static Column RaiseError(string message) => new Column(FunctionWrappedCall("raise_error", false, Lit(message)));
+    public static Column RaiseError(Column message) => new Column(FunctionWrappedCall("raise_error", false, message));
+    
+    // substrColumn or str
+    //     A column of string, substring.
+    //
+    //     strColumn or str
+    //     A column of string.
+    //
+    // startColumn or str, optional
+    //     A column of string, start position.
+
     /// <Summary>
     ///     Round
     ///     Round the given value to `scale` default scale = 0

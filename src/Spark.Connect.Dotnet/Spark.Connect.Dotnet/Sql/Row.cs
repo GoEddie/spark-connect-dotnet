@@ -90,5 +90,4 @@ public class Row
             $"Field '{columnName}' was not found in the schema: '{_schema.SimpleString()}'");
     } 
     
-    
 } 

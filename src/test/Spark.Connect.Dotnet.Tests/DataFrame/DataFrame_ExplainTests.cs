@@ -1,9 +1,14 @@
+using Xunit.Abstractions;
 using static Spark.Connect.Dotnet.Sql.Functions;
 
 namespace Spark.Connect.Dotnet.Tests.DataFrame;
 
 public class DataFrameExplainTests : E2ETestBase
 {
+    public DataFrameExplainTests(ITestOutputHelper logger) : base(logger)
+    {
+    }
+    
     [Fact]
     public void DefaultExplain()
     {

@@ -96,9 +96,9 @@ public class CustomTestFramework : XunitTestFramework
                 {
                     throw new TimeoutException($"Test {test} timed out");
                 }
-                
+
                 var result = task.Result;
-                
+
                 var status = result.Failed > 0 
                     ? "FAILURE" 
                     : (result.Skipped > 0 ? "SKIPPED" : "SUCCESS");
@@ -153,7 +153,7 @@ class CustomTestMethodRunner : XunitTestMethodRunner
             {
                 throw new TimeoutException($"Test {test} timed out");
             }
-                
+
             var result = task.Result;
 
             // Work out the final status of the test

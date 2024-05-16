@@ -1,9 +1,14 @@
 using Spark.Connect.Dotnet.Sql;
+using Xunit.Abstractions;
 
 namespace Spark.Connect.Dotnet.Tests.DataFrame;
 
 public class DataFrame_JoinTests : E2ETestBase
 {
+    public DataFrame_JoinTests(ITestOutputHelper logger) : base(logger)
+    {
+    }
+    
     [Fact]
     public void CrossJoin_Test()
     {
