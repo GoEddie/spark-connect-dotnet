@@ -402,7 +402,6 @@ public class MapVisitor :
     public MapVisitor(int[] valueOffsets)
     {
         _valueOffsets = valueOffsets;
-        
     }
 
     public void Visit(StringArray array)
@@ -414,7 +413,7 @@ public class MapVisitor :
     {
         var key = array.Fields.First();
         var value = array.Fields.Last();
-
+        
         var keyVisitor = new MapKeyVisitior();
         var valueVisitor = new MapValueVisitior();
         

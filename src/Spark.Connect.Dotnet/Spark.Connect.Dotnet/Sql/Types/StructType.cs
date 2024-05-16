@@ -1,3 +1,4 @@
+using System.Text;
 using Apache.Arrow;
 using Apache.Arrow.Types;
 using Google.Protobuf.Collections;
@@ -86,7 +87,12 @@ public class StructType : SparkDataType
 
         return $"StructType<{string.Join(",", Fields.Select(GetNameAndType))}>";
     }
-
+    
+    public string Json()
+    {
+        return DataTypeJsonSerializer.StructTypeToJson(this);
+    }
+    
     public override DataType ToDataType()
     {
         var fields = Fields.Select(field => new DataType.Types.StructField
@@ -110,6 +116,11 @@ public class StructType : SparkDataType
         return new Apache.Arrow.Types.StructType(Fields
             .Select(field => new Field(field.Name, field.DataType.ToArrowType(), field.Nullable)).ToList());
     }
+    
+    public static StructField StructField(string name, SparkDataType type, bool isNullable=true)
+    {
+        return new StructField(name, type, isNullable);
+    }
 }
 
 public class StructField
@@ -117,32 +128,36 @@ public class StructField
     public StructField()
     {
     }
-
-    public StructField(string name, SparkDataType type, bool nullable)
+    
+    public StructField(string name, SparkDataType type, bool nullable, IDictionary<string, object>? metadata = null)
     {
         Name = name;
         DataType = type;
         Nullable = nullable;
+        Metadata = metadata;
     }
 
-    public StructField(string name, DataType type, bool nullable)
+    public StructField(string name, DataType type, bool nullable, IDictionary<string, object>? metadata = null)
     {
         Name = name;
         Nullable = nullable;
         DataType = FromConnectDataType(type);
+        Metadata = metadata;
     }
 
-    public StructField(string name, IArrowType type, bool nullable)
+    public StructField(string name, IArrowType type, bool nullable, IDictionary<string, object>? metadata = null)
     {
         Name = name;
         Nullable = nullable;
         DataType = FromArrowType(type);
+        Metadata = metadata;
     }
 
     public string Name { get; set; }
-    
     public SparkDataType DataType { get; set; }
     public bool Nullable { get; set; }
+    
+    public IDictionary<string, object> Metadata;
 
     private SparkDataType FromArrowType(IArrowType type) => type.TypeId switch
     {
@@ -163,7 +178,7 @@ public class StructField
         ArrowTypeId.List => ArrayType(FromArrowType((type as ListType).ValueDataType), (type as ListType).ValueField.IsNullable),
         
         ArrowTypeId.Map => MapType(FromArrowType((type as Apache.Arrow.Types.MapType).KeyField.DataType), FromArrowType((type as Apache.Arrow.Types.MapType).ValueField.DataType), (type as Apache.Arrow.Types.MapType).ValueField.IsNullable),
-        _ => throw new ArgumentOutOfRangeException($"Cannot convert Arrow Type '{type}'")
+        _ => throw new ArgumentOutOfRangeException($"Cannot convert Arrow Type '{type}'")   
     };
     
     private SparkDataType FromConnectDataType(DataType type)
@@ -235,5 +250,192 @@ public class StructField
         }
 
         return new VoidType();
+    }
+}
+
+public static class DataTypeJsonSerializer
+{
+    /// <summary>
+    /// Converts a struct type which is a list of fields and some optional metadata into a string
+    /// </summary>
+    /// <param name="structType"></param>
+    /// <returns></returns>
+    public static string StructTypeToJson(StructType structType)
+    {
+        var json = new StringBuilder();
+        json.Append(TextStart);
+        var first = true;
+
+        foreach (var field in structType.Fields)
+        {
+            if (!first)
+            {
+                json.Append(',');
+            }
+
+            first = false;
+
+            if (field.DataType is ArrayType array)
+            {
+                json.Append(ArrayTypeToJson(field, array));
+                continue;
+            }
+
+            if (field.DataType is MapType)
+            {
+                continue;
+            }
+
+            if (field.DataType is StructType structTypeField)
+            {
+                json.Append(StructTypeToJson(field, structTypeField));
+                continue;
+            }
+
+            json.Append(SimpleTypeToJson(field));
+        }
+
+        json.Append(TextEnd);
+
+        return json.ToString();
+    }
+
+
+
+    private const string TextStart = @"{""fields"":[";
+    private const string TextEnd = @"],""type"":""struct""}";
+
+    private const string MetadataStart = @"{""metadata"":{";
+    private const string MetadataEnd = @"},";
+    private const string MetadataItemFormat = @"""{0}"":{1}";
+
+    private const string NameStart = @"""name"":""";
+    private const string NameEnd = @""",";
+
+    private const string NullableStart = @"""nullable"":";
+    private const string NullableEnd = @",";
+
+    private const string ContainsNullStart = @"""containsNull"":";
+    private const string ContainsNullEnd = ",";
+
+    private const string ElementTypeStart = @"""elementType"":""";
+    private const string ElementTypeEnd = @""",";
+
+    private const string ArrayType = @"""type"":""array""";
+
+    private const string TypeStart = @"""type"":""";
+    private const string TypeEnd = @"""";
+
+    private const string TypeStructStart = @"""type"":";
+    private const string TypeStructEnd = @"";
+
+    private const string FieldEnd = "}";
+
+    private static string StructTypeToJson(StructField field, StructType structType)
+    {
+        var json = new StringBuilder();
+        json.Append(MetadataToString(field));
+        json.Append(NameToString(field));
+        json.Append(NullableToString(field));
+        json.Append($"{TypeStructStart}{StructTypeToJson(structType)}{TypeStructEnd}");
+        json.Append(FieldEnd);
+        return json.ToString();
+    }
+
+    private static string SimpleTypeToJson(StructField field)
+    {
+        var json = new StringBuilder();
+        json.Append(MetadataToString(field));
+        json.Append(NameToString(field));
+        json.Append(NullableToString(field));
+        json.Append(SimpleTypeToString(field));
+        json.Append(FieldEnd);
+        return json.ToString();
+    }
+
+    private static string ArrayTypeToJson(StructField field, ArrayType array)
+    {
+        var json = new StringBuilder();
+        json.Append(MetadataToString(field));
+        json.Append(NameToString(field));
+        json.Append(NullableToString(field));
+        
+        json.Append($"{TypeStructStart}{{{ArrayTypeToJson(array)}{TypeStructEnd}}}");
+        json.Append(FieldEnd);
+        return json.ToString();
+    }
+    
+    private static string ArrayTypeToJson(ArrayType array)
+    {
+        if (array.ElementType is ArrayType)
+        {
+            return String.Empty;
+        }
+
+        if (array.ElementType is MapType)
+        {
+            return string.Empty;
+        }
+
+        if (array.ElementType is StructType)
+        {
+            return string.Empty;
+        }
+        
+        var json = new StringBuilder();
+        json.Append(ContainsNullStart);
+        json.Append(array.NullableValues.ToString().ToLowerInvariant());
+        json.Append(ContainsNullEnd);
+        json.Append(ElementTypeStart);
+        json.Append(array.ElementType.JsonTypeName());
+        json.Append(ElementTypeEnd);
+        json.Append(ArrayType);
+        
+        return json.ToString();
+    }
+
+    /// <summary>
+    /// is the value bare or wrapped in quotes
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    private static string ValueToFormattedString(object value)
+    {
+        if (value is string or DateTime)
+        {
+            return $@"""{value}""";
+        }
+
+        return value.ToString();
+    }
+    private static string MetadataToString(StructField field)
+    {
+        var metadata = new StringBuilder();
+        metadata.Append(MetadataStart);
+
+        if (field.Metadata != null && field.Metadata.Count > 0)
+        {
+            var items = string.Join(",",
+                field.Metadata.Select(p => string.Format(MetadataItemFormat, p.Key, ValueToFormattedString(p.Value))));
+            metadata.Append(items);
+        }
+
+        metadata.Append(MetadataEnd);
+        return metadata.ToString();
+    }
+
+    private static string NameToString(StructField field)
+    {
+        return $@"{NameStart}{field.Name}{NameEnd}";
+    }
+    
+    private static string SimpleTypeToString(StructField field)
+    {
+        return $@"{TypeStart}{field.DataType.JsonTypeName()}{TypeEnd}";
+    }
+    
+    private static string NullableToString(StructField field)
+    {
+        return $@"{NullableStart}{field.Nullable.ToString().ToLowerInvariant()}{NullableEnd}";
     }
 }

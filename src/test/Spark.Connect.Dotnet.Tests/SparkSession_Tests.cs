@@ -1,10 +1,16 @@
 using Spark.Connect.Dotnet.Sql;
 using Spark.Connect.Dotnet.Sql.Types;
+using Xunit.Abstractions;
 
 namespace Spark.Connect.Dotnet.Tests;
 
 public class SparkSession_Tests : E2ETestBase
 {
+    
+    public SparkSession_Tests(ITestOutputHelper logger) : base(logger)
+    {
+    }
+    
     [Fact]
     public void CreateDataFrame_Test()
     {
@@ -80,7 +86,47 @@ public class SparkSession_Tests : E2ETestBase
         {
             Console.WriteLine($"ROW: {row}");
         }
-        
+    }
 
+    [Fact]
+    public void SqlWithDict_Test()
+    {
+        var df = Spark.Range(100);
+        var dict = new Dictionary<string, object>
+        {
+            ["c"] = df["id"], //could do Col("id") etc
+            ["dataFramePassedIn"] = df,
+            ["three"] = 3
+        };
+        
+        Spark.Sql("SELECT {c} FROM {dataFramePassedIn} WHERE {c} = {three}", dict).Show();
+        var rows = Spark.Sql("SELECT {c} FROM {dataFramePassedIn} WHERE {c} = {three}", dict).Collect();
+        Assert.Equal(1, rows.Count);
+        Assert.Equal(3L, rows[0][0]);
+    }
+    
+    [Fact]
+    public void SqlWithDataFrames_Test()
+    {
+        var df = Spark.Range(100);
+        var df2 = Spark.Range(1000, 2000);
+        
+        Spark.Sql("SELECT * FROM {dataFramePassedIn} union all SELECT * FROM {anotherDataFramePassedIn}", ("dataFramePassedIn", df), ("anotherDataFramePassedIn", df2)).Show();
+        var rows = Spark.Sql("SELECT * FROM {dataFramePassedIn} union all SELECT * FROM {anotherDataFramePassedIn}", ("dataFramePassedIn", df), ("anotherDataFramePassedIn", df2)).Collect();
+        Assert.Equal(1100, rows.Count);
+        Assert.Equal(0L, rows[0][0]);
+    }
+    
+    [Fact]
+    public void SqlWithDataFramesJoin_Test()
+    {
+        var df = Spark.Range(100);
+        var df2 = Spark.Range(0, 2000);
+        
+        Spark.Sql("SELECT * FROM {dataFramePassedIn} a LEFT OUTER JOIN {anotherDataFramePassedIn} b on a.id = b.id", ("dataFramePassedIn", df), ("anotherDataFramePassedIn", df2)).Show();
+        var rows = Spark.Sql("SELECT * FROM {dataFramePassedIn} a LEFT OUTER JOIN {anotherDataFramePassedIn} b on a.id = b.id", ("dataFramePassedIn", df), ("anotherDataFramePassedIn", df2)).Collect();
+        Assert.Equal(100, rows.Count);
+        Assert.Equal(1L, rows[1][0]);
+        Assert.Equal(1L, rows[1][1]);
     }
 }

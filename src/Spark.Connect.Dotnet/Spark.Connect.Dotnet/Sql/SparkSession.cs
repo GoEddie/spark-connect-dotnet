@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Text;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
@@ -25,7 +26,8 @@ public class SparkSession
     public readonly string SessionId;
 
     private readonly DatabricksConnectionVerification _databricksConnectionVerification;
-    
+    public LocalConsole Console;
+
     private int _planId;
 
     public readonly RuntimeConf Conf;
@@ -43,15 +45,18 @@ public class SparkSession
     /// <param name="sparkConnectDotnetConf"></param>
     public SparkSession(string sessionId, string url, Metadata headers, UserContext userContext, string clientType,
         DatabricksConnectionVerification databricksConnectionVerification,
-        TimeSpan databricksConnectionMaxVerificationTime, Dictionary<string, string> sparkConnectDotnetConf)
+        TimeSpan databricksConnectionMaxVerificationTime, Dictionary<string, string> sparkConnectDotnetConf, LocalConsole customConsole=null)
     {
         Headers = headers;
         UserContext = userContext;
         SessionId = sessionId;
         _databricksConnectionVerification = databricksConnectionVerification;
+        Console = customConsole?? new LocalConsole();
+
+
         Conf = new RuntimeConf(this, sparkConnectDotnetConf);
         ClientType = clientType;
-
+    
         Host = url.Replace("sc://", "http://");
         var channel = GrpcChannel.ForAddress(Host, new GrpcChannelOptions());
 
@@ -262,6 +267,49 @@ public class SparkSession
     }
 
     /// <summary>
+    ///     Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
+    ///
+    ///     ///     Args is a list of DataFrames to wrap in CreateOrReplaceTempView, example (spark is a SparkSession):
+    ///
+    ///     ```csharp
+    ///     var df = spark.Range(100);
+    ///     var dict = new Dictionary<string, object>();
+    ///     dict["c"] = df["id"]; //could do Col("id") etc
+    ///     dict["dataFramePassedIn"] = df;
+    ///     dict["three"] = 3;
+    ///     spark.Sql("SELECT {c} FROM {dataFramePassedIn} WHERE {c} = {three}", dict).Show();
+    ///     ```
+    /// </summary>
+    /// <param name="sql">The SPARK SQL Query to execute.</param>
+    /// <param name="args">Args is a list of key names to replace in the Sql with values, can also include DataFrames which are wrapped in CreateOrReplaceTempView</param>
+    /// <returns>`DataFrame`</returns>
+    public DataFrame Sql(string sql, IDictionary<string, object> args)
+    {
+        var task = Task.Run(() => SqlAsync(sql, args));
+        task.Wait();
+        return task.Result;
+    }
+    
+    /// <summary>
+    ///     Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
+    ///
+    ///     Args is a list of DataFrames to wrap in CreateOrReplaceTempView, example (spark is a SparkSession):
+    ///     ```csharp 
+    ///     var df = spark.Range(100);
+    ///     spark.Sql("SELECT * FROM {dataFramePassedIn}", ("dataFramePassedIn", df)).Show();
+    ///     ```
+    /// </summary>
+    /// <param name="sql">The SPARK SQL Query to execute.</param>
+    /// <param name="args">Args is a list of tuples containing the name of the token to replace in the Sql and the DataFrame to wrap in CreateOrReplaceTempView</param>
+    /// <returns>`DataFrame`</returns>
+    public DataFrame Sql(string sql, params (string, DataFrame)[] args)
+    {
+        var task = Task.Run(() => SqlAsync(sql, args));
+        task.Wait();
+        return task.Result;
+    }
+
+    /// <summary>
     ///     Async Version of `Sql`. Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
     /// </summary>
     /// <param name="sql">The SPARK SQL Query to execute.</param>
@@ -281,6 +329,49 @@ public class SparkSession
 
         var (relation, schema, output) = await GrpcInternal.Exec(GrpcClient, Host, SessionId, plan, Headers, UserContext, ClientType);
         return new DataFrame(this, relation, schema);
+    }
+
+    /// <summary>
+    ///     Async Version of `Sql`. Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
+    /// </summary>
+    /// <param name="sql">The SPARK SQL Query to execute.</param>
+    /// <param name="args">Args keys = name in {name} format to replace in the SQL, values = the value to use in the place of the token, can be a Col, Lit, native type, or a DataFrame which will be wrapped in a CreateOrReplaceTempView call</param>
+    /// <returns>`DataFrame`</returns>
+    public async Task<DataFrame> SqlAsync(string sql, IDictionary<string, object> args)
+    {
+        var formattedSql = SqlFormatter.Format(sql, args);
+        
+        var plan = new Plan
+        {
+            Command = new Command
+            {
+                SqlCommand = new SqlCommand
+                {
+                    Sql = formattedSql
+                }
+            }
+        };
+
+        var (relation, schema, output) = await GrpcInternal.Exec(GrpcClient, Host, SessionId, plan, Headers, UserContext, ClientType);
+        return new DataFrame(this, relation, schema);
+    }
+    
+    /// <summary>
+    ///     Async Version of `Sql`. Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
+    ///         SqlAsync("SELECT * FROM {dataFrame1}", ("dataFrame1", SparkSession.Range(100)));
+    /// </summary>
+    /// <param name="sql">The SPARK SQL Query to execute.</param>
+    /// <param name="args">Array of tuples containing string name to replace in the SQL and the DataFrame to wrap in createOrReplaceTempView</param>
+    /// <returns>`DataFrame`</returns>
+    public async Task<DataFrame> SqlAsync(string sql, params (string, DataFrame)[] dataFrames)
+    {
+        var dict = new Dictionary<string, object>();
+        foreach (var tuple in dataFrames)
+        {
+            dict[tuple.Item1] = tuple.Item2;
+        }
+
+        return await SqlAsync(sql, dict);
     }
 
     /// <summary>
@@ -344,8 +435,8 @@ public class SparkSession
 
         var fields = new List<StructField>
         {
-            new StructField("_1", SparkDataType.FromString(first.Item1.GetType().Name), true),
-            new StructField("_2", SparkDataType.FromString(first.Item2.GetType().Name), true)
+            new ("_1", SparkDataType.FromString(first.Item1.GetType().Name), true),
+            new ("_2", SparkDataType.FromString(first.Item2.GetType().Name), true)
         };
         var schema = new StructType(fields.ToArray());
 
@@ -459,8 +550,7 @@ public class SparkSession
     public DataFrame CreateDataFrame(IEnumerable<IEnumerable<object>> data, StructType schema)
     {
         var columns = DataToColumns(data);
-        var schemaFields = schema.Fields
-            .Select(field => new Field(field.Name, field.DataType.ToArrowType(), field.Nullable)).ToList();
+        var schemaFields = schema.Fields.Select(field => new Field(field.Name, field.DataType.ToArrowType(), field.Nullable)).ToList();
         var arrowSchema = new Schema(schemaFields, new List<KeyValuePair<string, string>>());
         var stream = new MemoryStream();
         var writer = new ArrowStreamWriter(stream, arrowSchema);
@@ -507,8 +597,11 @@ public class SparkSession
                 case Date32Type:
                     batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Date32(builder => AppendDateTime(column, builder)));
                     break;
+                case Date64Type:
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Date64(builder => AppendDate64(column, builder)));
+                    break;
                 case TimestampType:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Timestamp(builder => AppendTimestamp(column, builder)));
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.Int64(builder => AppendTimestamp(column, builder)));
                     break;
                 
                 case ListType:
@@ -642,10 +735,10 @@ public class SparkSession
         return retList;
     }
     
-    private static IEnumerable<TimestampArray.Builder> AppendTimestamp(dynamic? column, TimestampArray.Builder builder)
+    private static IEnumerable<Date64Array.Builder> AppendDate64(dynamic? column, Date64Array.Builder builder)
     {
         var list = (List<DateTime?>)column;
-        var retList = new List<TimestampArray.Builder>();
+        var retList = new List<Date64Array.Builder>();
         foreach (var i in list)
         {
             if (i.HasValue)
@@ -653,6 +746,29 @@ public class SparkSession
                 retList.Add(builder.Append(i.Value));    
             }
 
+            else
+            {
+                retList.Add(builder.AppendNull());
+            }
+
+        }
+        return retList;
+    }
+    
+    private static IEnumerable<Int64Array.Builder> AppendTimestamp(dynamic? column, Int64Array.Builder builder)
+    {
+        //Timestamp is actually long microseconds since unix epoch - don't use timestamp builder
+        // the arrow schema type also needs to be set to unit=microsoeconds and timezone=utc
+        
+        var list = (List<DateTime?>)column;
+        var retList = new List<Int64Array.Builder>();
+        foreach (var i in list)
+        {
+            if (i.HasValue)
+            {
+                DateTime unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                retList.Add(builder.Append((long)(i.Value - unixEpoch).TotalMicroseconds));    
+            }
             else
             {
                 retList.Add(builder.AppendNull());
@@ -783,5 +899,7 @@ public class SparkSession
             return _catalog;
         }
     }
+    
+    
 
 }

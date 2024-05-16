@@ -30,6 +30,7 @@ public class WindowSpec
 
     public WindowSpec OrderBy(Column col)
     {
+        
         _orderSpec.Add(new Expression.Types.SortOrder
         {
             Child = col.Expression
@@ -42,7 +43,9 @@ public class WindowSpec
     {
         _orderSpec.Add(new Expression.Types.SortOrder
         {
-            Child = new Column(col).Expression
+            Child = new Column(col).Expression, 
+            Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending, 
+            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
         });
 
         return this;
@@ -60,6 +63,7 @@ public class WindowSpec
                 },
                 OrderSpec = { _orderSpec },
                 PartitionSpec = { _partitionSpec }
+                
             }
         };
 

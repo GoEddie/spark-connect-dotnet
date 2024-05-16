@@ -1,21 +1,26 @@
-using System.Collections;
-using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Sql;
 using Spark.Connect.Dotnet.Sql.Types;
+using Xunit.Abstractions;
 using static Spark.Connect.Dotnet.Sql.Functions;
 using static Spark.Connect.Dotnet.Sql.Types.SparkDataType;
-using DateType = Spark.Connect.Dotnet.Sql.Types.DateType;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
+using static Spark.Connect.Dotnet.Sql.Types.StructType;
+using static Spark.Connect.Dotnet.Sql.DataFrame;
 
 namespace Spark.Connect.Dotnet.Tests.FunctionsTests;
 
 public class ManuallyWrittenFunctionsTests : E2ETestBase
 {
-    private static readonly Dotnet.Sql.DataFrame Source = Spark.Sql(
-        "SELECT array(id, id + 1, id + 2) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(id as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr, 'year' as year_string, struct('a', 1) as struct_  FROM range(100)");
+    public ManuallyWrittenFunctionsTests(ITestOutputHelper logger) : base(logger)
+    {
+        Source = Spark.Sql(
+            "SELECT array(id, id + 1, id + 2) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(id as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr, 'year' as year_string, struct('a', 1) as struct_  FROM range(100)");
 
-    private static WindowSpec Window =   Dotnet.Sql.Window.OrderBy("id").PartitionBy("id");
+    }
+
+    private readonly Dotnet.Sql.DataFrame Source;
+    private static WindowSpec TheWindow =   Dotnet.Sql.Window.OrderBy("id").PartitionBy("id");
     private static WindowSpec OtherWindow = new WindowSpec().OrderBy("id").PartitionBy("id");
 
     [Fact]
@@ -544,13 +549,457 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
 
     }
 
-    
-    
-    
-    static IEnumerable<IEnumerable<object>> ToRows(params object[] objects)
-    {   //don't do new on List<>(){} otherwise the child objects get flattened
-        return objects.Cast<IEnumerable<object>>().ToList();
+    [Fact]
+    public void FromJson_Tests()
+    {
+        var data = ToRow(new object[]{1, "{\"a\": 123}"});
+        var schema = StructType(StructField("a", IntegerType()));
+        var df = Spark.CreateDataFrame(ToRows(data), "key", "value");
+        
+        df.Select(FromJson(df["value"], schema).Alias("json")).Show();
+        var rows = df.Select(FromJson(df["value"], schema).Alias("json")).Collect();
+        Assert.Equal(123, rows[0][0]);
+        
+        rows = df.Select(FromJson(df["value"], "a INT").Alias("json")).Collect();
+        Assert.Equal(123, rows[0][0]);
+        
+        rows = df.Select(FromJson(df["value"],  "MAP<STRING,INT>").Alias("json")).Collect();
+        var dict = (rows[0][0] as IDictionary<string, object>);
+        Assert.NotNull(dict);
+        Assert.Equal(123, dict["a"]);
     }
 
-    static IEnumerable<object> ToRow(params object[] items) => items.ToList<object>();
+    [Fact]
+    public void FromUtcTimestamp_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("1997-02-28 10:30:00", "JST")), "ts", "tz");
+        df.Select(FromUtcTimestamp(df["ts"], Lit("PST")).Alias("local_time")).Collect();
+        df.Select(FromUtcTimestamp(df["ts"], Lit("PST")).Alias("local_time")).Show();
+
+        df.Select(FromUtcTimestamp(df["ts"], Col("tz")).Alias("local_time")).Collect();
+        df.Select(FromUtcTimestamp(df["ts"], Col("tz")).Alias("local_time")).Show();
+    }
+
+    [Fact]
+    public void Grouping_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("Alice", 2), ToRow("Bob", 5)), "name", "age");
+        df.Cube("name").Agg(Grouping("name"), Sum("age")).OrderBy("name").Show();
+        df.Cube("name").Agg(Grouping("name"), Sum("age")).OrderBy("name").Collect();
+    }
+
+    [Fact]
+    public void JsonTuple_Test()
+    {
+        var data = ToRows(ToRow("1", "{\"f1\": \"value1\", \"f2\": \"value2\"}"), ToRow("2", "{\"f1\": \"value12\"}"));
+        var df = Spark.CreateDataFrame(data, "key", "jstring");
+
+        df.Select(df["key"], JsonTuple(df["jstring"], "f1", "f2")).Collect();
+        df.Select(df["key"], JsonTuple(df["jstring"], "f1", "f2")).Show();
+    }
+    
+    [Fact]
+    public void Lag_Test()
+    {
+            var df = Spark.CreateDataFrame(ToRows(ToRow("a", 1),
+                ToRow("a", 2),
+                ToRow("a", 3),
+                ToRow("b", 8),
+                ToRow("b", 2)
+                ), "c1", "c2");
+
+                df.Show();
+                
+        var w = Window.PartitionBy("c1").OrderBy("c2");
+
+        df.WithColumn("previos_value", Lag("c2").Over(w)).Show();
+        df.WithColumn("previos_value", Lag("c2", 1, 0).Over(w)).Show();
+        df.WithColumn("previos_value", Lag("c2", 2, -1).Over(w)).Show();
+        
+        df.WithColumn("previos_value", Lag("c2").Over(w)).Collect();
+        df.WithColumn("previos_value", Lag("c2", 1, 0).Over(w)).Collect();
+        df.WithColumn("previos_value", Lag("c2", 2, -1).Over(w)).Collect();
+
+    }
+    
+    [Fact]
+    public void Lead_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("a", 1),
+            ToRow("a", 2),
+            ToRow("a", 3),
+            ToRow("b", 8),
+            ToRow("b", 2)
+        ), "c1", "c2");
+
+        df.Show();
+                
+        var w = Window.PartitionBy("c1").OrderBy("c2");
+
+        df.WithColumn("next_value", Lead("c2").Over(w)).Show();
+        df.WithColumn("next_value", Lead("c2", 1, 0).Over(w)).Show();
+        df.WithColumn("next_value", Lead("c2", 2, -1).Over(w)).Show();
+        
+        df.WithColumn("next_value", Lead("c2").Over(w)).Collect();
+        df.WithColumn("next_value", Lead("c2", 1, 0).Over(w)).Collect();
+        df.WithColumn("next_value", Lead("c2", 2, -1).Over(w)).Collect();
+    }
+    
+    [Fact]
+    public void Last_Test()
+    {
+        var df = Spark.Sql("SELECT  id from range(10)");
+        df.Select(Last("id")).Show();
+        
+        var rows = df.Select(Last("id")).Collect();
+        Assert.Equal(9L, rows[0][0]);
+    }
+    
+    [Fact]
+    public void Levenshtein_Test()
+    {
+        var df = Spark.CreateDataFrame(
+                ToRows(
+                    ToRow("Kitten", "Smitten"), 
+                    ToRow("Kitten", "Sitting")
+        ), "l", "r");
+
+        df.Select(Levenshtein("l", "r").Alias("d")).Show();
+        df.Select(Levenshtein("l", "r").Alias("d")).Collect();
+        
+        df.Select(Levenshtein("l", "r", 123).Alias("d")).Show();
+        df.Select(Levenshtein("l", "r", 123).Alias("d")).Collect();
+
+        df.Select(Levenshtein(df["l"], df["r"]).Alias("d")).Show();
+        df.Select(Levenshtein(df["l"], df["r"]).Alias("d")).Collect();
+        
+        df.Select(Levenshtein(df["l"], df["r"], 123).Alias("d")).Show();
+        df.Select(Levenshtein(df["l"], df["r"], 123).Alias("d")).Collect();
+    }
+    
+    [Fact]
+    public void Like_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("Kitten", "%it%"), 
+                ToRow("Kitten", "%it%")
+            ), "l", "r");
+
+        df.Select(Like("l", "%it%").Alias("d")).Show();
+        df.Select(Like("l", "%it%").Alias("d")).Collect();
+        
+        df.Select(Like(Col("l"), Lit("%it%")).Alias("d")).Show();
+        df.Select(Like(Col("l"), Lit("%it%")).Alias("d")).Collect();
+        
+        df.Select(Like(Col("l"), Col("r")).Alias("d")).Show();
+        df.Select(Like(Col("l"), Col("r")).Alias("d")).Collect();
+        
+        
+        df.Select(Like("l", "%it%", "\\").Alias("d")).Show();
+        df.Select(Like("l", "%it%", "\\").Alias("d")).Collect();
+        
+        df.Select(Like(Col("l"), Lit("%it%"), Lit("\\")).Alias("d")).Show();
+        df.Select(Like(Col("l"), Lit("%it%"), Lit("\\")).Alias("d")).Collect();
+        
+        df.Select(Like(Col("l"), Col("r")).Alias("d")).Show();
+        df.Select(Like(Col("l"), Col("r")).Alias("d")).Collect();
+
+    }
+
+    [Fact]
+    public void Locate_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("Kitten"),
+                ToRow("Kitten")
+            ), "l");
+
+        df.Select(Locate("ten", "l").Alias("d")).Show();
+        var locate = Locate("ten", "l", 1);
+        df.Select(locate.Alias("d")).Show();
+        df.Select(Locate("ten", "l", 100).Alias("d")).Show();
+
+    }
+    
+    [Fact]
+    public void LPad_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("Kitten"),
+                ToRow("Kitten")
+            ), "l");
+
+        df.Select(LPad("l", 100, "%|%").Alias("d")).Show();
+        df.Select(LPad(df["l"], 100, "%|%").Alias("d")).Show();
+        
+        df.Select(LPad("l", 100, "%|%").Alias("d")).Collect();
+        df.Select(LPad(df["l"], 100, "%|%").Alias("d")).Collect();
+    }
+
+    
+    [Fact]
+    public void MakeDtInterval_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(1, 12, 30, 01.001001),
+                ToRow(1, 12, 30, 01.001001)
+            ), "day", "hour", "min", "sec");
+        df.Select(MakeDtInterval(
+            df["day"], df["hour"], df["min"], df["sec"]).Alias("r")).Show();
+       
+    }
+    
+    [Fact(Skip = "Need a SparkDataType for interval")]
+    public void MakeDtInterval_Collect_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(1, 12, 30, 01.001001),
+                ToRow(1, 12, 30, 01.001001)
+            ), "day", "hour", "min", "sec");
+        df.Select(MakeDtInterval(
+            df["day"], df["hour"], df["min"], df["sec"]).Alias("r")).Collect();
+       
+    }
+
+    [Fact]
+    public void MakeTimestamp_Test()
+    {
+        Spark.Conf.Set("spark.sql.session.timeZone", "America/Los_Angeles");
+        var df = Spark.CreateDataFrame(ToRows(ToRow(2014, 12, 28, 6, 30, 45.887, "CET")), "year", "month", "day", "hour", "min", "sec", "timezone");
+
+        df.Select(MakeTimestamp(
+                 df["year"], df["month"], df["day"], df["hour"], df["min"], df["sec"], df["timezone"]).Alias("r")
+        ).Show();
+        
+        df.Select(MakeTimestamp(
+                df["year"], df["month"], df["day"], df["hour"], df["min"], df["sec"], df["timezone"]).Alias("r")
+        ).Collect();
+   
+    }
+    
+    [Fact]
+    public void MakeTimestampLtz_Test()
+    {
+        Spark.Conf.Set("spark.sql.session.timeZone", "America/Los_Angeles");
+        var df = Spark.CreateDataFrame(ToRows(ToRow(2014, 12, 28, 6, 30, 45.887, "CET")), "year", "month", "day", "hour", "min", "sec", "timezone");
+
+        df.Select(MakeTimestampLtz(
+                df["year"], df["month"], df["day"], df["hour"], df["min"], df["sec"], df["timezone"]).Alias("r")
+        ).Show();
+        
+        df.Select(MakeTimestampLtz(
+                df["year"], df["month"], df["day"], df["hour"], df["min"], df["sec"], df["timezone"]).Alias("r")
+        ).Collect();
+    }
+    
+    [Fact]
+    public void Mask_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("AbCD123-@$#", 1), ToRow("abcd-EFGH-8765-4321", 1)), "data");
+        var data = df["data"];
+        df.Select(Mask(data).Alias("r")).Show();
+
+        df.Select(Mask(data, Lit("Y")).Alias("r")).Show();
+
+        df.Select(Mask(data, Lit("Y"), Lit("y")).Alias("r")).Show();
+
+        df.Select(Mask(data, Lit("Y"), Lit("y"), Lit("d")).Alias("r")).Show();
+
+        df.Select(Mask(data, Lit("Y"), Lit("y"), Lit("d"), Lit("*")).Alias("r")).Show();
+
+        df.Select(Mask("data", null, "g", "D")).Show();
+    }
+
+    [Fact]
+    public void MonthsBetween_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("1997-02-28 10:30:00", "1996-10-30")), "date1", "date2");
+        df.Select(MonthsBetween(df["date1"], Col("date2")).Alias("months")).Show();
+        df.Select(MonthsBetween("date1", "date2").Alias("months")).Show();
+        df.Select(MonthsBetween(df["date1"], Col("date2"), false).Alias("months")).Show();
+        df.Select(MonthsBetween("date1", "date2", false).Alias("months")).Show();
+        
+        df.Select(MonthsBetween(df["date1"], Col("date2")).Alias("months")).Collect();
+        df.Select(MonthsBetween("date1", "date2").Alias("months")).Collect();
+        df.Select(MonthsBetween(df["date1"], Col("date2"), false).Alias("months")).Collect();
+        df.Select(MonthsBetween("date1", "date2", false).Alias("months")).Collect();
+    }
+    
+    [Fact]
+    public void NthValue_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)>(){  ("a", 1),
+                                                                                    ("a", 2),
+                                                                                    ("a", 3),
+                                                                                    ("b", 8),
+                                                                                    ("b", 2)}, "c1", "c2");
+
+        df.Show();
+
+        var w = Window.PartitionBy("c1").OrderBy("c2");
+        df.WithColumn("nth_value", NthValue("c2", 1).Over(w)).Show();
+        df.WithColumn("nth_value", NthValue("c2", 1).Over(w)).Collect();
+        
+        df.WithColumn("nth_value", NthValue("c2", 2).Over(w)).Show();
+        df.WithColumn("nth_value", NthValue("c2", 2).Over(w)).Collect();
+    }
+    
+    [Fact]
+    public void Ntile_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)>(){  ("a", 1),
+            ("a", 2),
+            ("a", 3),
+            ("b", 8),
+            ("b", 2)}, "c1", "c2");
+
+        df.Show();
+
+        var w = Window.PartitionBy("c1").OrderBy("c2");
+        df.WithColumn("ntile", Ntile( 2).Over(w)).Show();
+        df.WithColumn("ntile", Ntile( 2).Over(w)).Collect();
+        
+        df.WithColumn("ntile", Ntile( 2).Over(w)).Show();
+        df.WithColumn("ntile", Ntile( 2).Over(w)).Collect();
+    }
+    
+    [Fact]
+    public void Overlay_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)>(){ ("SPARK_SQL", "CORE")}, "x", "y");
+
+        df.Select(Overlay("x", "y", 7).Alias("overlayed")).Show();
+        df.Select(Overlay("x", "y", 7).Alias("overlayed")).Collect();
+
+        df.Select(Overlay("x", "y", 7, 0).Alias("overlayed")).Show();
+        df.Select(Overlay("x", "y", 7, 0).Alias("overlayed")).Collect();
+        
+        df.Select(Overlay(Col("x"), df["y"], 7, 0).Alias("overlayed")).Show();
+        df.Select(Overlay(Col("x"), df["y"],7, 0).Alias("overlayed")).Collect();
+        
+        df.Select(Overlay(Col("x"), df["y"], 7).Alias("overlayed")).Show();
+        df.Select(Overlay(Col("x"), df["y"],7).Alias("overlayed")).Collect();
+        
+        df.Select(Overlay("x", "y", 7, 2).Alias("overlayed")).Show();
+        df.Select(Overlay("x", "y", 7, 2).Alias("overlayed")).Collect();
+    }
+    
+    [Fact]
+    public void Percentile_Test()
+    {
+        var key = (Col("id") % 3).Alias("key");
+        var value = (Randn(42) + key * 10).Alias("value");
+        
+        var df = Spark.Range(0, 1000, 1, 1).Select(key, value);
+
+        df.Select(
+            Percentile(Col("value"), Lit(new float[] { 0.25F, 0.5F, 0.75F }), Lit(1)).Alias("quantiles")
+        ).Show();
+        
+        df.GroupBy("key").Agg(
+            Percentile("value", 0.5F, 1).Alias("median")
+        ).Show();
+        
+        df.Select(
+            Percentile(Col("value"), Lit(new float[] { 0.25F, 0.5F, 0.75F }), Lit(1)).Alias("quantiles")
+        ).Collect();
+        
+        df.GroupBy("key").Agg(
+            Percentile("value", 0.5F, 1).Alias("median")
+        ).Collect();
+        
+        df.Select(
+            Percentile(Col("value"), Lit(new float[] { 0.25F, 0.5F, 0.75F }), Lit(1)).Alias("quantiles")
+        ).PrintSchema();
+        
+        df.GroupBy("key").Agg(
+            Percentile("value", 0.5F, 1).Alias("median")
+        ).PrintSchema();
+    }
+    
+    [Fact]
+    public void PercentileApprox_Test()
+    {
+        var key = (Col("id") % 3).Alias("key");
+        var value = (Randn(42) + key * 10).Alias("value");
+        
+        var df = Spark.Range(0, 1000, 1, 1).Select(key, value);
+
+        df.Select(
+            PercentileApprox(Col("value"), Lit(new float[] { 0.25F, 0.5F, 0.75F }), Lit(100)).Alias("quantiles")
+        ).Show();
+        
+        df.GroupBy("key").Agg(
+            PercentileApprox("value", 0.5F, 1000000).Alias("median")
+        ).Show();
+       
+        df.Select(
+            PercentileApprox(Col("value"), Lit(new float[] { 0.25F, 0.5F, 0.75F }), Lit(100)).Alias("quantiles")
+        ).Collect();
+        
+        df.GroupBy("key").Agg(
+            PercentileApprox("value", 0.5F, 1000000).Alias("median")
+        ).Collect();
+        
+        df.Select(
+            PercentileApprox(Col("value"), Lit(new float[] { 0.25F, 0.5F, 0.75F }), Lit(100)).Alias("quantiles")
+        ).PrintSchema();
+        
+        df.GroupBy("key").Agg(
+            PercentileApprox("value", 0.5F, 1000000).Alias("median")
+        ).PrintSchema();
+
+    }
+
+    [Fact]
+    public void ParseUrl_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("http://spark.apache.org/path?query=1", "QUERY", "query")), "a", "b", "c");
+        df.Show();
+        df.Select(ParseUrl("a", "b", "c").Alias("r")).Show();
+        df.Select(ParseUrl("a", "b").Alias("r")).Show();
+        
+        var first = df.Select(ParseUrl("a", "b", "c").Alias("r")).Collect();
+        var second = df.Select(ParseUrl("a", "b").Alias("r")).Collect();
+        
+        Assert.Equal("1", first[0][0]);
+        Assert.Equal("query=1", second[0][0]);
+    }
+    
+    [Fact]
+    public void Position_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("bar", "foobarbar", 5)), "a", "b", "c");
+        df.Show();
+        df.Select(Position("a", "b", "c").Alias("r")).Show();
+        df.Select(Position(Col("a"), df["b"]).Alias("r")).Show();
+        Assert.Equal(7, df.Select(Position("a", "b", "c").Alias("r")).Collect()[0][0]);
+        Assert.Equal(4, df.Select(Position(Col("a"), df["b"]).Alias("r")).Collect()[0][0]);
+    }    
+    
+    [Fact]
+    public void Printf_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("aa%d%s", 123, "cc")), "a", "b", "c");
+        df.Show();
+        df.Select(PrintF("a", "b", "c").Alias("r")).Show();
+        df.Select(PrintF(Col("a"), df["b"], df["c"]).Alias("r")).Show();
+        
+        Assert.Equal("aa123cc", df.Select(PrintF("a", "b", "c").Alias("r")).Collect()[0][0]);
+    }
+    
+    [Fact]
+    public void RaiseError_Test()
+    {
+        var df = Spark.Range(1);
+        var exception = Assert.Throws<InternalSparkException>(() => df.Select(RaiseError("My error message")).Show());
+        Assert.Contains("My error message", exception.Message);
+    }
+
+    
 }

@@ -141,12 +141,12 @@ public class DataFrame
         };
 
         var (_, _, output) = await GrpcInternal.Exec(session.GrpcClient, session.Host, session.SessionId, showStringPlan, session.Headers, session.UserContext, session.ClientType);
-        Console.WriteLine(output);
+        session.Console.WriteLine(output);
     }
 
     public void PrintSchema(int? level = null)
     {
-        Console.WriteLine(GrpcInternal.TreeString(_session, Relation));
+        _session.Console.WriteLine(GrpcInternal.TreeString(_session, Relation));
     }
 
     /// <summary>
@@ -879,6 +879,11 @@ public class DataFrame
     {
         return new GroupedData(_session, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Groupby);
     }
+    
+    public GroupedData GroupBy(params string[] cols)
+    {
+        return new GroupedData(_session, Relation, cols.Select(p => Col(p).Expression).ToArray(), Aggregate.Types.GroupType.Groupby);
+    }
 
     public DataFrame Agg(params Column[] exprs)
     {
@@ -922,7 +927,8 @@ public class DataFrame
             {
                 Input = Relation,
                 Order = { sortColumns },
-                IsGlobal = true
+                IsGlobal = true,
+                
             }
         };
 
@@ -946,7 +952,7 @@ public class DataFrame
                 {
                     Child = column.Expression,
                     Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
-                    NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
+                    NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
                 });
             }
 
@@ -1856,6 +1862,13 @@ public class DataFrame
     public DataFrameNaFunctions Na => new DataFrameNaFunctions(this);
     
     public SparkSession SparkSession => _session;
+    
+    public static IEnumerable<IEnumerable<object>> ToRows(params object[] objects)
+    {   //don't do new on List<>(){} otherwise the child objects get flattened
+        return objects.Cast<IEnumerable<object>>().ToList();
+    }
+
+    public static IEnumerable<object> ToRow(params object[] items) => items.ToList<object>();
 }
 
 public enum JoinType

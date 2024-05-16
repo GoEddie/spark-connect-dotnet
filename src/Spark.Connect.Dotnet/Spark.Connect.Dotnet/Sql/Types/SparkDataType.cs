@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using Apache.Arrow;
 using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Grpc;
 
@@ -23,9 +22,9 @@ public abstract class SparkDataType
         return TypeName;
     }
 
-    public virtual string JsonValue()
+    public virtual string JsonTypeName()
     {
-        return TypeName;
+        return SimpleString();
     }
 
     public static ByteType ByteType()
@@ -93,10 +92,14 @@ public abstract class SparkDataType
         return new DateType();
     }
     
-    
     public static TimestampType TimestampType()
     {
         return new TimestampType();
+    }
+    
+    public static TimestampNtzType TimestampNtzType()
+    {
+        return new TimestampNtzType();
     }
 
     public static StructType StructType(params StructField[] fields)
@@ -104,7 +107,7 @@ public abstract class SparkDataType
         return new StructType(fields);
     }
 
-    public static ArrayType ArrayType(SparkDataType elementType, bool nullableValues)
+    public static ArrayType ArrayType(SparkDataType elementType, bool nullableValues=true)
     {
         return new ArrayType(elementType, nullableValues);
     }
@@ -275,360 +278,13 @@ public abstract class SparkDataType
         {
             return new StructType(type.Struct.Fields);
         }
-        
+
+        if (type.Byte != null)
+        {
+            return new ByteType();
+        }
         
         throw new NotImplementedException();
     }
+    
 }
-
-public class ByteType : SparkDataType
-{
-    public ByteType() : base("Byte")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Byte = new DataType.Types.Byte()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return new Int8Type();
-    }
-}
-
-public class FloatType : SparkDataType
-{
-    public FloatType() : base("Float")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Float = new DataType.Types.Float()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return new Apache.Arrow.Types.FloatType();
-    }
-}
-
-public class BinaryType : SparkDataType
-{
-    public BinaryType() : base("Binary")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Binary = new DataType.Types.Binary()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return new Apache.Arrow.Types.BinaryType();
-    }
-}
-
-public class BooleanType : SparkDataType
-{
-    public BooleanType() : base("Boolean")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Boolean = new DataType.Types.Boolean()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return new Apache.Arrow.Types.BooleanType();
-    }
-}
-
-public class DoubleType : SparkDataType
-{
-    public DoubleType() : base("Double")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Double = new DataType.Types.Double()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return new Apache.Arrow.Types.DoubleType();
-    }
-}
-
-public class ShortType : SparkDataType
-{
-    public ShortType() : base("Short")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Short = new DataType.Types.Short()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return new Int16Type();
-    }
-}
-
-public class StringType : SparkDataType
-{
-    public StringType() : base("String")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            String = new DataType.Types.String()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return new Apache.Arrow.Types.StringType();
-    }
-}
-
-public class IntegerType : SparkDataType
-{
-    public IntegerType() : base("Int")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Integer = new DataType.Types.Integer()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return new Int32Type();
-    }
-}
-
-public class BigIntType : SparkDataType
-{
-    public BigIntType() : base("BigInt")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Long = new DataType.Types.Long()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return new Int64Type();
-    }
-}
-
-public class MapType : SparkDataType
-{
-    private readonly SparkDataType _keyType;
-    private readonly SparkDataType _valueType;
-    private readonly bool _isNullableValue;
-
-    public MapType(SparkDataType keyType, SparkDataType valueType, bool isNullableValue) : base("Map")
-    {
-        _keyType = keyType;
-        _valueType = valueType;
-        _isNullableValue = isNullableValue;
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Map = new DataType.Types.Map
-            {
-                KeyType = _keyType.ToDataType(),
-                ValueType = _valueType.ToDataType()
-            }
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        var keyField = new Field("key", _keyType.ToArrowType(), false);
-        var valueField = new Field("value", _valueType.ToArrowType(), _isNullableValue);
-        return new Apache.Arrow.Types.MapType(keyField, valueField);
-    }
-}
-
-public class ArrayType : SparkDataType
-{
-    private readonly SparkDataType _elementType;
-    private readonly bool _nullableValues;
-
-    public ArrayType(SparkDataType elementType, bool nullableValues) : base($"Array<{elementType.TypeName}>")
-    {
-        _elementType = elementType;
-        _nullableValues = nullableValues;
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Array = new DataType.Types.Array
-            {
-                ElementType = _elementType.ToDataType()
-            }
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        var elementType = _elementType.ToArrowType();
-        var childField = new Field("element", elementType, _nullableValues);
-        return new ListType(childField);
-    }
-
-    public override string SimpleString()
-    {
-        return $"array<{_elementType.SimpleString()}>";
-    }
-}
-
-
-public class VoidType : SparkDataType
-{
-    public VoidType() : base($"Void")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Null = new DataType.Types.NULL()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return NullType.Default;
-    }
-
-    public override string SimpleString()
-    {
-        return $"void";
-    }
-}
-
-public class DateType : SparkDataType
-{
-    public DateType() : base($"Date")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Date = new DataType.Types.Date()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return Apache.Arrow.Types.Date32Type.Default;
-    }
-
-    public override string SimpleString()
-    {
-        return $"date";
-    }
-}
-
-
-public class TimestampType : SparkDataType
-{
-    public TimestampType() : base($"Timestamp")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            Timestamp = new DataType.Types.Timestamp(),
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        var ts = Apache.Arrow.Types.TimestampType.Default;
-        return ts;
-    }
-
-    public override string SimpleString()
-    {
-        return $"timestamp";
-    }
-}
-
-public class TimestampNtzType : SparkDataType
-{
-    public TimestampNtzType() : base($"Timestamp")
-    {
-    }
-
-    public override DataType ToDataType()
-    {
-        return new DataType
-        {
-            TimestampNtz = new DataType.Types.TimestampNTZ()
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {
-        return new Apache.Arrow.Types.Time64Type(); //Apache.Arrow.Types.TimestampType(timezone: "+00:00");
-    }
-
-    public override string SimpleString()
-    {
-        return $"timestampntz";
-    }
-}
-
