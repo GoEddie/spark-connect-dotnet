@@ -16,7 +16,6 @@ public class TestOutputConsole : LocalConsole
 
     public override void WriteLine(string what)
     {
-        Console.WriteLine($"TestOutputConsole: {_helper.GetHashCode()}::{what}");
         _helper.WriteLine(what);
     }
 }

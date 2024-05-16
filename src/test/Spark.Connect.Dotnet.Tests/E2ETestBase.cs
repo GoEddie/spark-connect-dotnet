@@ -19,9 +19,6 @@ public class E2ETestBase
         Spark = SparkSession.Builder.Remote(RemotePath).GetOrCreate();
         Spark.Console = new TestOutputConsole(logger);
         var tempFolder = Path.GetTempPath();
-
         OutputPath = Path.Join(tempFolder, "spark-connect-tests");
-        
-        Console.WriteLine($"***** INIT TestOutputConsole: {logger.GetHashCode()} for class {GetType()}");
     }
 }
