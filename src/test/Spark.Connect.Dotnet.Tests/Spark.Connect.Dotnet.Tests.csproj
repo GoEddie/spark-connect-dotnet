@@ -26,4 +26,7 @@
         <ProjectReference Include="..\..\Spark.Connect.Dotnet\Spark.Connect.Dotnet\Spark.Connect.Dotnet.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
 </Project>
