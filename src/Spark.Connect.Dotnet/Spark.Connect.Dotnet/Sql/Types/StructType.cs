@@ -127,6 +127,9 @@ public class StructField
 {
     public StructField()
     {
+        Name = String.Empty;
+        DataType = new StringType();
+        Metadata = new Dictionary<string, object>();
     }
     
     public StructField(string name, SparkDataType type, bool nullable, IDictionary<string, object>? metadata = null)
@@ -134,7 +137,7 @@ public class StructField
         Name = name;
         DataType = type;
         Nullable = nullable;
-        Metadata = metadata;
+        Metadata = metadata ?? new Dictionary<string, object>();
     }
 
     public StructField(string name, DataType type, bool nullable, IDictionary<string, object>? metadata = null)
@@ -142,7 +145,7 @@ public class StructField
         Name = name;
         Nullable = nullable;
         DataType = FromConnectDataType(type);
-        Metadata = metadata;
+        Metadata = metadata ?? new Dictionary<string, object>();
     }
 
     public StructField(string name, IArrowType type, bool nullable, IDictionary<string, object>? metadata = null)
@@ -150,7 +153,7 @@ public class StructField
         Name = name;
         Nullable = nullable;
         DataType = FromArrowType(type);
-        Metadata = metadata;
+        Metadata = metadata ?? new Dictionary<string, object>();
     }
 
     public string Name { get; set; }
@@ -406,7 +409,7 @@ public static class DataTypeJsonSerializer
             return $@"""{value}""";
         }
 
-        return value.ToString();
+        return value == null ? "None" : value.ToString();
     }
     private static string MetadataToString(StructField field)
     {

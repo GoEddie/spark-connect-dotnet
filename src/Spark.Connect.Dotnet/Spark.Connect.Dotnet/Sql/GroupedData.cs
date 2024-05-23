@@ -8,7 +8,7 @@ public class GroupedData
     private readonly Aggregate.Types.GroupType _groupType;
     public readonly SparkSession _session;
     protected internal Relation Relation;
-    private Aggregate.Types.Pivot _pivot;
+    private Aggregate.Types.Pivot? _pivot = null;
 
     internal GroupedData(SparkSession session, Relation relation, IEnumerable<Expression> groupingExpressions, Aggregate.Types.GroupType groupType)
     {

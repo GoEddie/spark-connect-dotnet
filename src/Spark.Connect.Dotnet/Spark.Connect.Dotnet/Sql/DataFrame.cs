@@ -718,7 +718,8 @@ public class DataFrame
             {
                 WithColumnsRenamed = new WithColumnsRenamed()
                 {
-                    Input = Relation, RenameColumnsMap = { { existing, newName } }
+                    Input = Relation,
+                    RenameColumnsMap = { { existing, newName } }
                 },
                 Common = new RelationCommon()
                 {
@@ -1025,7 +1026,7 @@ public class DataFrame
         return new DataFrameWriterV2(table, _session, this);
     }
 
-    public string Explain(bool extended = false, string mode = null, bool outputToConsole = true)
+    public string Explain(bool extended = false, string? mode = null, bool outputToConsole = true)
     {
         var plan = new Plan
         {

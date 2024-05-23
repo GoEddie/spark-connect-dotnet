@@ -37,7 +37,7 @@ public class SparkCatalog
         GrpcInternal.Exec(_sparkSession, plan);
     }
     
-    public DataFrame CreateExternalTable(string tableName, string path, string source = "", StructType? schema = null, IEnumerable<MapField<string, string>> options = null)
+    public DataFrame CreateExternalTable(string tableName, string path, string source = "", StructType? schema = null, IEnumerable<MapField<string, string>>? options = null)
     {
         var plan = Plan();
         plan.Root.Catalog.CreateExternalTable = new CreateExternalTable()
