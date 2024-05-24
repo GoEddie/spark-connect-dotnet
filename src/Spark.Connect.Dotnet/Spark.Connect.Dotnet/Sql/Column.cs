@@ -5,7 +5,7 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class Column
 {
-    private readonly string _name;
+    private readonly string _name = string.Empty;
     public readonly Expression Expression;
 
     public Column(Expression expression)

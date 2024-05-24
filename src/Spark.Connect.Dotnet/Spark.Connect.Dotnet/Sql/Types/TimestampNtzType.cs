@@ -18,7 +18,7 @@ public class TimestampNtzType : SparkDataType
 
     public override IArrowType ToArrowType()
     {
-        TimeZoneInfo tz = null;
+        TimeZoneInfo? tz = null;
         var ts = new Apache.Arrow.Types.TimestampType(TimeUnit.Microsecond, tz);
         return ts;
     }

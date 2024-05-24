@@ -156,7 +156,7 @@ public class DataStreamWriter
         return this;
     }
 
-    public DataStreamWriter Trigger(string processingTime = null, bool? once = null, string continuous = null,
+    public DataStreamWriter Trigger(string? processingTime = null, bool? once = null, string? continuous = null,
         bool? availableNow = null)
     {
         _processingTime = processingTime;

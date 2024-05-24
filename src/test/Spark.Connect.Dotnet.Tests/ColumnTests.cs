@@ -99,7 +99,31 @@ public class ColumnTests : E2ETestBase
 
             Assert.Throws<IndexOutOfRangeException>(() => row.Get("FakeColumn"));
         }
+    }
+    
+    [Fact]
+    public void CollectTests_IntArray()
+    {
+        var df = Spark.Sql("SELECT array(id, 1, 2, 3) FROM range(100)");
         
+        foreach (var row in df.Collect())
+        {
+            Console.WriteLine(row);
+            Assert.NotNull(row[0]);
+        }
+    }
+    
+    [Fact]
+    public void CollectTests_StringArray()
+    {
+        var df = Spark.Sql("SELECT array(\"ABC\", \"DEF\") FROM range(100)");
         
+        foreach (var row in df.Collect())
+        {
+            Console.WriteLine(row);
+            Assert.NotNull(row[0]);
+            Assert.Equal("ABC", (row[0] as string[])[0]);
+            Assert.Equal("DEF", (row[0] as string[])[1]);
+        }
     }
 }

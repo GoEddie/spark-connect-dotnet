@@ -196,6 +196,29 @@ public partial class Functions : FunctionsWrapper
         });
     }
 
+    public static Column Lit(IDictionary<string, object> dict)
+    {
+        var values = new List<Expression>();
+        foreach (var value in dict)
+        {
+            values.Add(Lit(value.Key).Expression);
+            values.Add(Lit(value.Value).Expression);
+        }
+        
+        
+        var functionCall = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "map",
+                IsDistinct = false,
+                IsUserDefinedFunction = false, Arguments = { values }
+            }
+        };
+        
+        return new Column(functionCall);
+    }
+    
     public static Column Lit(object o)
     {
         if (o is null)
@@ -1372,6 +1395,12 @@ public partial class Functions : FunctionsWrapper
     
     public static Column LPad(Column col, int len, string pad) => new (FunctionWrappedCall("lpad", false, col, Lit(len), Lit(pad)));
 
+    
+    public static Column RPad(string col, int len, string pad) => RPad(Col(col), len, pad);
+    
+    public static Column RPad(Column col, int len, string pad) => new (FunctionWrappedCall("rpad", false, col, Lit(len), Lit(pad)));
+
+    
     public static Column MakeDtInterval() => new(FunctionWrappedCall("make_dt_interval", false));
 
     public static Column MakeDtInterval(string day) => MakeDtInterval(Col(day));
@@ -1427,7 +1456,7 @@ public partial class Functions : FunctionsWrapper
     /// <param name="digitChar"></param>
     /// <param name="otherChar"></param>
     /// <returns></returns>
-    public static Column Mask(string col, string upperChar=null, string lowerChar=null, string digitChar=null, string otherChar=null)
+    public static Column Mask(string col, string? upperChar=null, string? lowerChar=null, string? digitChar=null, string? otherChar=null)
     {
         if (string.IsNullOrEmpty(upperChar))
         {
@@ -1456,7 +1485,7 @@ public partial class Functions : FunctionsWrapper
     /// <param name="digitChar"></param>
     /// <param name="otherChar"></param>
     /// <returns></returns>
-    public static Column Mask(Column col, Column upperChar=null, Column lowerChar=null, Column digitChar=null, Column otherChar=null)
+    public static Column Mask(Column col, Column? upperChar=null, Column? lowerChar=null, Column? digitChar=null, Column? otherChar=null)
     {
         if (Object.Equals(null, upperChar))
         {
@@ -1602,16 +1631,88 @@ public partial class Functions : FunctionsWrapper
     
     public static Column RaiseError(string message) => new Column(FunctionWrappedCall("raise_error", false, Lit(message)));
     public static Column RaiseError(Column message) => new Column(FunctionWrappedCall("raise_error", false, message));
-    
-    // substrColumn or str
-    //     A column of string, substring.
-    //
-    //     strColumn or str
-    //     A column of string.
-    //
-    // startColumn or str, optional
-    //     A column of string, start position.
 
+    public static Column RegexpExtract(string col, string pattern, int idx) => RegexpExtract(Col(col), pattern, idx);
+    
+    public static Column RegexpExtract(Column col, string pattern, int idx) => RegexpExtract(col, Lit(pattern), Lit(idx));
+
+    public static Column RegexpExtract(Column col, Column pattern, Column idx)
+    {
+        return new Column(FunctionWrappedCall("regexp_extract", false, col, pattern, idx));
+    }
+    
+    public static Column RegexpExtractAll(string col, string pattern, int idx) => RegexpExtractAll(Col(col), pattern, idx);
+    
+    public static Column RegexpExtractAll(Column col, string pattern, int idx) => RegexpExtractAll(col, Lit(pattern), Lit(idx));
+
+    public static Column RegexpExtractAll(Column col, Column pattern, Column idx)
+    {
+        return new Column(FunctionWrappedCall("regexp_extract_all", false, col, pattern, idx));
+    }
+    
+    public static Column RegexpExtractInstr(string col, string pattern, int idx) => RegexpExtractInstr(Col(col), pattern, idx);
+    
+    public static Column RegexpExtractInstr(Column col, string pattern, int idx) => RegexpExtractInstr(col, Lit(pattern), Lit(idx));
+
+    public static Column RegexpExtractInstr(Column col, Column pattern, Column idx)
+    {
+        return new Column(FunctionWrappedCall("regexp_instr", false, col, pattern, idx));
+    }
+
+    public static Column RegexpReplace(string col, string pattern, string replacement) => RegexpReplace(Col(col), Lit(pattern), Lit(replacement));
+    public static Column RegexpReplace(Column col, string pattern, string replacement) => RegexpReplace(col, Lit(pattern), Lit(replacement));
+    public static Column RegexpReplace(Column col, Column pattern, Column replacement)
+    {
+        return new Column(FunctionWrappedCall("regexp_replace", false, col, pattern, replacement));
+    }
+    public static Column Replace(Column src, string search, string replace) => Replace(src, Lit(search), Lit(replace));
+    public static Column Replace(string src, string search, string replace) => Replace(Col(src), search, replace);
+    public static Column Replace(Column src, Column search, Column replace)
+    {
+        return new Column(FunctionWrappedCall("replace", false, src, search, replace));
+    }
+
+    public static Column SchemaOfCsv(string schema, IDictionary<string, object>? dict = null) => SchemaOfCsv(Lit(schema), dict);
+    public static Column SchemaOfCsv(Column schema, IDictionary<string, object>? dict = null)
+    {
+        if (dict != null)
+        {
+            return new Column(FunctionWrappedCall("schema_of_csv", false, schema, Lit(dict)));
+        }
+        
+        return new Column(FunctionWrappedCall("schema_of_csv", false, schema));
+    }
+    
+    public static Column SchemaOfJson(string json, IDictionary<string, object>? dict = null) => SchemaOfJson(Lit(json), dict);
+    
+    public static Column SchemaOfJson(Column json, IDictionary<string, object>? dict = null)
+    {
+        if (dict != null)
+        {
+            return new Column(FunctionWrappedCall("schema_of_json", false, json, Lit(dict)));
+        }
+        
+        return new Column(FunctionWrappedCall("schema_of_json", false, json));
+    }
+
+    public static Column Sentences(string col, string? language = null, string? country = null) => Sentences(Col(col), String.IsNullOrEmpty(language) ? null : Lit(language), String.IsNullOrEmpty(country) ? null : Lit(country));
+    public static Column Sentences(Column col, Column? language = null, Column? country = null)
+    {
+        if (Object.Equals(null, language))
+        {
+            language = Lit("");
+        }
+        
+        if (Object.Equals(null, country))
+        {
+            country = Lit("");
+        }
+    
+        return new Column(FunctionWrappedCall("sentences", false, col, language, country));
+
+        
+    }
+    
     /// <Summary>
     ///     Round
     ///     Round the given value to `scale` default scale = 0

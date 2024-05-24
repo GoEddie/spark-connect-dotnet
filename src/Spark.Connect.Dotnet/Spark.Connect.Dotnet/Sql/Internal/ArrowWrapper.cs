@@ -2,7 +2,6 @@ using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Sql.Types;
-using Array = Apache.Arrow.Array;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using TimestampType = Apache.Arrow.Types.TimestampType;
 
@@ -150,7 +149,6 @@ public class ArrowVisitor :
     IArrowArrayVisitor<ListArray>, 
     IArrowArrayVisitor<MapArray>,
     IArrowArrayVisitor<StructArray>
-
 {
     public readonly List<object[]> Rows;
     private readonly int _columnIndex;
@@ -270,8 +268,6 @@ public class ArrowVisitor :
             Console.WriteLine("what to do here?");
         }
         
-        
-        
         var rowNumber = 0;
         for (var i = 0; i < array.Length; i++)
         {
@@ -288,7 +284,7 @@ public class ArrowVisitor :
         rowNumber = 0;
         foreach (var row in rows)
         {
-            Rows[_readCount + rowNumber] = rows[rowNumber++].ToArray();
+            Rows[_readCount + rowNumber][_columnIndex] = rows[rowNumber++].ToArray();
         }
     }
 
@@ -371,10 +367,39 @@ public class ArrowVisitor :
     public void Visit(ListArray array)
     {
         var rowNumber = 0;
-        // foreach (var item in array)
-        // {
-        //     Rows[_readCount + rowNumber++][_columnIndex] = item;
-        // }
+        for (var i = 0; i <array.Length; i++)
+        {
+            var slice = array.GetSlicedValues(i);
+            var data = GetArrayData(slice);
+            Rows[_readCount + rowNumber++][_columnIndex] = data;
+        }
+    }
+    
+    private static dynamic GetArrayData(IArrowArray array)
+    {
+        return array switch
+        {
+            Int32Array int32array =>int32array.Values.ToArray(),
+            Int16Array int16array => int16array.Values.ToArray(),
+            StringArray stringArray => stringArray.Cast<string>().Select(p => p).ToArray(),
+            FloatArray floatArray => floatArray.Values.ToArray(),
+            Int64Array int64Array => int64Array.Values.ToArray(),
+            DoubleArray doubleArray => doubleArray.Values.ToArray(),
+            Time32Array time32Array => time32Array.Values.ToArray(),
+            Time64Array time64Array => time64Array.Values.ToArray(),
+            BooleanArray booleanArray => booleanArray.Values.ToArray(),
+            Date32Array date32Array => date32Array.Values.ToArray(),
+            Date64Array date64Array => date64Array.Values.ToArray(),
+            Int8Array int8Array => int8Array.Values.ToArray(),
+            UInt16Array uint6Array => uint6Array.Values.ToArray(),
+            UInt8Array uInt8Array => uInt8Array.Values.ToArray(),
+            UInt64Array uInt64Array => uInt64Array.Values.ToArray(),
+            
+            ListArray listArray => GetArrayData((listArray).Values),
+            StructArray structArray => structArray.Fields.Select(p => GetArrayData(p)).ToList(),
+            
+            _ => throw new NotImplementedException(),
+        };
     }
 
     public void Visit(BooleanArray array)
@@ -389,6 +414,23 @@ public class ArrowVisitor :
     public void Visit(IArrowArray array)
     {
         Console.WriteLine("array");
+    }
+}
+
+public class ListArrayVisitor : IArrowArrayVisitor, IArrowArrayVisitor<StringArray>
+{
+    public List<object> Data = new List<object>();
+    public void Visit(StringArray array)
+    {
+        foreach (var item in array.Cast<string>())
+        {
+            Data.Add(item);
+        }
+    }
+
+    public void Visit(IArrowArray array)
+    {
+        Console.WriteLine("STOP HERE");
     }
 }
 
@@ -437,11 +479,6 @@ public class MapVisitor :
             }
         }
         
-        //
-        // for (var i = 0; i < keyVisitor.Keys.Count; i++)
-        // {
-        //     Items.Add(new KeyValuePair<object, object>(keyVisitor.Keys[i], valueVisitor.Values[i]));
-        // }
     }
 
     public void Visit(IArrowArray array)

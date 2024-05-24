@@ -37,7 +37,7 @@ public class SparkCatalog
         GrpcInternal.Exec(_sparkSession, plan);
     }
     
-    public DataFrame CreateExternalTable(string tableName, string path, string source = "", StructType? schema = null, IEnumerable<MapField<string, string>> options = null)
+    public DataFrame CreateExternalTable(string tableName, string path, string source = "", StructType? schema = null, IEnumerable<MapField<string, string>>? options = null)
     {
         var plan = Plan();
         plan.Root.Catalog.CreateExternalTable = new CreateExternalTable()
@@ -193,7 +193,7 @@ public class SparkCatalog
         }
         
         var row = new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect().First();
-        return new Function((string)row[0], (string)row[1], (string)row[2], (string)row[3], (string)row[4],(bool)row[5]);
+        return new Function((string)row[0], (string)row[1], (string[])row[2], (string)row[3], (string)row[4],(bool)row[5]);
     }
     
     public Table GetTable(string functionName, string? dbName = null)
@@ -301,7 +301,7 @@ public class SparkCatalog
         var result = new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect();
         foreach (var function in result)
         {
-            functions.Add(new Function((string)function[0], (string)function[1], (string)function[2], (string)function[3], (string)function[4], (bool)function[5]));
+            functions.Add(new Function((string)function[0], (string)function[1], (string[])function[2], (string)function[3], (string)function[4], (bool)function[5]));
         }
 
         return functions;
@@ -429,7 +429,7 @@ public class SparkCatalog
     };
 
     public record Database(string name, string catalog, string description, string locationUri);
-    public record Function(string name, string catalog, string namesSpace, string description, string className, bool isTemporary);
+    public record Function(string name, string catalog, string[] namesSpace, string description, string className, bool isTemporary);
     public record Table(string name, string catalog, string nameSpace, string description, string tableType, bool isTemporary);
     public record CatalogMetadata(string name, string description);
     public record Column(string name, string description, string dataType, bool nullable, bool isPartition, bool isBucket);

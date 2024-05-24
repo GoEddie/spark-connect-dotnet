@@ -428,12 +428,11 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         var conf = spark.Conf.GetAll();
         foreach (var item  in conf)
         {
-            Console.WriteLine($"key: {item.Key} value: {item.Value}");
+            Logger.WriteLine($"key: {item.Key} value: {item.Value}");
         }
         
         var df = Spark.Range(100);
         Assert.Throws<AggregateException>(() => df.WriteTo("bucket_test").PartitionedBy(Bucket(10, Col("id"))).CreateOrReplace());
-        
     }
     
     [Fact]
@@ -541,12 +540,10 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Show();
         var rows = df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Collect();
         var row = rows.First();
-        Console.WriteLine(row);
+        Logger.WriteLine(row.ToString());
         df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Show();
         df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Collect();
-
-
-
+        
     }
 
     [Fact]
@@ -558,10 +555,10 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         
         df.Select(FromJson(df["value"], schema).Alias("json")).Show();
         var rows = df.Select(FromJson(df["value"], schema).Alias("json")).Collect();
-        Assert.Equal(123, rows[0][0]);
+        Assert.Equal(123, (rows[0][0] as object[])[0]);
         
         rows = df.Select(FromJson(df["value"], "a INT").Alias("json")).Collect();
-        Assert.Equal(123, rows[0][0]);
+        Assert.Equal(123, (rows[0][0] as object[])[0]);
         
         rows = df.Select(FromJson(df["value"],  "MAP<STRING,INT>").Alias("json")).Collect();
         var dict = (rows[0][0] as IDictionary<string, object>);
@@ -738,7 +735,22 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         df.Select(LPad("l", 100, "%|%").Alias("d")).Collect();
         df.Select(LPad(df["l"], 100, "%|%").Alias("d")).Collect();
     }
+    
+    [Fact]
+    public void RPad_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("Kitten"),
+                ToRow("Kitten")
+            ), "r");
 
+        df.Select(RPad("r", 100, "%|%").Alias("d")).Show();
+        df.Select(RPad(df["r"], 100, "%|%").Alias("d")).Show();
+        
+        df.Select(RPad("r", 100, "%|%").Alias("d")).Collect();
+        df.Select(RPad(df["r"], 100, "%|%").Alias("d")).Collect();
+    }
     
     [Fact]
     public void MakeDtInterval_Test()
@@ -1001,5 +1013,100 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         Assert.Contains("My error message", exception.Message);
     }
 
+    [Fact]
+    public void RegexpExtract_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("100-200")), "str");
+        df.Select(RegexpExtract("str", "(\\d+)-(\\d+)", 1)).Show();
+        df.Select(RegexpExtract(Col("str"), "(\\d+)-(\\d+)", 1)).Collect();
+        
+        df.Select(RegexpExtract(Col("str"), Lit("(\\d+)-(\\d+)"), Lit(1))).Show();
+        df.Select(RegexpExtract(Col("str"), Lit("(\\d+)-(\\d+)"), Lit(1))).Collect();
+        
+        df = Spark.CreateDataFrame(ToRows(ToRow("foo")), "str");
+        df.Select(RegexpExtract("str", @"(\d+)", 1).Alias("d")).Show();
+        df.Select(RegexpExtract("str", @"(\d+)", 1).Alias("d")).Collect();
+        
+        df = Spark.CreateDataFrame(ToRows(ToRow("aaaac")), "str");
+        df.Select(RegexpExtract("str", @"(a+)(b)?(c)", 2).Alias("e")).Show();
+        df.Select(RegexpExtract("str", @"(a+)(b)?(c)", 2).Alias("e")).Collect();
+    }
     
+    [Fact]
+    public void RegexpExtractAll_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("100-200, 300-400")), "str");
+        df.Select(RegexpExtractAll("str", "(\\d+)-(\\d+)", 1)).Show();
+        df.Select(RegexpExtractAll(Col("str"), "(\\d+)-(\\d+)", 1)).Collect();
+        df.Select(RegexpExtractAll(Col("str"), Lit("(\\d+)-(\\d+)"), Lit(1))).Show();
+        df.Select(RegexpExtractAll(Col("str"), Lit("(\\d+)-(\\d+)"), Lit(1))).PrintSchema();
+    }
+    
+    [Fact]
+    public void RegexpExtractInstr_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("1a 2b 14m", "d+(a|b|m)")), "str", "regexp");
+        df.Select(RegexpExtractInstr("str", "\\d+(a|b|m)", 1)).Show();
+        df.Select(RegexpExtractInstr(Col("str"), "\\d+(a|b|m)", 1)).Collect();
+        df.Select(RegexpExtractInstr(Col("str"), Col("regexp"), Lit(1))).Collect();
+        df.Select(RegexpExtractInstr(Col("str"), Lit("(\\d+)-(\\d+)"), Lit(1))).Show();
+        df.Select(RegexpExtractInstr(Col("str"), Lit("(\\d+)-(\\d+)"), Lit(1))).PrintSchema();
+    }
+    
+    [Fact]
+    public void RegexpReplace_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("100-200, 300-400", @"(\d+)", @"--")), "str", "pattern", "replacement");
+        df.Select(RegexpReplace("str", @"(\d+)", @"--")).Show();
+        df.Select(RegexpReplace(Col("str"), Col("pattern"), Col("replacement"))).Show();
+    }
+    
+    [Fact]
+    public void Replace_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("ABCabc", "abc", "DEF")), "a", "b", "c");
+        df.Select(Replace(Col("a"), Col("b"), Col("c"))).Show();
+        df.Select(Replace(Col("a"),  Col("b"), Col("c"))).Show();
+        df.Select(Replace(Col("a"),  Lit("abc"), Lit("DEF"))).Show();
+        df.Select(Replace(Col("a"),  "abc", "DEF")).Show();
+        
+        df.Select(Replace("a", "b", "c")).Collect();
+        df.Select(Replace(Col("a"),  "b", "c")).Collect();
+        df.Select(Replace(Col("a"),  Lit("abc"), Lit("DEF"))).Collect();
+        df.Select(Replace(Col("a"),  "abc", "DEF")).Collect();
+    }
+    
+    [Fact]
+    public void SchemaOfCsv_Test()
+    {
+        var df = Spark.Range(1);
+        var csvschema_df = df.Select(SchemaOfCsv(Lit("123|col2"), new Dictionary<string, object>() { { "sep", "|" } }).Alias("csv"));
+        csvschema_df.PrintSchema();
+        csvschema_df.Show(truncate: 1000, vertical: true);
+        var rows = csvschema_df.Collect();
+        Assert.Equal("STRUCT<_c0: INT, _c1: STRING>", rows[0][0]);
+        df.Select(SchemaOfCsv("1|a", new Dictionary<string, object>() { { "sep", "|" }, {"header", "true"} }).Alias("csv")).Show();
+    }
+    
+    [Fact]
+    public void SchemaOfJson_Test()
+    {
+        var df = Spark.Range(1);
+        var jsonschema_df = df.Select(SchemaOfJson(@"{""a"": 0, ""b"": [1,2,3,4]}").Alias("schema"));
+        jsonschema_df.PrintSchema();
+        jsonschema_df.Show(truncate: 1000, vertical: true);
+        var rows = jsonschema_df.Collect();
+        Assert.Equal("STRUCT<a: BIGINT, b: ARRAY<BIGINT>>", rows[0][0]);
+        df.Select(SchemaOfCsv("{a: 1}", new Dictionary<string, object>() { { "allowUnquotedFieldNames", true} }).Alias("schema")).Show();
+    }
+    
+    [Fact]
+    public void Sentences_Test()
+    {
+        var df = Spark.CreateDataFrame( ToRows(ToRow("This is an example sentence.")), "string");
+        df.Select(Sentences(df["string"], Lit("en"), Lit("US"))).Show(truncate: 1000);
+        
+        df = Spark.CreateDataFrame( ToRows(ToRow("Hello world. How are you?")), "string");
+        df.Select(Sentences(df["string"])).Show(truncate: 1000);
+    }
 }
