@@ -428,12 +428,11 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         var conf = spark.Conf.GetAll();
         foreach (var item  in conf)
         {
-            Console.WriteLine($"key: {item.Key} value: {item.Value}");
+            Logger.WriteLine($"key: {item.Key} value: {item.Value}");
         }
         
         var df = Spark.Range(100);
         Assert.Throws<AggregateException>(() => df.WriteTo("bucket_test").PartitionedBy(Bucket(10, Col("id"))).CreateOrReplace());
-        
     }
     
     [Fact]
@@ -541,12 +540,10 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Show();
         var rows = df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Collect();
         var row = rows.First();
-        Console.WriteLine(row);
+        Logger.WriteLine(row.ToString());
         df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Show();
         df.Select(FromCsv(df["value"], Lit("a INT, b INT, c INT")).Alias("csv")).Collect();
-
-
-
+        
     }
 
     [Fact]
@@ -558,10 +555,10 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         
         df.Select(FromJson(df["value"], schema).Alias("json")).Show();
         var rows = df.Select(FromJson(df["value"], schema).Alias("json")).Collect();
-        Assert.Equal(123, rows[0][0]);
+        Assert.Equal(123, (rows[0][0] as object[])[0]);
         
         rows = df.Select(FromJson(df["value"], "a INT").Alias("json")).Collect();
-        Assert.Equal(123, rows[0][0]);
+        Assert.Equal(123, (rows[0][0] as object[])[0]);
         
         rows = df.Select(FromJson(df["value"],  "MAP<STRING,INT>").Alias("json")).Collect();
         var dict = (rows[0][0] as IDictionary<string, object>);

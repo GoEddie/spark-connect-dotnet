@@ -1,10 +1,7 @@
-using System.Text;
-using System.Text.Unicode;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Sql.Types;
-using Array = Apache.Arrow.Array;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using TimestampType = Apache.Arrow.Types.TimestampType;
 
@@ -271,8 +268,6 @@ public class ArrowVisitor :
             Console.WriteLine("what to do here?");
         }
         
-        
-        
         var rowNumber = 0;
         for (var i = 0; i < array.Length; i++)
         {
@@ -289,7 +284,7 @@ public class ArrowVisitor :
         rowNumber = 0;
         foreach (var row in rows)
         {
-            Rows[_readCount + rowNumber] = rows[rowNumber++].ToArray();
+            Rows[_readCount + rowNumber][_columnIndex] = rows[rowNumber++].ToArray();
         }
     }
 
@@ -399,6 +394,10 @@ public class ArrowVisitor :
             UInt16Array uint6Array => uint6Array.Values.ToArray(),
             UInt8Array uInt8Array => uInt8Array.Values.ToArray(),
             UInt64Array uInt64Array => uInt64Array.Values.ToArray(),
+            
+            ListArray listArray => GetArrayData((listArray).Values),
+            StructArray structArray => structArray.Fields.Select(p => GetArrayData(p)).ToList(),
+            
             _ => throw new NotImplementedException(),
         };
     }
