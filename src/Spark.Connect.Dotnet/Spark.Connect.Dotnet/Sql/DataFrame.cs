@@ -1818,6 +1818,27 @@ public class DataFrame
             
         return new DataFrame(_session, plan.Root);
     }
+    
+    public DataFrame ToDf(params string[] cols)
+    {
+        var plan = new Plan()
+        {
+            Root = new Relation()
+            {
+                ToDf = new ToDF()
+                {
+                    Input = Relation,
+                    ColumnNames = { cols }
+                },
+                Common = new RelationCommon()
+                {
+                    PlanId     = _session.GetPlanId()
+                }
+            }
+        };
+            
+        return new DataFrame(_session, plan.Root);
+    }
 
     public DataFrame WithWatermark(string eventTime, string delayThreshold)
     {

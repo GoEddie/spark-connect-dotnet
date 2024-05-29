@@ -126,4 +126,11 @@ public class ColumnTests : E2ETestBase
             Assert.Equal("DEF", (row[0] as string[])[1]);
         }
     }
+
+    [Fact]
+    public void IsInTests()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)>() { (2, "Alice"), (5, "Bob") }, "age", "name");
+        df.Select(Col("name"), df["name"].IsIn("Bob", "Mike")).Show();
+    }
 }

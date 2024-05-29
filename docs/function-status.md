@@ -8,6 +8,7 @@
 | Acos                      | acos                        |
 | Acosh                     | acosh                       |
 | AddMonths                 | add_months                  |
+| Aggregate                 | aggregate                   |
 | AnyValue                  | any_value                   |
 | ApproxCountDistinct       | approx_count_distinct       |
 | ApproxPercentile          | approx_percentile           |
@@ -26,15 +27,17 @@
 | ArrayRemove               | array_remove                |
 | ArrayRepeat               | array_repeat                |
 | ArraySize                 | array_size                  |
+| ArraySort                 | array_sort                  |
 | ArraysZip                 | arrays_zip                  |
 | Asc                       | asc                         |
-| AssertTrue                | assert_true                 |
 | Ascii                     | ascii                       |
 | AscNullsFirst             | asc_nulls_first             |
 | AscNullsLast              | asc_nulls_last              |
 | Asin                      | asin                        |
 | Asinh                     | asinh                       |
+| AssertTrue                | assert_true                 |
 | Atan                      | atan                        |
+| Atan2                     | atan2                       |
 | Atanh                     | atanh                       |
 | Avg                       | avg                         |
 | Base64                    | base64                      |
@@ -53,8 +56,8 @@
 | BitXor                    | bit_xor                     |
 | BoolAnd                   | bool_and                    |
 | BoolOr                    | bool_or                     |
-| Bround                    | bround                      |
 | Broadcast                 | broadcast                   |
+| Bround                    | bround                      |
 | Btrim                     | btrim                       |
 | Bucket                    | bucket                      |
 | Cardinality               | cardinality                 |
@@ -76,6 +79,7 @@
 | Cosh                      | cosh                        |
 | Cot                       | cot                         |
 | Count                     | count                       |
+| CountDistinct             | count_distinct              |
 | CountIf                   | count_if                    |
 | Crc32                     | crc32                       |
 | CreateMap                 | create_map                  |
@@ -90,10 +94,10 @@
 | CurrentTimezone           | current_timezone            |
 | CurrentUser               | current_user                |
 | DateAdd                   | date_add                    |
-| DateSub                   | date_sub                    |
 | DateFormat                | date_format                 |
 | DateFromUnixDate          | date_from_unix_date         |
 | DatePart                  | date_part                   |
+| DateSub                   | date_sub                    |
 | DateTrunc                 | date_trunc                  |
 | Day                       | day                         |
 | Dayofmonth                | dayofmonth                  |
@@ -111,27 +115,32 @@
 | Elt                       | elt                         |
 | Encode                    | encode                      |
 | Every                     | every                       |
+| Exists                    | exists                      |
 | Exp                       | exp                         |
 | Explode                   | explode                     |
 | ExplodeOuter              | explode_outer               |
 | Expm1                     | expm1                       |
 | Expr                      | expr                        |
+| Extract                   | extract                     |
 | Factorial                 | factorial                   |
+| Filter                    | filter                      |
 | First                     | first                       |
 | FirstValue                | first_value                 |
 | Flatten                   | flatten                     |
 | Floor                     | floor                       |
+| Forall                    | forall                      |
 | FormatNumber              | format_number               |
 | FormatString              | format_string               |
 | FromCsv                   | from_csv                    |
 | FromJson                  | from_json                   |
 | FromUnixtime              | from_unixtime               |
 | FromUtcTimestamp          | from_utc_timestamp          |
+| Get                       | get                         |
 | Getbit                    | getbit                      |
 | GetJsonObject             | get_json_object             |
 | Greatest                  | greatest                    |
-| GroupingId                | grouping_id                 |
 | Grouping                  | grouping                    |
+| GroupingId                | grouping_id                 |
 | Hash                      | hash                        |
 | Hex                       | hex                         |
 | HistogramNumeric          | histogram_numeric           |
@@ -150,6 +159,7 @@
 | Isnan                     | isnan                       |
 | Isnotnull                 | isnotnull                   |
 | Isnull                    | isnull                      |
+| JavaMethod                | java_method                 |
 | JsonArrayLength           | json_array_length           |
 | JsonObjectKeys            | json_object_keys            |
 | JsonTuple                 | json_tuple                  |
@@ -181,9 +191,11 @@
 | MapConcat                 | map_concat                  |
 | MapContainsKey            | map_contains_key            |
 | MapEntries                | map_entries                 |
+| MapFilter                 | map_filter                  |
 | MapFromEntries            | map_from_entries            |
 | MapKeys                   | map_keys                    |
 | MapValues                 | map_values                  |
+| MapZipWith                | map_zip_with                |
 | Mask                      | mask                        |
 | Max                       | max                         |
 | Md5                       | md5                         |
@@ -203,11 +215,12 @@
 | NthValue                  | nth_value                   |
 | Ntile                     | ntile                       |
 | OctetLength               | octet_length                |
+| Otherwise                 | otherwise                   |
 | Overlay                   | overlay                     |
 | ParseUrl                  | parse_url                   |
-| PercentRank               | percent_rank                |
 | Percentile                | percentile                  |
 | PercentileApprox          | percentile_approx           |
+| PercentRank               | percent_rank                |
 | Pi                        | pi                          |
 | Pmod                      | pmod                        |
 | Posexplode                | posexplode                  |
@@ -223,6 +236,8 @@
 | Rand                      | rand                        |
 | Randn                     | randn                       |
 | Rank                      | rank                        |
+| Reduce                    | reduce                      |
+| Reflect                   | reflect                     |
 | RegexpExtract             | regexp_extract              |
 | RegexpExtractAll          | regexp_extract_all          |
 | RegexpInstr               | regexp_instr                |
@@ -240,8 +255,11 @@
 | Sec                       | sec                         |
 | Second                    | second                      |
 | Sentences                 | sentences                   |
+| SessionWindow             | session_window              |
+| Sequence                  | sequence                    |
 | Sha                       | sha                         |
 | Sha1                      | sha1                        |
+| Sha2                      | sha2                        |
 | Shiftleft                 | shiftleft                   |
 | ShiftLeft                 | shiftLeft                   |
 | Shiftright                | shiftright                  |
@@ -255,9 +273,12 @@
 | Sinh                      | sinh                        |
 | Size                      | size                        |
 | Skewness                  | skewness                    |
+| Slice                     | slice                       |
 | Some                      | some                        |
+| SortArray                 | sort_array                  |
 | Soundex                   | soundex                     |
 | SparkPartitionId          | spark_partition_id          |
+| Split                     | split                       |
 | SplitPart                 | split_part                  |
 | Sqrt                      | sqrt                        |
 | Stack                     | stack                       |
@@ -265,6 +286,8 @@
 | Stddev                    | stddev                      |
 | StddevPop                 | stddev_pop                  |
 | StddevSamp                | stddev_samp                 |
+| Struct                    | struct                      |
+| StrToMap                  | str_to_map                  |
 | Sum                       | sum                         |
 | Tan                       | tan                         |
 | Tanh                      | tanh                        |
@@ -272,10 +295,16 @@
 | TimestampMillis           | timestamp_millis            |
 | TimestampSeconds          | timestamp_seconds           |
 | ToTimestamp               | to_timestamp                |
+| ToVarchar                 | to_varchar                  |
+| Transform                 | transform                   |
+| TransformKeys             | transform_keys              |
+| TransformValues           | transform_values            |
 | Trim                      | trim                        |
 | Trunc                     | trunc                       |
 | TryAvg                    | try_avg                     |
+| TryElementAt              | try_element_at              |
 | TrySum                    | try_sum                     |
+| TryToNumber               | try_to_number               |
 | Typeof                    | typeof                      |
 | Ucase                     | ucase                       |
 | Unbase64                  | unbase64                    |
@@ -296,29 +325,20 @@
 | Weekday                   | weekday                     |
 | Weekofyear                | weekofyear                  |
 | When                      | when                        |
+| Xpath                     | xpath                       |
+| XpathBoolean              | xpath_boolean               |
+| XpathDouble               | xpath_double                |
 | XpathFloat                | xpath_float                 |
+| XpathInt                  | xpath_int                   |
+| XpathLong                 | xpath_long                  |
 | XpathNumber               | xpath_number                |
 | XpathShort                | xpath_short                 |
+| XpathString               | xpath_string                |
 | Xxhash64                  | xxhash64                    |
 | Year                      | year                        |
 | Years                     | years                       |
 | ZipWith                   | zip_with                    |
-| Atan2                     | atan2                       |
-| Otherwise                 | otherwise                   |
-| TryElementAt              | try_element_at              |
-| CountDistinct             | count_distinct              |
-| Extract                   | extract                     |
-| Sha2                      | sha2                        |
-| Xpath                     | xpath                       |
-| XpathDouble               | xpath_double                |
-| XpathInt                  | xpath_int                   |
-| XpathLong                 | xpath_long                  |
-| XpathString               | xpath_string                |
-| JavaMethod                | java_method                 |
-| Reflect                   | reflect                     |
-| ToVarchar                 | to_varchar                  |
-| TryToNumber               | try_to_number               |
-| XpathBoolean              | xpath_boolean               |
+
 
 ## To Be Implemented Functions
 
@@ -326,22 +346,12 @@
 |-------------------|---------------------|
 | AesDecrypt        | aes_decrypt         |
 | AesEncrypt        | aes_encrypt         |
-| CallFunction      | call_function       |
-| CallUdf           | call_udf            |
 | CountMinSketch    | count_min_sketch    |
-| Get               | get                 |
 | HllSketchAgg      | hll_sketch_agg      |
 | HllSketchEstimate | hll_sketch_estimate |
 | HllUnion          | hll_union           |
 | MakeInterval      | make_interval       |
 | MakeYmInterval    | make_ym_interval    |
-| Sequence          | sequence            |
-| SessionWindow     | session_window      |
-| Slice             | slice               |
-| SortArray         | sort_array          |
-| Split             | split               |
-| StrToMap          | str_to_map          |
-| Struct            | struct              |
 | Substr            | substr              |
 | Substring         | substring           |
 | SubstringIndex    | substring_index     |
@@ -361,26 +371,14 @@
 | TryAesDecrypt     | try_aes_decrypt     |
 | TryToBinary       | try_to_binary       |
 | TryToTimestamp    | try_to_timestamp    |
-| Udf               | udf                 |
-| Udtf              | udtf                |
-| UnwrapUdt         | unwrap_udt          |
 | WidthBucket       | width_bucket        |
 | Window            | window              |
 | WindowTime        | window_time         |
 
-## To Be Implemented Functions - Require Callable / Lambda
-
-| CSharp Name     | Python Name      |
-|-----------------|------------------|
-| Aggregate       | aggregate        |
-| ArraySort       | array_sort       |
-| Exists          | exists           |
-| Filter          | filter           |
-| Forall          | forall           |
-| MapFilter       | map_filter       |
-| MapZipWith      | map_zip_with     |
-| Reduce          | reduce           |
-| Transform       | transform        |
-| TransformKeys   | transform_keys   |
-| TransformValues | transform_values |
-| ZipWith         | zip_with         |
+| CSharp Name  | Python Name   |
+|--------------|---------------|
+| CallUdf      | call_udf      |
+| CallFunction | call_function |
+| Udf          | udf           |
+| Udtf         | udtf          |
+| UnwrapUdt    | unwrap_udt    |

@@ -3357,6 +3357,8 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("array", false, cols));
     }
+    
+    
 
     /// <Summary>Array</Summary>
     public static Column Array()
