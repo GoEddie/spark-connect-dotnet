@@ -211,6 +211,10 @@ public abstract class SparkDataType
         DateTime => TimestampType(),
         DateOnly => DateType(),
         byte => ByteType(),
+        IDictionary<string, long?> => MapType(StringType(),  LongType(), true),
+        IDictionary<string, int?> => MapType(StringType(),  IntType(), true),
+        IDictionary<string, string?> => MapType(StringType(),  StringType(), true),
+        IDictionary<string, object> dict => MapType(StringType(),  FromDotNetType(dict.Values.FirstOrDefault()), true),
 
         _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
     };

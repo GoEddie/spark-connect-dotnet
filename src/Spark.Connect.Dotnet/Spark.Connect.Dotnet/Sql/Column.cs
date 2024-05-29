@@ -97,6 +97,11 @@ public class Column
     {
         return src.And(value);
     }
+    
+    public static Column operator &(Column src, Column value)
+    {
+        return src.And(value);
+    }
 
     public Column And(bool value)
     {
@@ -109,6 +114,11 @@ public class Column
     }
 
     public static Column operator |(Column src, bool value)
+    {
+        return src.Or(value);
+    }
+    
+    public static Column operator |(Column src, Column value)
     {
         return src.Or(value);
     }
@@ -1484,4 +1494,44 @@ public class Column
 
         return new Column(expression);
     }
+
+    public Column IsIn(params object[] cols)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "in", IsUserDefinedFunction = false, IsDistinct = false
+            }
+        };
+        
+        expression.UnresolvedFunction.Arguments.Add(Expression);
+
+        foreach (var o in cols)
+        {
+            if (o is Column col)
+            {
+                expression.UnresolvedFunction.Arguments.Add(col.Expression);
+            }
+            
+            expression.UnresolvedFunction.Arguments.Add(Functions.Lit(o).Expression);
+        }
+
+        return new Column(expression);
+
+    }
+
+    /// <summary>
+    ///     Returns the `Column` denoted by name.
+    /// </summary>
+    /// <param name="name"></param>
+    public Column this[string name] =>
+        new(new Expression()
+        {
+            UnresolvedExtractValue = new Expression.Types.UnresolvedExtractValue()
+            {
+                Child = this.Expression,
+                Extraction = Functions.Lit(name).Expression
+            }
+        });
 }

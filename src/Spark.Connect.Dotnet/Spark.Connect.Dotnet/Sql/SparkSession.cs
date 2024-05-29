@@ -3,6 +3,7 @@ using System.Text;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
+using Apache.Arrow.Memory;
 using Google.Protobuf;
 using Grpc.Core;
 using Grpc.Net.Client;
@@ -13,6 +14,7 @@ using Spark.Connect.Dotnet.Sql.Types;
 using BinaryType = Apache.Arrow.Types.BinaryType;
 using BooleanType = Apache.Arrow.Types.BooleanType;
 using DoubleType = Apache.Arrow.Types.DoubleType;
+using MapType = Apache.Arrow.Types.MapType;
 using StringType = Apache.Arrow.Types.StringType;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using TimestampType = Apache.Arrow.Types.TimestampType;
@@ -605,8 +607,10 @@ public class SparkSession
                     break;
                 
                 case ListType:
-                    throw new NotImplementedException(
-                        $"Currently you can't pass a complex type to CreateDataFrame - use Spark.Sql array, map, etc");
+                    throw new NotImplementedException($"Currently you can't pass a complex type to CreateDataFrame - use Spark.Sql array, map, etc i.e. spark.Range(1).Select(Map(...)) will do the same thing as CreateDataFrame or WithColumn etc");
+                
+                 case MapType:
+                    throw new NotImplementedException($"Currently you can't pass a complex type to CreateDataFrame - use Spark.Sql array, map, etc i.e. spark.Range(1).Select(Map(...)) will do the same thing as CreateDataFrame or WithColumn etc");
                     
                 default:
                     throw new SparkException($"Need Arrow Type for Builder: {schemaCol.DataType}");
@@ -834,6 +838,17 @@ public class SparkSession
     private static IList CreateGenericList(Type elementType)
     {
         if (elementType == typeof(string))
+        {
+            var listType = typeof(List<>);
+        
+            // Make the generic type by using the elementType
+            var constructedListType = listType.MakeGenericType(elementType);
+            
+            // Create an instance of the list
+            var instance = (IList)Activator.CreateInstance(constructedListType);
+
+            return instance;
+        }else if (elementType == typeof(IDictionary<string, object>) || elementType == typeof(Dictionary<string, object>))
         {
             var listType = typeof(List<>);
         

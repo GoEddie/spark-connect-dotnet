@@ -260,8 +260,8 @@ public static class GrpcInternal
     public static async Task<(Relation, DataType?, string)> Exec(SparkConnectService.SparkConnectServiceClient client,
         string host, string sessionId, Plan plan, Metadata headers, UserContext userContext, string clientType)
     {
-        // Console.WriteLine("** PLAN **");
-        // Console.WriteLine(plan);
+        Console.WriteLine("** PLAN **");
+        Console.WriteLine(plan);
         
         var executeRequest = new ExecutePlanRequest
         {

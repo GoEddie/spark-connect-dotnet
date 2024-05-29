@@ -1,6 +1,8 @@
 using Spark.Connect.Dotnet.Sql;
 using Spark.Connect.Dotnet.Sql.Types;
 using Xunit.Abstractions;
+using static Spark.Connect.Dotnet.Sql.Functions;
+using static Spark.Connect.Dotnet.Sql.DataFrame;
 
 namespace Spark.Connect.Dotnet.Tests;
 

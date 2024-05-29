@@ -493,6 +493,13 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
     
     [Fact]
+    public void ToDate_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)> { ("2015-04-08", 2) }, "dt", "add");
+        df.Select(df["*"], Month(ToDate(df["dt"])).Alias("last_date")).Show();
+    }
+    
+    [Fact]
     public void DateTrunc_Test()
     {
         var df = Spark.CreateDataFrame(new List<(object, object)> { ("1997-02-28 05:02:11", 0) }, "dt", "ignore");
@@ -1108,5 +1115,79 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         
         df = Spark.CreateDataFrame( ToRows(ToRow("Hello world. How are you?")), "string");
         df.Select(Sentences(df["string"])).Show(truncate: 1000);
+    }
+    
+    [Fact]
+    public void Struct_Test()
+    {
+        var df = Spark.Range(10);
+        df.Select(Struct(Lit("HELLO"), Col("id"), df["id"]).Alias("hey")).Show();
+    }
+    
+    [Fact]
+    public void Get_Test()
+    {
+        var df = Spark.Sql("SELECT array(\"a\", \"b\", \"c\") data, 1 index");
+        df.Select(Get("data", 0)).Show();
+        
+        df.Select(Get(Col("data"), Col("index"))).Show();
+        
+        df.Select(Get("data", "index")).Show();
+    }
+
+    [Fact]
+    public void Sequence_Test()
+    {
+        var df1 = Spark.CreateDataFrame(new (object, object)[]{(-200, 200)}, "c1", "c2");
+        df1.Select(Sequence(Col("c1"), Col("c2")).Alias("r")).Show();
+        df1.Select(Sequence(Col("c1"), Col("c2"), Lit(50)).Alias("r")).Show(vertical: true, truncate: 1000);
+    }
+
+    [Fact]
+    public void SessionWindow_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows((ToRow(DateTime.Parse("2016-03-11 09:00:07"), 1)))).ToDf("date", "val");
+        var w = df.GroupBy(SessionWindow("date", "5 seconds")).Agg(Sum("val").Alias("sum"));
+        w.Select(w["session_window"]["start"].Cast("string").Alias("start"), w["session_window"]["end"].Cast("string").Alias("start"), Col("sum")).Show();
+        
+        w = df.GroupBy(SessionWindow(Col("date"), Lit("5 hours"))).Agg(Sum("val").Alias("sum"));
+        w.Select(w["session_window"]["start"].Cast("string").Alias("start"), w["session_window"]["end"].Cast("string").Alias("stop"), Col("sum")).Show();
+    }
+
+    [Fact]
+    public void Slice_Test()
+    {
+        var df = (Spark.Range(1).WithColumn("x", Array(1, 2, 3))
+                .Union(
+                    Spark.Range(1).WithColumn("x", Array(4, 5)))
+            ).Drop("id");
+        
+        df.Select(Slice(df["x"], 2, 2).Alias("sliced")).Show();
+    }
+
+    [Fact]
+    public void SortArray_Test()
+    {
+        var df = Spark.Range(1).WithColumn("data", Array(2, 1, null, 3)).Union(
+            Spark.Range(1).WithColumn("data", Array(1))).Union(
+            Spark.Range(1).WithColumn("data", Array()));
+        
+        df.Select(SortArray(df["data"]).Alias("r")).Show();
+        df.Select(SortArray(df["data"], false).Alias("r")).Show();
+    }
+
+    [Fact]
+    public void Split_Test()
+    {
+        var df = Spark.CreateDataFrame(new List<(object, object)>{("oneAtwoBthreeC", 1)}, "s", "ignore");
+        df.Select(Split("s", "[ABC]", 2)).Show();
+        df.Select(Split("s", "[ABC]", -1)).Show();
+    }
+    
+    [Fact]
+    public void StrToMap_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("a:1,b:2,c:3")), "e");
+        df.Select(StrToMap(df["e"], Lit(","), Lit(":").Alias("r"))).Show();
     }
 }

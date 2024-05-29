@@ -1,8 +1,12 @@
-using Apache.Arrow.Types;
+using System.Linq.Expressions;
 using Google.Protobuf;
 using Spark.Connect.Dotnet.Grpc;
-using Spark.Connect.Dotnet.Sql.Types;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
+
+using TernaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column>>;
+using BinaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column>>;
+using UnaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column>>;
+
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -411,6 +415,34 @@ public partial class Functions : FunctionsWrapper
             Literal = new Expression.Types.Literal
             {
                 Integer = value
+            }
+        });
+    }
+    
+    public static Column Lit(int? value)
+    {
+        if (!value.HasValue)
+        {
+            return new Column(new Expression
+            {
+                Literal = new Expression.Types.Literal
+                {
+                    Null = new DataType()
+                    {
+                        Integer = new DataType.Types.Integer()
+                        {
+                            
+                        }
+                    }
+                }
+            });
+        }
+        
+        return new Column(new Expression
+        {
+            Literal = new Expression.Types.Literal
+            {
+                Integer = value.Value
             }
         });
     }
@@ -1709,8 +1741,35 @@ public partial class Functions : FunctionsWrapper
         }
     
         return new Column(FunctionWrappedCall("sentences", false, col, language, country));
+    }
 
-        
+    public static Column ToDate(string col, string? format = null) => ToDate(Col(col), string.IsNullOrEmpty(format) ? null : Lit(format));
+    
+    
+    public static Column ToDate(Column col, Column? format = null)
+    {
+        if (Object.Equals(null, format))
+        {
+            return new Column(FunctionWrappedCall("to_Date", false, col));
+        }
+
+        return new Column(FunctionWrappedCall("to_Date", false, col, format));
+    }
+
+
+    public static Column Struct(params Column[] cols)
+    {
+        return new Column(FunctionWrappedCall("struct", false, cols));
+    }    
+    
+    /// <Summary>
+    ///     Round
+    ///     Round the given value to `scale` decimal places using HALF_UP rounding mode if `scale` >= 0 or at integral part
+    ///     when `scale` < 0.
+    /// </Summary>
+    public static Column Round(Column col, int scale)
+    {
+        return new Column(FunctionWrappedCall("round", false, col, Lit(scale)));
     }
     
     /// <Summary>
@@ -1721,4 +1780,280 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("round", false, Col(col)));
     }
+
+    public static Column Get(string col, int index) => Get(Col(col), Lit(index));
+    
+    public static Column Get(string col, string index) => Get(Col(col), Col(index));
+
+    public static Column Get(Column col, Column index)
+    {
+        return new Column(FunctionWrappedCall("get", false, col, index));
+    }
+
+    public static Column Sequence(Column start, Column stop, Column? step = null)
+    {
+        if (Object.Equals(null, step))
+        {
+            return new Column(FunctionWrappedCall("sequence", false, start, stop));
+        }
+        
+        return new Column(FunctionWrappedCall("sequence", false, start, stop, step));
+    }
+    
+    public static Column Sequence(string start, string end, string? step = null) => Sequence(Col(start), Col(end), String.IsNullOrEmpty(step) ? null : Col(step));
+
+    /// <summary>
+    /// Generates session window given a timestamp specifying column. Session window is one of dynamic windows, which means the length of window is varying according to the given inputs. The length of session window is defined as “the timestamp of latest input of the session + gap duration”, so when the new inputs are bound to the current session window, the end time of session window can be expanded according to the new inputs. Windows can support microsecond precision. Windows in the order of months are not supported. For a streaming query, you may use the function current_timestamp to generate windows on processing time. gapDuration is provided as strings, e.g. ‘1 second’, ‘1 day 12 hours’, ‘2 minutes’. Valid interval strings are ‘week’, ‘day’, ‘hour’, ‘minute’, ‘second’, ‘millisecond’, ‘microsecond’. It could also be a Column which can be evaluated to gap duration dynamically based on the input row. The output column will be a struct called ‘session_window’ by default with the nested columns ‘start’ and ‘end’, where ‘start’ and ‘end’ will be of pyspark.sql.types.TimestampType.
+    ///
+    /// Example:
+    ///
+    /// ```csharp
+    ///var df = Spark.CreateDataFrame(ToRows((ToRow(DateTime.Parse("2016-03-11 09:00:07"), 1)))).ToDf("date", "val");
+    ///var w = df.GroupBy(SessionWindow("date", "5 seconds")).Agg(Sum("val").Alias("sum"));
+    /// w.Select(w["session_window"]["start"].Cast("string").Alias("start"), w["session_window"]["end"].Cast("string").Alias("stop"), Col("sum")).Show();
+    /// ```
+    /// </summary>
+    /// <param name="timeColumn"></param>
+    /// <param name="gapDuration"></param>
+    /// <returns></returns>
+    public static Column SessionWindow(Column timeColumn, Column gapDuration)
+    {
+        return new Column(FunctionWrappedCall("session_window", false, timeColumn, gapDuration));
+    }
+    
+    /// <summary>
+    /// Generates session window given a timestamp specifying column. Session window is one of dynamic windows, which means the length of window is varying according to the given inputs. The length of session window is defined as “the timestamp of latest input of the session + gap duration”, so when the new inputs are bound to the current session window, the end time of session window can be expanded according to the new inputs. Windows can support microsecond precision. Windows in the order of months are not supported. For a streaming query, you may use the function current_timestamp to generate windows on processing time. gapDuration is provided as strings, e.g. ‘1 second’, ‘1 day 12 hours’, ‘2 minutes’. Valid interval strings are ‘week’, ‘day’, ‘hour’, ‘minute’, ‘second’, ‘millisecond’, ‘microsecond’. It could also be a Column which can be evaluated to gap duration dynamically based on the input row. The output column will be a struct called ‘session_window’ by default with the nested columns ‘start’ and ‘end’, where ‘start’ and ‘end’ will be of pyspark.sql.types.TimestampType.
+    ///
+    /// Example:
+    ///
+    /// ```csharp
+    ///var df = Spark.CreateDataFrame(ToRows((ToRow(DateTime.Parse("2016-03-11 09:00:07"), 1)))).ToDf("date", "val");
+    ///var w = df.GroupBy(SessionWindow("date", "5 seconds")).Agg(Sum("val").Alias("sum"));
+    /// w.Select(w["session_window"]["start"].Cast("string").Alias("start"), w["session_window"]["end"].Cast("string").Alias("stop"), Col("sum")).Show();
+    /// ```
+    /// </summary>
+    /// <param name="timeColumn"></param>
+    /// <param name="gapDuration"></param>
+    /// <returns></returns>
+    public static Column SessionWindow(string timeColumn, string gapDuration) => SessionWindow(Col(timeColumn), Lit(gapDuration));
+
+    public static Column Slice(Column x, Column start, Column length)
+    {
+        return new Column(FunctionWrappedCall("slice", false, x, start, length));
+    }
+
+    public static Column Slice(string x, string start, string length) => Slice(Col(x), Col(start), Col(length));
+    
+    public static Column Slice(string x, int start, int length) => Slice(Col(x), Lit(start), Lit(length));
+    
+    public static Column Slice(Column x, int start, int length) => Slice(x, Lit(start), Lit(length));
+    
+    /// <Summary>
+    ///     Array
+    /// </Summary>
+    public static Column Array(params int?[] cols)
+    {
+        return new Column(FunctionWrappedCall("array", false, cols.Select(Lit).ToArray()));
+    }
+
+    public static Column SortArray(Column col, bool? asc = null)
+    {
+        if (asc.HasValue)
+        {
+            return new Column(FunctionWrappedCall("sort_array", false, col, Lit(asc.Value)));
+        }
+        
+        return new Column(FunctionWrappedCall("sort_array", false, col));
+    }
+
+    public static Column Split(Column str, string pattern, int? limit = null)
+    {
+        if (limit.HasValue)
+        {
+            return new Column(FunctionWrappedCall("split", false, str, Lit(pattern), Lit(limit.Value)));
+        }
+        
+        return new Column(FunctionWrappedCall("sort_array", false, str, Lit(pattern)));
+    }
+
+    public static Column Split(string str, string pattern, int? limit = null) => Split(Col(str), pattern, limit);
+
+    public static Column StrToMap(Column text, Column? pairDelim = null, Column? keyValueDelim = null)
+    {
+        if (Object.Equals(null, pairDelim))
+        {
+            pairDelim = Lit(",");
+        }
+
+        if (Object.Equals(null, keyValueDelim))
+        {
+            keyValueDelim = Lit(":");
+        }
+
+        return new Column(FunctionWrappedCall("str_to_map", false, text, pairDelim, keyValueDelim));
+    }
+    
+    public static Column StrToMap(string text, string? pairDelim = null, string? keyValueDelim = null) => StrToMap(Col(text), String.IsNullOrEmpty(pairDelim) ? null : Col(pairDelim), String.IsNullOrEmpty(keyValueDelim) ? null : Col(keyValueDelim));
+    
+    
+    
+    
+    // Callable Functions...
+    public static Column ArraySort(Column col, BinaryFunction comparator)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(comparator);
+        return new Column(FunctionWrappedCall("array_sort", false, col, expression));
+    }
+
+    public static Column ArraySort(string col, BinaryFunction comparator) => ArraySort(Col(col), comparator);
+    
+    public static Column ForAll(Column col, UnaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        return new Column(FunctionWrappedCall("forall", false, col, expression));
+    }
+    
+    public static Column ForAll(string col,UnaryFunction function) => ForAll (Col(col), function); 
+    
+    public static Column Transform(Column col, UnaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        return new Column(FunctionWrappedCall("transform", false, col, expression));
+    }
+    
+    public static Column Transform(Column col, BinaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        return new Column(FunctionWrappedCall("transform", false, col, expression));
+    }
+    
+    public static Column Transform(string col, UnaryFunction function) => Transform(Col(col), function);
+    public static Column Transform(string col, BinaryFunction function) => Transform(Col(col), function);
+    
+    public static Column Exists(Column col, UnaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        return new Column(FunctionWrappedCall("exists", false, col, expression));
+    }
+
+    public static Column Exists(string col, UnaryFunction function) => Exists(Col(col), function);
+    
+    public static Column Filter(Column col, UnaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        return new Column(FunctionWrappedCall("filter", false, col, expression));
+    }
+
+    public static Column Filter(string col, UnaryFunction function)  => Filter(Col(col), function);
+    
+    public static Column Filter(Column col, BinaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        return new Column(FunctionWrappedCall("filter", false, col, expression));
+    }
+
+    public static Column Filter(string col, BinaryFunction function) => Filter(Col(col), function);
+    
+    public static Column Aggregate(Column col, Column initialValue, BinaryFunction merge,  UnaryFunction finish)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
+        var finishExpression = sparkLambdaFunction.GetLambdaExpression(finish);
+        
+        return new Column(FunctionWrappedCall("aggregate", false, col, initialValue.Expression, mergeExpression, finishExpression));
+    }
+    
+    public static Column Aggregate(string col, Column initialValue, BinaryFunction merge,  UnaryFunction finish) => Aggregate(Col(col), initialValue, merge, finish);
+    
+    public static Column Aggregate(Column col, Column initialValue, BinaryFunction merge)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
+        
+        return new Column(FunctionWrappedCall("aggregate", false, col, initialValue.Expression, mergeExpression));
+    }
+    
+    public static Column Aggregate(string col, Column initialValue, Expression<Func<Column, Column, Column>> merge) => Aggregate(Col(col), initialValue, merge);
+    
+    //
+    public static Column Reduce(Column col, Column initialValue, BinaryFunction merge,  UnaryFunction finish)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
+        var finishExpression = sparkLambdaFunction.GetLambdaExpression(finish);
+        
+        return new Column(FunctionWrappedCall("reduce", false, col, initialValue.Expression, mergeExpression, finishExpression));
+    }
+    
+    public static Column Reduce(string col, Column initialValue, BinaryFunction merge,  UnaryFunction finish) => Reduce(Col(col), initialValue, merge, finish);
+    
+    public static Column Reduce(Column col, Column initialValue, BinaryFunction merge)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
+        
+        return new Column(FunctionWrappedCall("reduce", false, col, initialValue.Expression, mergeExpression));
+    }
+    
+    public static Column Reduce(string col, Column initialValue, Expression<Func<Column, Column, Column>> merge) => Reduce(Col(col), initialValue, merge);
+
+    
+    public static Column ZipWith(Column left, Column right, BinaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        
+        return new Column(FunctionWrappedCall("zip_with", false, left.Expression, right.Expression, expression));
+    }
+    
+    public static Column ZipWith(string left, string right, BinaryFunction function) => ZipWith(Col(left), Col(right), function);
+    
+    public static Column TransformKeys(Column col, BinaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        
+        return new Column(FunctionWrappedCall("transform_keys", false, col.Expression, expression));
+    }
+    
+    public static Column TransformKeys(string col,  BinaryFunction function) => TransformKeys(Col(col),  function);
+
+    
+    public static Column TransformValues(Column col, BinaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        
+        return new Column(FunctionWrappedCall("transform_values", false, col.Expression, expression));
+    }
+    
+    public static Column TransformValues(string col,  BinaryFunction function) => TransformValues(Col(col),  function);
+
+    public static Column MapFilter(Column col, BinaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        
+        return new Column(FunctionWrappedCall("map_filter", false, col.Expression, expression));
+    }
+    
+    public static Column MapFilter(string col,  BinaryFunction function) => MapFilter(Col(col),  function);
+
+    public static Column MapZipWith(Column col1, Column col2, TernaryFunction function)
+    {
+        var sparkLambdaFunction = new CallableHelper();
+        var expression = sparkLambdaFunction.GetLambdaExpression(function);
+        
+        return new Column(FunctionWrappedCall("map_zip_with", false, col1.Expression, col2.Expression, expression));
+    }
+    
+    public static Column MapZipWith(string col1, string col2, TernaryFunction function) => MapZipWith(Col(col1), Col(col2), function);
+    
 }
