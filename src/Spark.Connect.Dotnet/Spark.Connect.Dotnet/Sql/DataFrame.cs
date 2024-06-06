@@ -13,7 +13,7 @@ public class DataFrame
 {
     private readonly DataType? _schema;
     private readonly SparkSession _session;
-    protected internal readonly Relation Relation;
+    public readonly Relation Relation;
 
     public DataFrame(SparkSession session, Relation relation, DataType? schema)
     {

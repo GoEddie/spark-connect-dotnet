@@ -10,7 +10,7 @@ public class GeneratedFunctionsTests : E2ETestBase
     public GeneratedFunctionsTests(ITestOutputHelper logger) : base(logger)
     {
         Source = Spark.Sql(
-            "SELECT array(id, id + 1, id + 2) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(id as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr FROM range(100)");
+            "SELECT array(id, id + 1, id + 2) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(cast(id as string) as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr FROM range(100)");
     }
 
     private readonly Dotnet.Sql.DataFrame Source;
@@ -846,9 +846,12 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Pmod_Test()
     {
+        Spark.Conf.Set("spark.sql.ansi.enabled", "false");
         Source.Select(Pmod("id", "id")).Show();
         Source.Select(Pmod(Lit(1), Lit(2))).Show();
         Source.Select(Pmod(Col("id"), Col("id"))).Show();
+        Spark.Conf.Set("spark.sql.ansi.enabled", "true");
+        
     }
 
     /** GeneratedBy::NoArgsFunction **/
@@ -900,9 +903,11 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Corr_Test()
     {
+        Spark.Conf.Set("spark.sql.ansi.enabled", "false");
         Source.Select(Corr("id", "id")).Show();
         Source.Select(Corr(Lit(1), Lit(1))).Show();
         Source.Select(Corr(Col("id"), Col("id"))).Show();
+        Spark.Conf.Set("spark.sql.ansi.enabled", "true");
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
@@ -1278,9 +1283,11 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void MakeDate_Test()
     {
+        Spark.Conf.Set("spark.sql.ansi.enabled", "false");
         Source.Select(MakeDate("id", "id", "id")).Show();
         Source.Select(MakeDate(Lit(1), Lit(1), Lit(1))).Show();
         Source.Select(MakeDate(Col("id"), Col("id"), Col("id"))).Show();
+        Spark.Conf.Set("spark.sql.ansi.enabled", "true");
     }
 
     /** GeneratedBy::AllArgsColumnOrName::Date **/
@@ -1762,9 +1769,11 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void Elt_Test()
     {
+        Spark.Conf.Set("spark.sql.ansi.enabled", "false");
         Source.Select(Elt("id", "id")).Show();
         Source.Select(Elt(Lit(180), Lit(180))).Show();
         Source.Select(Elt(Col("id"), Col("id"))).Show();
+        Spark.Conf.Set("spark.sql.ansi.enabled", "true");
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/
@@ -1877,9 +1886,11 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void ElementAt_Test()
     {
+        Spark.Conf.Set("spark.sql.ansi.enabled", "false");
         Source.Select(ElementAt(Col("idarray"), Lit(1980))).Show();
         Source.Select(ElementAt(Array(Lit(1), Lit(2)), Lit(1))).Show();
         Source.Select(ElementAt("idarray", Lit(401))).Show();
+        Spark.Conf.Set("spark.sql.ansi.enabled", "true");
     }
 
     /** GeneratedBy::ColumnOrNameHidingArgTwoType::ArrayInt **/
@@ -2204,9 +2215,11 @@ public class GeneratedFunctionsTests : E2ETestBase
     [Fact]
     public void MakeTimestampNtz_Test()
     {
+        Spark.Conf.Set("spark.sql.ansi.enabled", "false");
         Source.Select(MakeTimestampNtz("id", "id", "id", "id", "id", "id")).Show();
         Source.Select(MakeTimestampNtz(Lit(1), Lit(1), Lit(1), Lit(1), Lit(1), Lit(1))).Show();
         Source.Select(MakeTimestampNtz(Col("id"), Col("id"), Col("id"), Col("id"), Col("id"), Col("id"))).Show();
+        Spark.Conf.Set("spark.sql.ansi.enabled", "true");
     }
 
     /** GeneratedBy::AllArgsColumnOrNames::EverythingElse **/

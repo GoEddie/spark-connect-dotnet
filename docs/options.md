@@ -30,7 +30,6 @@ if you have set it and want to disable it globally then:
 spark.Conf.Set("spark.connect.dotnet.validatethiscallcolumnname", "false");
 ```
 
-
 If you do not have it enabled globally but want it enabled on one specific DataFrame then you can do it like this:
 
 ```csharp

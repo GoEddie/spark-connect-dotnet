@@ -179,11 +179,22 @@ public class StructField
         ArrowTypeId.Timestamp => TimestampType(),
         ArrowTypeId.Struct => StructType(),
         ArrowTypeId.List => ArrayType(FromArrowType((type as ListType).ValueDataType), (type as ListType).ValueField.IsNullable),
-        
         ArrowTypeId.Map => MapType(FromArrowType((type as Apache.Arrow.Types.MapType).KeyField.DataType), FromArrowType((type as Apache.Arrow.Types.MapType).ValueField.DataType), (type as Apache.Arrow.Types.MapType).ValueField.IsNullable),
+        ArrowTypeId.Interval  =>  IntervalToType(type as IntervalType),
+        
         _ => throw new ArgumentOutOfRangeException($"Cannot convert Arrow Type '{type}'")   
     };
-    
+
+    private SparkDataType IntervalToType(IntervalType type)
+    {
+        if (type.Unit == IntervalUnit.YearMonth)
+        {
+            return new YearMonthIntervalType();
+        }
+
+        throw new NotImplementedException($"Unknown Interval Unit: {type.Unit}");
+    }
+
     private SparkDataType FromConnectDataType(DataType type)
     {
         if (type.String != null)

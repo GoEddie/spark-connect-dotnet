@@ -204,6 +204,20 @@ public class RuntimeConf
         var task =Task.Run(() => GrpcInternal.ExecSetConfigCommandResponse(_session, dict));
         task.Wait();
     }
+
+    public void Unset(string key)
+    {
+        if (key.ToLowerInvariant().StartsWith(SparkDotnetConfigKey))
+        {
+            SparkDotnetConnectOptions.Remove(key);
+            return;
+        }
+        
+        
+        var task =Task.Run(() => GrpcInternal.ExecUnSetConfigCommandResponse(_session, key));
+        task.Wait();
+        
+    }
     
     public string Get(string key)
     {

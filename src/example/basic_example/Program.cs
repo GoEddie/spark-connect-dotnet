@@ -1,4 +1,5 @@
-﻿using basic_example;using Spark.Connect.Dotnet.Sql;
+﻿using basic_example;
+using Spark.Connect.Dotnet.Sql;
 
 var spark = SparkSession
     .Builder

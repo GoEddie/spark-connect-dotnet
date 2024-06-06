@@ -102,6 +102,11 @@ public abstract class SparkDataType
         return new TimestampNtzType();
     }
 
+    public static YearMonthIntervalType YearMonthIntervalType()
+    {
+        return new YearMonthIntervalType();
+    }
+    
     public static StructType StructType(params StructField[] fields)
     {
         return new StructType(fields);
@@ -215,7 +220,9 @@ public abstract class SparkDataType
         IDictionary<string, int?> => MapType(StringType(),  IntType(), true),
         IDictionary<string, string?> => MapType(StringType(),  StringType(), true),
         IDictionary<string, object> dict => MapType(StringType(),  FromDotNetType(dict.Values.FirstOrDefault()), true),
-
+        
+        string[] => ArrayType(StringType()),
+         
         _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
     };
 
@@ -286,6 +293,11 @@ public abstract class SparkDataType
         if (type.Byte != null)
         {
             return new ByteType();
+        }
+
+        if (type.YearMonthInterval != null)
+        {
+            return new YearMonthIntervalType(type.YearMonthInterval.StartField, type.YearMonthInterval.EndField);
         }
         
         throw new NotImplementedException();

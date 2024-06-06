@@ -145,7 +145,7 @@ public class ArrowVisitor :
     IArrowArrayVisitor<Date32Array>, 
     IArrowArrayVisitor<Date64Array>,
     IArrowArrayVisitor<BinaryArray>,
-    
+    IArrowArrayVisitor<YearMonthIntervalArray>,
     IArrowArrayVisitor<ListArray>, 
     IArrowArrayVisitor<MapArray>,
     IArrowArrayVisitor<StructArray>
@@ -403,6 +403,15 @@ public class ArrowVisitor :
     }
 
     public void Visit(BooleanArray array)
+    {
+        var rowNumber = 0;
+        foreach (var item in array)
+        {
+            Rows[_readCount + rowNumber++][_columnIndex] = item;
+        }
+    }
+
+    public void Visit(YearMonthIntervalArray array)
     {
         var rowNumber = 0;
         foreach (var item in array)
