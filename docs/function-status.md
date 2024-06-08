@@ -8,6 +8,8 @@
 | Acos                      | acos                        |
 | Acosh                     | acosh                       |
 | AddMonths                 | add_months                  |
+| AesDecrypt                | aes_decrypt                 |
+| AesEncrypt                | aes_encrypt                 |
 | Aggregate                 | aggregate                   |
 | AnyValue                  | any_value                   |
 | ApproxCountDistinct       | approx_count_distinct       |
@@ -81,6 +83,7 @@
 | Count                     | count                       |
 | CountDistinct             | count_distinct              |
 | CountIf                   | count_if                    |
+| CountMinSketch            | count_min_sketch            |
 | Crc32                     | crc32                       |
 | CreateMap                 | create_map                  |
 | Csc                       | csc                         |
@@ -144,6 +147,9 @@
 | Hash                      | hash                        |
 | Hex                       | hex                         |
 | HistogramNumeric          | histogram_numeric           |
+| HllSketchAgg              | hll_sketch_agg              |
+| HllSketchEstimate         | hll_sketch_estimate         |
+| HllUnion                  | hll_union                   |
 | HllUnionAgg               | hll_union_agg               |
 | Hour                      | hour                        |
 | Hours                     | hours                       |
@@ -185,9 +191,11 @@
 | Lpad                      | lpad                        |
 | Ltrim                     | ltrim                       |
 | MakeDtInterval            | make_dt_interval            |
+| MakeInterval              | make_interval               |
 | MakeTimestamp             | make_timestamp              |
 | MakeTimestampLtz          | make_timestamp_ltz          |
 | MakeTimestampLtz          | make_timestamp_ntz          |
+| MakeYmInterval            | make_ym_interval            |
 | MapConcat                 | map_concat                  |
 | MapContainsKey            | map_contains_key            |
 | MapEntries                | map_entries                 |
@@ -255,8 +263,8 @@
 | Sec                       | sec                         |
 | Second                    | second                      |
 | Sentences                 | sentences                   |
-| SessionWindow             | session_window              |
 | Sequence                  | sequence                    |
+| SessionWindow             | session_window              |
 | Sha                       | sha                         |
 | Sha1                      | sha1                        |
 | Sha2                      | sha2                        |
@@ -286,25 +294,41 @@
 | Stddev                    | stddev                      |
 | StddevPop                 | stddev_pop                  |
 | StddevSamp                | stddev_samp                 |
-| Struct                    | struct                      |
 | StrToMap                  | str_to_map                  |
+| Struct                    | struct                      |
+| Substr                    | substr                      |
+| Substring                 | substring                   |
+| SubstringIndex            | substring_index             |
 | Sum                       | sum                         |
 | Tan                       | tan                         |
 | Tanh                      | tanh                        |
 | TimestampMicros           | timestamp_micros            |
 | TimestampMillis           | timestamp_millis            |
 | TimestampSeconds          | timestamp_seconds           |
+| ToBinary                  | to_binary                   |
+| ToChar                    | to_char                     |
+| ToCsv                     | to_csv                      |
+| ToDate                    | to_date                     |
+| ToJson                    | to_json                     |
+| ToNumber                  | to_number                   |
 | ToTimestamp               | to_timestamp                |
+| ToTimestampLtz            | to_timestamp_ltz            |
+| ToTimestampNtz            | to_timestamp_ntz            |
+| ToUnixTimestamp           | to_unix_timestamp           |
+| ToUtcTimestamp            | to_utc_timestamp            |
 | ToVarchar                 | to_varchar                  |
 | Transform                 | transform                   |
 | TransformKeys             | transform_keys              |
 | TransformValues           | transform_values            |
+| Translate                 | translate                   |
 | Trim                      | trim                        |
 | Trunc                     | trunc                       |
 | TryAvg                    | try_avg                     |
 | TryElementAt              | try_element_at              |
 | TrySum                    | try_sum                     |
+| TryToBinary               | try_to_binary               |
 | TryToNumber               | try_to_number               |
+| TryToTimestamp            | try_to_timestamp            |
 | Typeof                    | typeof                      |
 | Ucase                     | ucase                       |
 | Unbase64                  | unbase64                    |
@@ -325,6 +349,9 @@
 | Weekday                   | weekday                     |
 | Weekofyear                | weekofyear                  |
 | When                      | when                        |
+| WidthBucket               | width_bucket                |
+| Window                    | window                      |
+| WindowTime                | window_time                 |
 | Xpath                     | xpath                       |
 | XpathBoolean              | xpath_boolean               |
 | XpathDouble               | xpath_double                |
@@ -340,40 +367,8 @@
 | ZipWith                   | zip_with                    |
 
 
-## To Be Implemented Functions
+## UDF Functions 
 
-| CSharp Name       | Python Name         |
-|-------------------|---------------------|
-| AesDecrypt        | aes_decrypt         |
-| AesEncrypt        | aes_encrypt         |
-| CountMinSketch    | count_min_sketch    |
-| HllSketchAgg      | hll_sketch_agg      |
-| HllSketchEstimate | hll_sketch_estimate |
-| HllUnion          | hll_union           |
-| MakeInterval      | make_interval       |
-| MakeYmInterval    | make_ym_interval    |
-| Substr            | substr              |
-| Substring         | substring           |
-| SubstringIndex    | substring_index     |
-| ToBinary          | to_binary           |
-| ToChar            | to_char             |
-| ToCsv             | to_csv              |
-| ToDate            | to_date             |
-| ToDegrees         | toDegrees           |
-| ToJson            | to_json             |
-| ToNumber          | to_number           |
-| ToRadians         | toRadians           |
-| ToTimestampLtz    | to_timestamp_ltz    |
-| ToTimestampNtz    | to_timestamp_ntz    |
-| ToUnixTimestamp   | to_unix_timestamp   |
-| ToUtcTimestamp    | to_utc_timestamp    |
-| Translate         | translate           |
-| TryAesDecrypt     | try_aes_decrypt     |
-| TryToBinary       | try_to_binary       |
-| TryToTimestamp    | try_to_timestamp    |
-| WidthBucket       | width_bucket        |
-| Window            | window              |
-| WindowTime        | window_time         |
 
 | CSharp Name  | Python Name   |
 |--------------|---------------|

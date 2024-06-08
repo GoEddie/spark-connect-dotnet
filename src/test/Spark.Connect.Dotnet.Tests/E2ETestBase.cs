@@ -20,5 +20,6 @@ public class E2ETestBase
         Spark.Console = new TestOutputConsole(logger);
         var tempFolder = Path.GetTempPath();
         OutputPath = Path.Join(tempFolder, "spark-connect-tests");
+        
     }
 }

@@ -131,4 +131,11 @@ public class SparkSession_Tests : E2ETestBase
         Assert.Equal(1L, rows[1][0]);
         Assert.Equal(1L, rows[1][1]);
     }
+
+    [Fact]
+    public void SqlTestForDocs()
+    {
+        var df = Spark.Range(1).WithColumn("new_column", Lit(1)).WithColumn("another_col", Lit("hi")).Select(Col("another_col"));
+        this.Logger.WriteLine(df.Relation.ToString());
+    }
 }

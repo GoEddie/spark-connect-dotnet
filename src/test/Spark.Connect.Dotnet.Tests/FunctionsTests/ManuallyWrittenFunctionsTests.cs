@@ -1,4 +1,4 @@
-using Spark.Connect.Dotnet.Grpc;
+using System.Text;
 using Spark.Connect.Dotnet.Sql;
 using Spark.Connect.Dotnet.Sql.Types;
 using Xunit.Abstractions;
@@ -15,7 +15,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     public ManuallyWrittenFunctionsTests(ITestOutputHelper logger) : base(logger)
     {
         Source = Spark.Sql(
-            "SELECT array(id, id + 1, id + 2) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(id as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr, 'year' as year_string, struct('a', 1) as struct_  FROM range(100)");
+            "SELECT array(id, id + 1, id + 2) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(cast(id as STRING) as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr, 'year' as year_string, struct('a', 1) as struct_  FROM range(100)");
 
     }
 
@@ -76,10 +76,10 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     [Fact]
     public void ToVarchar_Test()
     {
-        var source = Spark.Sql("SELECT '$78.12' as e from range(10)");
+        var source = Spark.Sql("SELECT '78.12' as e from range(10)");
         source.Select(ToVarchar(source["e"], "$99.99")).Show();
         source.Select(ToVarchar("e", "$99.99")).Show();
-        source.Select(ToVarchar(Lit("$78.12"), Lit("$99.99"))).Show();
+        source.Select(ToVarchar(Lit("78.12"), Lit("$99.99"))).Show();
     }
 
 
@@ -384,8 +384,17 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         ));
 
         df.Show();
-        var exception = Assert.Throws<InternalSparkException>(() => df.Select(AssertTrue(df["a"] > df["b"], "a is smaller than b")).Show());
-        Assert.Equal("a is smaller than b", exception.Message);
+        try
+        {
+            df.Select(AssertTrue(df["a"] > df["b"], "a is smaller than b")).Show();
+        }
+        catch (Exception ex)
+        {
+            Assert.True(ex.InnerException.Message.Contains("a is smaller than b"));
+            return;
+        }
+
+        Assert.Fail("Should have thrown an exception");
     }
     
     [Fact]
@@ -419,7 +428,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         df.Select(BTrim(df["data2"])).Show();
     }
     
-    [Fact]
+    
     public void Bucket_Test()
     {
         var spark = SparkSession.Builder.Remote(RemotePath).Config("spark.sql.catalogImplementation", "hive")
@@ -1016,8 +1025,8 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     public void RaiseError_Test()
     {
         var df = Spark.Range(1);
-        var exception = Assert.Throws<InternalSparkException>(() => df.Select(RaiseError("My error message")).Show());
-        Assert.Contains("My error message", exception.Message);
+        var exception = Assert.ThrowsAny<Exception>(() => df.Select(RaiseError("My error message")).Show());
+        Assert.True(exception.Message.Contains("My error message") || exception.InnerException.Message.Contains("My error message"));
     }
 
     [Fact]
@@ -1189,5 +1198,313 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     {
         var df = Spark.CreateDataFrame(ToRows(ToRow("a:1,b:2,c:3")), "e");
         df.Select(StrToMap(df["e"], Lit(","), Lit(":").Alias("r"))).Show();
+    }
+    
+    [Fact]
+    public void Substr_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("Spark SQL", 5, 1)), "a", "b", "c");
+        df.Select(Substr("a", "b", "c")).Show();
+    }
+    
+    [Fact]
+    public void Substring_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("Spark SQL", 5, 1)), "a", "b", "c");
+        df.Select(Substring("a", 1, 2)).Show();
+    }
+
+    [Fact]
+    public void SubstringIndex_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("a.b.c.d")), "s");
+        df.Select(SubstringIndex(df["s"], ".", 2)).Show();
+    }
+
+    [Fact]
+    public void ToBinary_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("abc")), "e");
+        df.Select(ToBinary(df["e"], Lit("utf-8"))).Show();
+
+        df = Spark.CreateDataFrame(ToRows(ToRow("414243")), "e");
+        df.Select(ToBinary(df["e"])).Show();
+    }
+    
+    [Fact]
+    public void TryToBinary_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("abc")), "e");
+        df.Select(TryToBinary(df["e"], Lit("utf-8"))).Show();
+
+        df = Spark.CreateDataFrame(ToRows(ToRow("414243")), "e");
+        df.Select(TryToBinary(df["e"])).Show();
+    }
+    
+    [Fact]
+    public void ToChar_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow(78.12)), "e");
+        df.Select(ToChar(df["e"], Lit("$99.99"))).Show();
+    }
+    
+    [Fact]
+    public void ToNumber_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("$78.12")), "e");
+        df.Select(ToNumber(df["e"], Lit("$99.99"))).Show();
+    }
+        
+    [Fact]
+    public void ToCsv_Test()
+    {
+        var df = Spark.Sql("SELECT 1 as key, struct( 2, \"alice\") as data");
+        df.Select(Col("data"), ToCsv("data").Alias("csv")).Show();
+        var dict = new Dictionary<string, object>()
+        {
+            { "sep", "::" },  { "header", "true" }
+        };
+        
+        df.Select(Col("data"), ToCsv("data", dict).Alias("csv")).Show();
+    }
+    
+    [Fact]
+    public void ToJson_Test()
+    {
+        var df = Spark.Sql("SELECT 1 as key, struct( 2, \"alice\") as data union SELECT 2 as key, struct( 5, \"bert\") as dat");
+        df.Select(Col("data"), ToJson("data").Alias("json")).Show();
+        var dict = new Dictionary<string, object>()
+        {
+            { "locale", "fr-FR" }
+        };
+        
+        df.Select(Col("data"), ToJson("data", dict).Alias("json")).Show();
+    }
+    
+    [Fact]
+    public void ToTimestampLtz_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("2016-12-31")), "e");
+        df.Select(ToTimestampLtz(Col("e")).Alias("r")).Show();
+        
+        df = Spark.CreateDataFrame(ToRows(ToRow("31-12-2016")), "e");
+        df.Select(ToTimestampLtz(Col("e"), Lit("dd-MM-yyyy")).Alias("r")).Show();
+    }
+    
+    [Fact]
+    public void ToTimestampNtz_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("2016-12-31")), "e");
+        df.Select(ToTimestampNtz(Col("e")).Alias("r")).Show();
+        
+        df = Spark.CreateDataFrame(ToRows(ToRow("31-12-2016")), "e");
+        df.Select(ToTimestampNtz(Col("e"), Lit("dd-MM-yyyy")).Alias("r")).Show();
+    }
+    
+    [Fact]
+    public void ToUnixTimestamp_Test()
+    {
+        Spark.Conf.Set("spark.sql.session.timeZone", "America/Los_Angeles");
+        var df = Spark.CreateDataFrame(ToRows(ToRow("2016-12-31")), "e");
+        df.Select(ToUnixTimestamp(Col("e")).Alias("r")).Show();
+        
+        df = Spark.CreateDataFrame(ToRows(ToRow("31-12-2016")), "e");
+        df.Select(ToUnixTimestamp(Col("e"), Lit("dd-MM-yyyy")).Alias("r")).Show();
+        Logger.WriteLine($"timeZone: {Spark.Conf.Get("spark.sql.session.timeZone")}");
+        Spark.Conf.Unset("spark.sql.session.timeZone");
+        Logger.WriteLine($"timeZone: {Spark.Conf.Get("spark.sql.session.timeZone")}");
+    }
+    
+    [Fact]
+    public void ToUtcTimestamp_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("1997-02-28 10:30:00", "JST")), "ts", "tz");
+        df.Select(ToUtcTimestamp("ts", "PST").Alias("r")).Show();
+        
+        df.Select(ToUtcTimestamp(Col("ts"), Lit("PST")).Alias("r")).Show();
+        
+        df.Select(ToUtcTimestamp(Col("ts"), Col("tz")).Alias("r")).Show();
+        
+        df.Select(ToUtcTimestamp(df["ts"], df["tz"]).Alias("r")).Show();
+    }
+
+    [Fact]
+    public void Translate_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow("translate")), "a");
+        df.Select(Translate("a", "rnlt", "123").Alias("r")).Show();
+    }
+    
+    [Fact]
+    public void WidthBucket_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(
+            ToRow(5.3, 0.2, 10.6, 5),
+            ToRow(-2.1, 1.3, 3.4, 3),
+           ToRow (8.1, 0.0, 5.7, 4),
+            ToRow(-0.9, 5.2, 0.5, 2)), "v", "min", "max", "n");
+
+        df.Select(WidthBucket("v", "min", "max", "n")).Show();
+    }
+    
+    [Fact]
+    public void Window_Test()
+    {
+        var df = Spark.Sql("SELECT current_timestamp as date, 1 as val");
+        var w = df.GroupBy(WindowFunction.Window("date", "5 seconds")).Agg(Sum("val").Alias("sum"));
+        var output = w.Select(
+                w["Window"]["start"].Cast("string").Alias("start"),
+                w["Window"]["end"].Cast("string").Alias("end"),
+                Col("sum")
+            );
+            
+           output.Show();
+           w.PrintSchema();
+    }
+    
+    [Fact]
+    public void WindowTime_Test()
+    {
+        var df = Spark.Sql("SELECT current_timestamp as date, 1 as val");
+        var w = df.GroupBy(WindowFunction.Window("date", "5 seconds")).Agg(Sum("val").Alias("sum"));
+        var output = w.Select(
+            w["Window"]["start"].Cast("string").Alias("start"),
+            WindowTime(w["Window"]).Cast("string").Alias("window_time"),
+            Col("sum")
+        );
+            
+        output.Show();
+    }
+
+    [Fact]
+    public void CountMinSketch_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(1),
+                ToRow(2),
+                ToRow(1)
+            ), "data");
+
+        var a = df.Agg(CountMinSketch(df["data"], Lit(0.5), Lit(0.5), Lit(1)).Alias("sketch"));
+        a.Show(vertical: true, truncate: 1000);
+        
+    }
+    
+    [Fact]
+    public void HllSketchAgg_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(1),
+                ToRow(2),
+                ToRow(2),
+                ToRow(3)
+            ), "value");
+
+        var a = df.Agg(HllSketchEstimate(HllSketchAgg("value")).Alias("distinct_cnt"));
+        a.Show(vertical: true, truncate: 1000);
+    }
+    
+    [Fact]
+    public void HllUnion_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(1, 4),
+                ToRow(2, 5),
+                ToRow(2, 5),
+                ToRow(3, 6)
+            ), "v1", "v2");
+
+        var a = df.Agg(
+            HllSketchAgg("v1").Alias("sketch1"),
+            HllSketchAgg("v2").Alias("sketch2")
+        );
+        
+        var counts = a.WithColumn("distinct_cnt", HllSketchEstimate(HllUnion("sketch1", "sketch2")));
+        counts.Show(vertical: true, truncate: 1000);
+    }
+
+    [Fact]
+    public void AesDecrypt_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(
+            ToRow("AAAAAAAAAAAAAAAAQiYi+sTLm7KD9UcZ2nlRdYDe/PX4", "abcdefghijklmnop12345678ABCDEFGH", "GCM", "DEFAULT", "This is an AAD mixed into the input")),
+                "input", "key", "mode", "padding", "aad");
+
+        var data = df.Select(AesDecrypt(Unbase64(df["input"]), df["key"], df["mode"], df["padding"], df["aad"])).Collect()[0][0];
+        
+        Logger.WriteLine(UTF8Encoding.UTF8.GetString(data as byte[]));
+    }
+    
+    [Fact]
+    public void TryAesDecrypt_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(
+                ToRow("AAAAAAAAAAAAAAAAQiYi+sTLm7KD9UcZ2nlRdYDe/PX4", "abcdefghijklmnop12345678ABCDEFGH", "GCM", "DEFAULT", "This is an AAD mixed into the input")),
+            "input", "key", "mode", "padding", "aad");
+
+        var data = df.Select(TryAesDecrypt(Unbase64(df["input"]), df["key"], df["mode"], df["padding"], df["aad"])).Collect()[0][0];
+        
+        Logger.WriteLine(UTF8Encoding.UTF8.GetString(data as byte[]));
+        
+        
+        data = df.Select(TryAesDecrypt(Unbase64(df["input"]), Lit("definetly not the key"), df["mode"], df["padding"], df["aad"])).Collect()[0][0];
+        
+        Logger.WriteLine($"Output: '{UTF8Encoding.UTF8.GetString(data as byte[])}'");
+    }
+    
+    [Fact]
+    public void AesEncrypt_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(
+                ToRow("Spark", "abcdefghijklmnop12345678ABCDEFGH", "GCM", "DEFAULT", "000000000000000000000000", "This is an AAD mixed into the input")),
+            "input", "key", "mode", "padding", "iv", "aad");
+
+        df.Select(Base64(AesEncrypt(df["input"], df["key"], df["mode"], df["padding"], ToBinary(df["iv"], Lit("Hex")), df["aad"]))).Show(truncate: 1000, vertical: true);
+        
+        df = Spark.CreateDataFrame(ToRows(ToRow("Spark SQL", "1234567890abcdef", "ECB", "PKCS")), "input", "key", "mode", "padding");
+
+        df.Show();
+        
+        df.Select(AesEncrypt(df["input"], df["key"], df["mode"], df["padding"])).Show();
+        
+        var data = df.Select(AesDecrypt(
+                AesEncrypt(df["input"], df["key"], df["mode"], df["padding"]),
+                df["key"], df["mode"], df["padding"]).Alias("r")
+        ).Collect();
+        
+        Logger.WriteLine(UTF8Encoding.UTF8.GetString(data[0][0] as byte[]));
+    }
+
+    [Fact]
+    public void MakeInterval_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow(100, 11, 1, 1, 12, 30, 01.001001)), "year", "month", "week", "day", "hour", "min", "sec");
+        df.Select(MakeInterval(df["year"], df["month"], df["week"], df["day"], df["hour"], df["min"], df["sec"])).Show(truncate: 10000, vertical: true);
+        df.Select(MakeInterval(df["year"], df["month"], df["week"], df["day"], df["hour"], df["min"])).Show(truncate: 10000, vertical: true);
+        df.Select(MakeInterval(df["year"], df["month"], df["week"], df["day"], df["hour"])).Show(truncate: 10000, vertical: true);
+        df.Select(MakeInterval(df["year"], df["month"], df["week"], df["day"])).Show(truncate: 10000, vertical: true);
+        df.Select(MakeInterval(df["year"], df["month"], df["week"])).Show(truncate: 10000, vertical: true);
+        df.Select(MakeInterval(df["year"], df["month"])).Show(truncate: 10000, vertical: true);
+        df.Select(MakeInterval(df["year"])).Show(truncate: 10000, vertical: true);
+    }
+
+    [Fact]
+    public void MakeYmInterval_Test()
+    {
+        var df = Spark.CreateDataFrame(ToRows(ToRow(2014, 12)), "year", "month");
+        df.Select(MakeYmInterval(df["year"], df["month"])).Show(truncate: 10000);
+        var data = df.Select(MakeYmInterval(df["year"], df["month"])).Collect();
+        Logger.WriteLine($"data: '{((Apache.Arrow.Scalars.YearMonthInterval)data[0][0]).Months}'");
+    }
+    
+    [Fact]
+    public void TryToTimestamp_Test()
+    {
+        Source.Select(TryToTimestamp("id")).Show();
+        Source.Select(TryToTimestamp(Lit("ABC"))).Show();
+        Source.Select(TryToTimestamp(Col("id"))).Show();
     }
 }

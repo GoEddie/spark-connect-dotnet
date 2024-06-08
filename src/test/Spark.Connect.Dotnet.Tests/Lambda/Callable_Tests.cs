@@ -181,13 +181,16 @@ public class Callable_Tests : E2ETestBase
                 )
             .Show(
                 10, 100, true);
+
+        var df2 = df.Select(
+            Reduce("values",
+                Struct(Lit(0).Alias("count"), Lit(0.0).Alias("sum")),
+                (a, b) => Merge(a, b),
+                column => column["sum"] / column["count"]).Alias("mean")
+        );
         
-        df.Select(
-                Reduce("values", 
-                        Struct(Lit(0).Alias("count"), Lit(0.0).Alias("sum")),
-                        (a,b) => Merge(a, b),
-                        column => column["sum"] / column["count"]).Alias("mean")
-            ).Show();
+        df2.Show();
+        Logger.WriteLine(df2.Relation.ToString());
     }
     
 }

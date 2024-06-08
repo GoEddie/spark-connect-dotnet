@@ -837,18 +837,7 @@ public class SparkSession
 
     private static IList CreateGenericList(Type elementType)
     {
-        if (elementType == typeof(string))
-        {
-            var listType = typeof(List<>);
-        
-            // Make the generic type by using the elementType
-            var constructedListType = listType.MakeGenericType(elementType);
-            
-            // Create an instance of the list
-            var instance = (IList)Activator.CreateInstance(constructedListType);
-
-            return instance;
-        }else if (elementType == typeof(IDictionary<string, object>) || elementType == typeof(Dictionary<string, object>))
+        if (elementType == typeof(IDictionary<string, object>) || elementType == typeof(Dictionary<string, object>) || elementType == typeof(string) || elementType == typeof(string[]))
         {
             var listType = typeof(List<>);
         

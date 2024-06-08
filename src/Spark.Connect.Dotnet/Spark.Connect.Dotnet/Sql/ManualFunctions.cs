@@ -174,7 +174,9 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Lit(string value)
     {
-        if (String.IsNullOrEmpty(value))
+        
+        
+        if (value == null)
         {
             return new Column(new Expression
             {
@@ -1896,7 +1898,411 @@ public partial class Functions : FunctionsWrapper
     public static Column StrToMap(string text, string? pairDelim = null, string? keyValueDelim = null) => StrToMap(Col(text), String.IsNullOrEmpty(pairDelim) ? null : Col(pairDelim), String.IsNullOrEmpty(keyValueDelim) ? null : Col(keyValueDelim));
     
     
+    public static Column Substr(Column src, Column pos, Column len) => new Column(FunctionWrappedCall("substr", false, src.Expression, pos.Expression, len.Expression));
+
+    public static Column Substr(string src, string pos, string len) => Substr(Col(src), Col(pos), Col(len));
+
     
+    public static Column Substring(Column src, int pos, int len) => new Column(FunctionWrappedCall("substring", false, src.Expression, Lit(pos).Expression, Lit(len).Expression));
+
+    public static Column Substring(string src, int pos, int len) => Substring(Col(src), pos, len);
+
+    public static Column SubstringIndex(Column str, string delim, int count) => new Column(FunctionWrappedCall("substring_index", false, str.Expression, Lit(delim).Expression, Lit(count).Expression));
+    
+    public static Column SubstringIndex(string str, string delim, int count) => SubstringIndex(Col(str), delim, count);
+
+    public static Column ToBinary(Column col, Column? format = null)
+    {
+        if (Object.Equals(null, format))
+        {
+            return new Column(FunctionWrappedCall("to_binary", false, col));
+        }
+        
+        return new Column(FunctionWrappedCall("to_binary", false, col, format));
+    }
+
+    public static Column ToBinary(string col, string? format = null)
+    {
+        if (string.IsNullOrEmpty(format))
+        {
+            return ToBinary(Col(col));
+        }
+
+        return ToBinary(Col(col), Lit(format));
+    }
+    
+    public static Column TryToBinary(Column col, Column? format = null)
+    {
+        if (Object.Equals(null, format))
+        {
+            return new Column(FunctionWrappedCall("try_to_binary", false, col));
+        }
+        
+        return new Column(FunctionWrappedCall("try_to_binary", false, col, format));
+    }
+
+    public static Column TryToBinary(string col, string? format = null)
+    {
+        if (string.IsNullOrEmpty(format))
+        {
+            return TryToBinary(Col(col));
+        }
+
+        return TryToBinary(Col(col), Lit(format));
+    }
+    
+    public static Column ToChar(Column col, Column? format = null)
+    {
+        if (Object.Equals(null, format))
+        {
+            return new Column(FunctionWrappedCall("to_char", false, col));
+        }
+        
+        return new Column(FunctionWrappedCall("to_char", false, col, format));
+    }
+
+    public static Column ToChar(string col, string? format = null)
+    {
+        if (string.IsNullOrEmpty(format))
+        {
+            return ToChar(Col(col));
+        }
+
+        return ToChar(Col(col), Lit(format));
+    }
+    
+    public static Column ToNumber(Column col, Column? format = null)
+    {
+        if (Object.Equals(null, format))
+        {
+            return new Column(FunctionWrappedCall("to_number", false, col));
+        }
+        
+        return new Column(FunctionWrappedCall("to_number", false, col, format));
+    }
+
+    public static Column ToNumber(string col, string? format = null)
+    {
+        if (string.IsNullOrEmpty(format))
+        {
+            return ToNumber(Col(col));
+        }
+
+        return ToNumber(Col(col), Lit(format));
+    }
+
+    public static Column ToCsv(Column col, IDictionary<string, object>? options = null)
+    {
+        if (options == null)
+        {
+            return new Column(FunctionWrappedCall("to_csv", false, col));
+        }
+        
+        return new Column(FunctionWrappedCall("to_csv", false, col, Lit(options)));
+    }
+    
+    public static Column ToCsv(string col, IDictionary<string, object>? options = null) => ToCsv(Col(col), options);
+    
+    
+    public static Column ToJson(Column col, IDictionary<string, object>? options = null)
+    {
+        if (options == null)
+        {
+            return new Column(FunctionWrappedCall("to_json", false, col));
+        }
+        
+        return new Column(FunctionWrappedCall("to_json", false, col, Lit(options)));
+    }
+    
+    public static Column ToJson(string col, IDictionary<string, object>? options = null) => ToJson(Col(col), options);
+    
+    public static Column ToTimestampLtz(Column timestamp, Column? format = null)
+    {
+        if (Object.Equals(null, format))
+        {
+            return new Column(FunctionWrappedCall("to_timestamp_ltz", false, timestamp));
+        }
+        
+        return new Column(FunctionWrappedCall("to_timestamp_ltz", false, timestamp, format));
+    }
+    
+    public static Column ToTimestampLtz(string timestamp, string? format = null) => ToTimestampLtz(Col(timestamp), String.IsNullOrEmpty(format) ? null : Lit(format));
+    
+    public static Column ToTimestampNtz(Column timestamp, Column? format = null)
+    {
+        if (Object.Equals(null, format))
+        {
+            return new Column(FunctionWrappedCall("to_timestamp_ntz", false, timestamp));
+        }
+        
+        return new Column(FunctionWrappedCall("to_timestamp_ntz", false, timestamp, format));
+    }
+    
+    public static Column ToTimestampNtz(string timestamp, string? format = null) => ToTimestampNtz(Col(timestamp), String.IsNullOrEmpty(format) ? null : Lit(format));
+
+    public static Column ToUnixTimestamp(Column timestamp, Column? format = null)
+    {
+        if (Object.Equals(null, format))
+        {
+            return new Column(FunctionWrappedCall("to_unix_timestamp", false, timestamp));
+        }
+        
+        return new Column(FunctionWrappedCall("to_unix_timestamp", false, timestamp, format));
+    }
+    
+    public static Column ToUnixTimestamp(string timestamp, string? format = null) => ToUnixTimestamp(Col(timestamp), String.IsNullOrEmpty(format) ? null : Lit(format));
+    
+    public static Column ToUtcTimestamp(Column timestamp, Column tz)
+    {
+        return new Column(FunctionWrappedCall("to_utc_timestamp", false, timestamp, tz));
+    }
+    
+    public static Column ToUtcTimestamp(string timestamp, string tz) => ToUtcTimestamp(Col(timestamp), Lit(tz));
+    
+    public static Column Translate(Column source, string matching, string replace) => new Column(FunctionWrappedCall("translate", false, source, Lit(matching), Lit(replace)));
+    
+    public static Column Translate(string source, string matching, string replace) => Translate(Col(source), matching, replace);
+
+    public static Column WidthBucket(Column vstr, Column minstr, Column maxstr, Column numBuckets)
+    {
+        return new Column(FunctionWrappedCall("width_bucket", false, vstr, minstr, maxstr, numBuckets));
+    }
+    
+    public static Column WidthBucket(Column vstr, Column minstr, Column maxstr, int numBuckets) => WidthBucket(vstr, minstr, maxstr, numBuckets);
+    
+    public static Column WidthBucket(string vstr, string minstr, string maxstr, int numBuckets) => WidthBucket(Col(vstr), Col(minstr), Col(maxstr), numBuckets);
+    
+    public static Column WidthBucket(string vstr, string minstr, string maxstr, string numBuckets) => WidthBucket(Col(vstr), Col(minstr), Col(maxstr), Col(numBuckets));
+    
+    public static Column WindowTime(Column windowColumn) => new Column(FunctionWrappedCall("window_time", false, windowColumn));
+    
+    public static Column CountMinSketch(Column col, Column eps, Column confidence, Column seed) => new Column(FunctionWrappedCall("count_min_sketch", false, col, eps, confidence, seed));
+    
+    public static Column CountMinSketch(string col, string eps, string confidence, string seed) => CountMinSketch(Col(col), Col(eps), Col(confidence), Col(seed));
+
+    public static Column HllSketchAgg(string col, int? lgConfigKint = null) => HllSketchAgg(Col(col), lgConfigKint);
+    
+    public static Column HllSketchAgg(Column col, int? lgConfigKint = null)
+    {
+        if (lgConfigKint.HasValue)
+        {
+            return new Column(FunctionWrappedCall("hll_sketch_agg", false, col, Lit(lgConfigKint.Value)));
+        }  
+        
+        return new Column(FunctionWrappedCall("hll_sketch_agg", false, col));
+    } 
+    
+    public static Column HllSketchEstimate(Column col) => new Column(FunctionWrappedCall("hll_sketch_estimate", false, col));
+
+    public static Column HllSketchEstimate(string col) => HllSketchEstimate(Col(col));
+
+    public static Column HllUnion(Column col1, Column col2, bool? allowDifferentLgConfigKbool = null)
+    {
+        if (allowDifferentLgConfigKbool.HasValue)
+        {
+            return new Column(FunctionWrappedCall("hll_union", false, col1, col2, Lit(allowDifferentLgConfigKbool.Value)));
+        }
+        
+        return new Column(FunctionWrappedCall("hll_union", false, col1, col2));
+    }
+    
+    public static Column HllUnion(string col1, string col2, bool? allowDifferentLgConfigKbool = null) => HllUnion(Col(col1), Col(col2), allowDifferentLgConfigKbool);
+
+    public static Column AesDecrypt(string input, string key, string? mode = null, string? padding = null, string? aad = null)
+    {
+        Column modeCol = null;
+        Column paddingCol = null;
+        Column aadCol = null;
+
+        if (!String.IsNullOrEmpty(mode))
+        {
+            modeCol = Lit(mode);
+        }
+        
+        if (!String.IsNullOrEmpty(padding))
+        {
+            paddingCol = Lit(padding);
+        }
+        
+        if (!String.IsNullOrEmpty(aad))
+        {
+            aadCol = Lit(aad);
+        }
+
+
+        return AesDecrypt(Col(input), Col(key), modeCol, paddingCol, aadCol);
+    }
+    
+    
+    public static Column AesDecrypt(Column input, Column key, Column? mode = null, Column? padding = null, Column? aad = null)
+    {
+        if (Object.Equals(null, mode))
+        {
+            mode = Lit("GCM");
+        }
+        
+        if (Object.Equals(null, padding))
+        {
+            padding = Lit("DEFAULT");
+        }
+
+        if (Object.Equals(null, aad))
+        {
+            aad = Lit("");
+        }
+
+        return new Column(FunctionWrappedCall("aes_decrypt", false, input, key, mode, padding, aad));
+    }
+    
+    public static Column TryAesDecrypt(string input, string key, string? mode = null, string? padding = null, string? aad = null)
+    {
+        Column modeCol = null;
+        Column paddingCol = null;
+        Column aadCol = null;
+
+        if (!String.IsNullOrEmpty(mode))
+        {
+            modeCol = Lit(mode);
+        }
+        
+        if (!String.IsNullOrEmpty(padding))
+        {
+            paddingCol = Lit(padding);
+        }
+        
+        if (!String.IsNullOrEmpty(aad))
+        {
+            aadCol = Lit(aad);
+        }
+
+
+        return TryAesDecrypt(Col(input), Col(key), modeCol, paddingCol, aadCol);
+    }
+    
+    
+    public static Column TryAesDecrypt(Column input, Column key, Column? mode = null, Column? padding = null, Column? aad = null)
+    {
+        if (Object.Equals(null, mode))
+        {
+            mode = Lit("GCM");
+        }
+        
+        if (Object.Equals(null, padding))
+        {
+            padding = Lit("DEFAULT");
+        }
+
+        if (Object.Equals(null, aad))
+        {
+            aad = Lit("");
+        }
+
+        return new Column(FunctionWrappedCall("try_aes_decrypt", false, input, key, mode, padding, aad));
+    }
+    
+    public static Column AesEncrypt(Column input, Column key, Column? mode = null, Column? padding = null, Column? iv = null, Column? aad = null)
+    {
+        if (Object.Equals(null, mode))
+        {
+            mode = Lit("GCM");
+        }
+        
+        if (Object.Equals(null, padding))
+        {
+            padding = Lit("DEFAULT");
+        }
+
+        if (Object.Equals(null, iv))
+        {
+            iv = Lit("");
+        }
+        
+        if (Object.Equals(null, aad))
+        {
+            aad = Lit("");
+        }
+
+        return new Column(FunctionWrappedCall("aes_encrypt", false, input, key, mode, padding, iv,  aad));
+    }
+
+    
+    public static Column AesEncrypt(string input, string key, string? mode = null, string? padding = null, string? iv = null, string? aad = null)
+    {
+        Column modeCol = null;
+        Column paddingCol = null;
+        Column ivCol = null;
+        Column aadCol = null;
+
+        if (!String.IsNullOrEmpty(mode))
+        {
+            modeCol = Lit(mode);
+        }
+        
+        if (!String.IsNullOrEmpty(padding))
+        {
+            paddingCol = Lit(padding);
+        }
+
+        if (!String.IsNullOrEmpty(iv))
+        {
+            ivCol = Lit(iv);
+        }
+        
+        if (!String.IsNullOrEmpty(aad))
+        {
+            aadCol = Lit(aad);
+        }
+
+        return AesEncrypt(Col(input), Col(key), modeCol, paddingCol,  ivCol, aadCol);
+    }
+
+
+
+    public static Column MakeInterval(Column? years = null, Column? months = null, Column? weeks = null, Column? days = null, Column hours = null, Column? mins = null, Column? secs = null)
+    {
+        if (Object.Equals(null, years))
+        {
+            years = Lit(0);
+        }
+        
+        if (Object.Equals(null, months))
+        {
+            months = Lit(0);
+        }
+        
+        if (Object.Equals(null, weeks))
+        {
+            weeks = Lit(0);
+        }
+        
+        if (Object.Equals(null, days))
+        {
+            days = Lit(0);
+        }
+        
+        if (Object.Equals(null, hours))
+        {
+            hours = Lit(0);
+        }
+        
+        if (Object.Equals(null, mins))
+        {
+            mins = Lit(0);
+        }
+        
+        if (Object.Equals(null, secs))
+        {
+            secs = Lit(0.0d);
+        }
+
+        return new Column(FunctionWrappedCall("make_interval", false, years, months, weeks, days, hours, mins, secs));
+
+
+    }
+
+    public static Column MakeYmInterval(Column years, Column months) => new Column(FunctionWrappedCall("make_ym_interval", false, years, months));
+    
+    public static Column MakeYmInterval(string years, string months) => new Column(FunctionWrappedCall("make_ym_interval", false, Col(years), Col(months)));
     
     // Callable Functions...
     public static Column ArraySort(Column col, BinaryFunction comparator)
@@ -2055,5 +2461,49 @@ public partial class Functions : FunctionsWrapper
     }
     
     public static Column MapZipWith(string col1, string col2, TernaryFunction function) => MapZipWith(Col(col1), Col(col2), function);
+    
+    /// <Summary>ToTimestamp</Summary>
+    public static Column TryToTimestamp(string col)
+    {
+        return new Column(FunctionWrappedCall("try_to_timestamp", false, col));
+    }
+
+    /// <Summary>ToTimestamp</Summary>
+    public static Column TryToTimestamp(Column col)
+    {
+        return new Column(FunctionWrappedCall("try_to_timestamp", false, col));
+    }
+
+    /// <Summary>
+    ///     ToTimestamp
+    /// </Summary>
+    public static Column TryToTimestamp(string col, string format)
+    {
+        return new Column(FunctionWrappedCall("try_to_timestamp", false, Col(col), Lit(format)));
+    }
+
+    /// <Summary>
+    ///     ToTimestamp
+    /// </Summary>
+    public static Column TryToTimestamp(Column col, string format)
+    {
+        return new Column(FunctionWrappedCall("try_to_timestamp", false, col, Lit(format)));
+    }
+
+    /// <Summary>
+    ///     ToTimestamp
+    /// </Summary>
+    public static Column TryToTimestamp(Column col, Column format)
+    {
+        return new Column(FunctionWrappedCall("try_to_timestamp", false, col, format));
+    }
+
+    /// <Summary>
+    ///     ToTimestamp
+    /// </Summary>
+    public static Column TryToTimestamp(string col, Column format)
+    {
+        return new Column(FunctionWrappedCall("try_to_timestamp", false, Col(col), format));
+    }
     
 }

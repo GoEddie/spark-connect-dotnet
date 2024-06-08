@@ -301,6 +301,7 @@ public static class GrpcInternal
         var batchCount = 0;
         var outputString = "";
         
+        //the rust implementation looks prttier, consider switching to a match expression
         while (current != null)
         {
             if (current?.SqlCommandResult != null)
@@ -671,6 +672,54 @@ public static class GrpcInternal
         return null;
     }
     
+    
+    public static async Task ExecUnSetConfigCommandResponse(SparkSession session, string key)
+    {
+        var configRequest = new ConfigRequest()
+        {
+            ClientType = session.ClientType,
+            SessionId = session.SessionId,
+            UserContext = session.UserContext,
+            Operation = new ConfigRequest.Types.Operation()
+            {
+                Unset = new ConfigRequest.Types.Unset()
+                {
+                    Keys = { key }
+                }
+            }
+        };
+        
+
+        AsyncUnaryCall<ConfigResponse> Exec()
+        {
+            try
+            {
+                return session.GrpcClient.ConfigAsync(configRequest, session.Headers);
+            }
+            catch (Exception exception)
+            {
+                if (exception is AggregateException aggregateException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(aggregateException);
+                }
+
+                if (exception is RpcException rpcException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(rpcException);
+                }
+
+                throw new SparkException(exception);
+            }
+        }
+
+        var response = await Exec();
+        
+        foreach (var warning in response.Warnings)
+        {
+            Console.WriteLine($"Config::Warning: '{warning}'");
+        }
+        
+    }
     
     public static async Task ExecSetConfigCommandResponse(SparkSession session, IDictionary<string, string> options)
     {
