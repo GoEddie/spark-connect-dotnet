@@ -39,10 +39,6 @@ public class GroupedData
                     AggregateExpressions = { exprs.Select(p => p.Expression) },
                     GroupingExpressions = { _groupingExpressions },
                     GroupType = _groupType
-                },
-                Common = new RelationCommon()
-                {
-                    PlanId     = _session.GetPlanId()
                 }
             }
         };
@@ -134,10 +130,6 @@ public class GroupedData
                         AggregateExpressions = { expressions },
                         GroupType = _groupType,
                         GroupingExpressions = { _groupingExpressions }
-                    },
-                    Common = new RelationCommon()
-                    {
-                        PlanId     = _session.GetPlanId()
                     }
                 }
             };
@@ -158,10 +150,6 @@ public class GroupedData
                         GroupType = _groupType,
                         GroupingExpressions = { _groupingExpressions },
                         AggregateExpressions = { expressions }
-                    },
-                    Common = new RelationCommon()
-                    {
-                        PlanId     = _session.GetPlanId()
                     }
                 }
             };
@@ -181,10 +169,6 @@ public class GroupedData
                         AggregateExpressions = { expressions },
                         GroupType = _groupType,
                         GroupingExpressions = { _groupingExpressions }
-                    },
-                    Common = new RelationCommon()
-                    {
-                        PlanId     = _session.GetPlanId()
                     }
                 }
             };

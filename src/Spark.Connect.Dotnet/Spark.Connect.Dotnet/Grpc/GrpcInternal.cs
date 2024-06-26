@@ -1,5 +1,6 @@
 using System.Text;
 using Apache.Arrow.Ipc;
+using Google.Protobuf.Collections;
 using Grpc.Core;
 using Newtonsoft.Json;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
@@ -325,7 +326,18 @@ public static class GrpcInternal
             if (current?.WriteStreamOperationStartResult != null)
             {
             }
+            
+            if (current.Metrics != null)
+            {
+                DumpMetrics(current.Metrics);
+            }
 
+            if (current.ObservedMetrics != null && current.ObservedMetrics.Count > 0)
+            {
+                DumpObservedMetrics(current.ObservedMetrics);
+            }
+            
+            
             await execResponse.ResponseStream.MoveNext(new CancellationToken());
             current = execResponse.ResponseStream.Current;
         }
@@ -436,6 +448,11 @@ public static class GrpcInternal
                 queryId = current.StreamingQueryCommandResult.QueryId;
                 result = current.StreamingQueryCommandResult.Status;
             }
+            
+            if (current.Metrics != null)
+            {
+                DumpMetrics(current.Metrics);
+            }
 
             await execResponse.ResponseStream.MoveNext(new CancellationToken());
             current = execResponse.ResponseStream.Current;
@@ -444,7 +461,7 @@ public static class GrpcInternal
         return (queryId, result);
     }
 
-    public static async Task<(List<ExecutePlanResponse.Types.ArrowBatch>, DataType?)> ExecArrowResponse(
+    public static async Task<(List<ExecutePlanResponse.Types.ArrowBatch>, DataType?, RepeatedField<ExecutePlanResponse.Types.Metrics.Types.MetricObject>?)> ExecArrowResponse(
         SparkConnectService.SparkConnectServiceClient client, string sessionId, Plan plan, Metadata headers,
         UserContext userContext, string clientType)
     {
@@ -482,6 +499,7 @@ public static class GrpcInternal
 
         Relation? dataframe = null;
         DataType? schema = null;
+        RepeatedField<ExecutePlanResponse.Types.Metrics.Types.MetricObject>? metrics = null;
 
         var batches = new List<ExecutePlanResponse.Types.ArrowBatch>();
 
@@ -503,6 +521,16 @@ public static class GrpcInternal
                 batches.Add(batch);
             }
 
+            if (current.Metrics != null)
+            {
+                metrics = DumpMetrics(current.Metrics);
+            }
+
+            if (current.ObservedMetrics != null && current.ObservedMetrics.Count > 0)
+            {
+                DumpObservedMetrics(current.ObservedMetrics);
+            }
+
             await execResponse.ResponseStream.MoveNext(new CancellationToken());
             current = execResponse.ResponseStream.Current;
         }
@@ -512,7 +540,31 @@ public static class GrpcInternal
             Logger.WriteLine("EXEC Relation is NULL");
         }
 
-        return (batches, schema);
+        return (batches, schema, metrics);
+    }
+
+    private static void DumpObservedMetrics(RepeatedField<ExecutePlanResponse.Types.ObservedMetrics> currentObservedMetrics)
+    {
+        foreach (var metric in currentObservedMetrics)
+        {
+            for (var i = 0; i < metric.Keys.Count; i++)
+            {
+                Console.WriteLine($"observed metric: {metric.Name}, {metric.PlanId}, {metric.Keys[i]} = {metric.Values[i]}");   
+            }
+        }
+    }
+
+    private static RepeatedField<ExecutePlanResponse.Types.Metrics.Types.MetricObject> DumpMetrics(ExecutePlanResponse.Types.Metrics currentMetrics)
+    {
+        foreach (var metric in currentMetrics.Metrics_)
+        {
+            foreach (var value in metric.ExecutionMetrics)
+            {
+                Console.WriteLine($"metric: {metric.Name}, parent: {metric.Parent} planid: {metric.PlanId}, {value.Key} = {value.Value}");    
+            }
+        }
+        
+        return currentMetrics.Metrics_;
     }
 
 
@@ -520,12 +572,12 @@ public static class GrpcInternal
     {
         var executeRequest = new ExecutePlanRequest
         {
-            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext,
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, 
             ClientType = session.ClientType
         };
 
         LastPlan = plan.ToString();
-
+        
         AsyncServerStreamingCall<ExecutePlanResponse> Exec()
         {
             try
