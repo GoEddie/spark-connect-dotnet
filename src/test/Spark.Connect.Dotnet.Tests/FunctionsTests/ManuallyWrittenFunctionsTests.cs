@@ -1507,4 +1507,14 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         Source.Select(TryToTimestamp(Lit("ABC"))).Show();
         Source.Select(TryToTimestamp(Col("id"))).Show();
     }
+
+    [Fact]
+    public void LongerPlan_Test()
+    {
+        var a = Spark.Range(100).Repartition(30).GroupBy("id").Count();
+        var b = Spark.Range(100).WithColumn("id2", Col("id") % 5);
+        var c = a.Join(b, a["id"] == b["id2"]);
+        c.Collect();
+
+    }
 }

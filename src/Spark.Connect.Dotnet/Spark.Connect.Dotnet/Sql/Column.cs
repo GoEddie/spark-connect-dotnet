@@ -13,7 +13,7 @@ public class Column
         Expression = expression;
     }
 
-    public Column(string name)
+    public Column(string name, DataFrame? source = null)
     {
         _name = name;
 
@@ -29,6 +29,21 @@ public class Column
 
             return;
         }
+
+        if (null != source)
+        {
+            Expression = new Expression
+            {
+                UnresolvedAttribute = new Expression.Types.UnresolvedAttribute
+                {
+                    UnparsedIdentifier = name,
+                    PlanId = source.Relation.Common.PlanId
+                }
+            };
+
+            return;
+        }
+        
         
         Expression = new Expression
         {
