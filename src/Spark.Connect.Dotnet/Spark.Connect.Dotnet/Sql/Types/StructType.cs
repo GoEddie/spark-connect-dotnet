@@ -2,6 +2,7 @@ using System.Text;
 using Apache.Arrow;
 using Apache.Arrow.Types;
 using Google.Protobuf.Collections;
+using Grpc.Core;
 using Spark.Connect.Dotnet.Grpc;
 using static Spark.Connect.Dotnet.Sql.Types.SparkDataType;
 
@@ -31,7 +32,7 @@ public class StructType : SparkDataType
     {
         Fields = fields.ToList();
     }
-    
+
     public StructType(List<StructField> fields) : base("StructType")
     {
         Fields = fields;
@@ -41,7 +42,7 @@ public class StructType : SparkDataType
     {
 
         Fields = new List<StructField>();
-        
+
         foreach (var field in readerSchema.FieldsList)
         {
             var sparkField = new StructField(field.Name, field.DataType, field.IsNullable);
@@ -57,12 +58,12 @@ public class StructType : SparkDataType
         }
 
         Fields = new List<StructField>();
-        
+
         foreach (var field in schema.Struct.Fields)
         {
-            Fields.Add(new StructField(field.Name, field.DataType, field.Nullable));    
+            Fields.Add(new StructField(field.Name, field.DataType, field.Nullable));
         }
-        
+
     }
 
     public List<StructField> Fields { get; }
@@ -87,12 +88,39 @@ public class StructType : SparkDataType
 
         return $"StructType<{string.Join(",", Fields.Select(GetNameAndType))}>";
     }
-    
+
+    public override string ToDdl(string name, bool nullable)
+    {
+        var ddl = new StringBuilder();
+        ddl.Append(name);
+        ddl.Append(" ");
+        ddl.Append(ToDdl());
+        if (!nullable)
+        {
+            ddl.Append(" NOT NULL");
+        }
+        return ddl.ToString();
+    }
+
+    public string ToDdl()
+    {
+        var ddl = new StringBuilder();
+        ddl.Append("STRUCT<");
+        ddl.Append(FieldsAsDdl());
+        ddl.Append(">");
+        return ddl.ToString();
+    }
+
+    public string FieldsAsDdl()
+    {
+        return string.Join(", ", Fields.Select(f => f.Ddl()));
+    }
+
     public string Json()
     {
         return DataTypeJsonSerializer.StructTypeToJson(this);
     }
-    
+
     public override DataType ToDataType()
     {
         var fields = Fields.Select(field => new DataType.Types.StructField
@@ -116,8 +144,8 @@ public class StructType : SparkDataType
         return new Apache.Arrow.Types.StructType(Fields
             .Select(field => new Field(field.Name, field.DataType.ToArrowType(), field.Nullable)).ToList());
     }
-    
-    public static StructField StructField(string name, SparkDataType type, bool isNullable=true)
+
+    public static StructField StructField(string name, SparkDataType type, bool isNullable = true)
     {
         return new StructField(name, type, isNullable);
     }
@@ -131,7 +159,7 @@ public class StructField
         DataType = new StringType();
         Metadata = new Dictionary<string, object>();
     }
-    
+
     public StructField(string name, SparkDataType type, bool nullable, IDictionary<string, object>? metadata = null)
     {
         Name = name;
@@ -159,7 +187,29 @@ public class StructField
     public string Name { get; set; }
     public SparkDataType DataType { get; set; }
     public bool Nullable { get; set; }
-    
+
+    public string Ddl()
+    {
+        //var ddl = new System.Text.StringBuilder();
+        //ddl.Append(name);
+        //ddl.Append(":");
+        //ddl.Append(this.TypeName);
+        //if (!nullable)
+        //{
+        //    ddl.Append(" NOT NULL");
+        //}
+        //return ddl.ToString();
+
+        if (DataType is ArrayType arrayDataType)
+        {
+            return arrayDataType.ToDdl(Name, Nullable);
+        }
+        else
+        {
+            return DataType.ToDdl(Name, Nullable);
+        }
+    }
+
     public IDictionary<string, object> Metadata;
 
     private SparkDataType FromArrowType(IArrowType type) => type.TypeId switch
@@ -180,9 +230,9 @@ public class StructField
         ArrowTypeId.Struct => StructType(),
         ArrowTypeId.List => ArrayType(FromArrowType((type as ListType).ValueDataType), (type as ListType).ValueField.IsNullable),
         ArrowTypeId.Map => MapType(FromArrowType((type as Apache.Arrow.Types.MapType).KeyField.DataType), FromArrowType((type as Apache.Arrow.Types.MapType).ValueField.DataType), (type as Apache.Arrow.Types.MapType).ValueField.IsNullable),
-        ArrowTypeId.Interval  =>  IntervalToType(type as IntervalType),
-        
-        _ => throw new ArgumentOutOfRangeException($"Cannot convert Arrow Type '{type}'")   
+        ArrowTypeId.Interval => IntervalToType(type as IntervalType),
+
+        _ => throw new ArgumentOutOfRangeException($"Cannot convert Arrow Type '{type}'")
     };
 
     private SparkDataType IntervalToType(IntervalType type)
@@ -252,8 +302,8 @@ public class StructField
         {
             return new MapType(FromConnectDataType(type.Map.KeyType), FromConnectDataType(type.Map.ValueType), type.Map.ValueContainsNull);
         }
-        
-        if(type.Date != null)
+
+        if (type.Date != null)
         {
             return new DateType();
         }
@@ -373,12 +423,12 @@ public static class DataTypeJsonSerializer
         json.Append(MetadataToString(field));
         json.Append(NameToString(field));
         json.Append(NullableToString(field));
-        
+
         json.Append($"{TypeStructStart}{{{ArrayTypeToJson(array)}{TypeStructEnd}}}");
         json.Append(FieldEnd);
         return json.ToString();
     }
-    
+
     private static string ArrayTypeToJson(ArrayType array)
     {
         if (array.ElementType is ArrayType)
@@ -395,7 +445,7 @@ public static class DataTypeJsonSerializer
         {
             return string.Empty;
         }
-        
+
         var json = new StringBuilder();
         json.Append(ContainsNullStart);
         json.Append(array.NullableValues.ToString().ToLowerInvariant());
@@ -404,7 +454,7 @@ public static class DataTypeJsonSerializer
         json.Append(array.ElementType.JsonTypeName());
         json.Append(ElementTypeEnd);
         json.Append(ArrayType);
-        
+
         return json.ToString();
     }
 
@@ -442,12 +492,12 @@ public static class DataTypeJsonSerializer
     {
         return $@"{NameStart}{field.Name}{NameEnd}";
     }
-    
+
     private static string SimpleTypeToString(StructField field)
     {
         return $@"{TypeStart}{field.DataType.JsonTypeName()}{TypeEnd}";
     }
-    
+
     private static string NullableToString(StructField field)
     {
         return $@"{NullableStart}{field.Nullable.ToString().ToLowerInvariant()}{NullableEnd}";

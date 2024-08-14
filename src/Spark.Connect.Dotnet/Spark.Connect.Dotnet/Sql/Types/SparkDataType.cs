@@ -27,6 +27,19 @@ public abstract class SparkDataType
         return SimpleString();
     }
 
+    public virtual string ToDdl(string name, bool nullable)
+    {
+        var ddl = new System.Text.StringBuilder();
+        ddl.Append(name);
+        ddl.Append(" ");
+        ddl.Append(this.TypeName);
+        if (!nullable)
+        {
+            ddl.Append(" NOT NULL");
+        }
+        return ddl.ToString();
+    }
+
     public static ByteType ByteType()
     {
         return new ByteType();
@@ -51,7 +64,7 @@ public abstract class SparkDataType
     {
         return new FloatType();
     }
-    
+
     public static BigIntType BigIntType()
     {
         return new BigIntType();
@@ -86,17 +99,17 @@ public abstract class SparkDataType
     {
         return new VoidType();
     }
-    
+
     public static DateType DateType()
     {
         return new DateType();
     }
-    
+
     public static TimestampType TimestampType()
     {
         return new TimestampType();
     }
-    
+
     public static TimestampNtzType TimestampNtzType()
     {
         return new TimestampNtzType();
@@ -106,13 +119,13 @@ public abstract class SparkDataType
     {
         return new YearMonthIntervalType();
     }
-    
+
     public static StructType StructType(params StructField[] fields)
     {
         return new StructType(fields);
     }
 
-    public static ArrayType ArrayType(SparkDataType elementType, bool nullableValues=true)
+    public static ArrayType ArrayType(SparkDataType elementType, bool nullableValues = true)
     {
         return new ArrayType(elementType, nullableValues);
     }
@@ -150,27 +163,27 @@ public abstract class SparkDataType
 
             case "binary":
                 return new BinaryType();
-            
+
             case "double":
                 return new DoubleType();
-            
+
             case "float":
                 return new FloatType();
 
             case "bool":
             case "boolean":
                 return new BooleanType();
-            
+
             case "null":
             case "void":
                 return new VoidType();
-            
+
             case "timestamp":
                 return new TimestampType();
-            
+
             case "timestampntz":
                 return new TimestampNtzType();
-            
+
             case "date":
                 return new DateType();
         }
@@ -203,7 +216,7 @@ public abstract class SparkDataType
 
         throw new NotImplementedException($"Missing DataType From String: '{type}'");
     }
-    
+
 
     public static SparkDataType FromDotNetType(object o) => o switch
     {
@@ -216,17 +229,17 @@ public abstract class SparkDataType
         DateTime => TimestampType(),
         DateOnly => DateType(),
         byte => ByteType(),
-        IDictionary<string, long?> => MapType(StringType(),  LongType(), true),
-        IDictionary<string, int?> => MapType(StringType(),  IntType(), true),
-        IDictionary<string, string?> => MapType(StringType(),  StringType(), true),
-        IDictionary<string, object> dict => MapType(StringType(),  FromDotNetType(dict.Values.FirstOrDefault()), true),
-        
+        IDictionary<string, long?> => MapType(StringType(), LongType(), true),
+        IDictionary<string, int?> => MapType(StringType(), IntType(), true),
+        IDictionary<string, string?> => MapType(StringType(), StringType(), true),
+        IDictionary<string, object> dict => MapType(StringType(), FromDotNetType(dict.Values.FirstOrDefault()), true),
+
         string[] => ArrayType(StringType()),
-         
+
         _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
     };
 
-    public static SparkDataType FromSparkConnectType(DataType type) 
+    public static SparkDataType FromSparkConnectType(DataType type)
     {
         if (type.Array != null)
         {
@@ -299,8 +312,8 @@ public abstract class SparkDataType
         {
             return new YearMonthIntervalType(type.YearMonthInterval.StartField, type.YearMonthInterval.EndField);
         }
-        
+
         throw new NotImplementedException();
     }
-    
+
 }
