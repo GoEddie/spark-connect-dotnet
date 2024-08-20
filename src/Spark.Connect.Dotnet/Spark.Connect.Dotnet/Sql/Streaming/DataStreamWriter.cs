@@ -9,20 +9,20 @@ public class DataStreamWriter
     private readonly Relation _input;
 
     private readonly MapField<string, string> _options = new();
+    private readonly List<string> _paritionBy = new();
     private readonly SparkSession _session;
+    private readonly string _udf_base64_function = string.Empty;
+
+    private readonly string _udf_pythonVersion = string.Empty;
     private bool? _availableNow;
     private string _continuous = string.Empty;
 
     private string _format = string.Empty;
     private bool? _once;
     private string _outputMode = string.Empty;
-    private readonly List<string> _paritionBy = new();
     private string _path = string.Empty;
     private string _processingTime = string.Empty;
     private string _queryName = string.Empty;
-    private readonly string _udf_base64_function = string.Empty;
-
-    private readonly string _udf_pythonVersion = string.Empty;
 
     public DataStreamWriter(SparkSession session, Relation input)
     {
@@ -89,8 +89,7 @@ public class DataStreamWriter
             {
                 PythonFunction = new PythonUDF
                 {
-                    Command = ByteString.FromBase64(_udf_base64_function),
-                    PythonVer = _udf_pythonVersion
+                    Command = ByteString.FromBase64(_udf_base64_function), PythonVer = _udf_pythonVersion
                 }
             };
         }

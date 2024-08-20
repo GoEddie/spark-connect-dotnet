@@ -6,42 +6,115 @@ using Spark.Connect.Dotnet.Sql.Streaming;
 using Spark.Connect.Dotnet.Sql.Types;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using static Spark.Connect.Dotnet.Sql.Functions;
-
-using BinaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column>>;
+using TransformFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.DataFrame, Spark.Connect.Dotnet.Sql.DataFrame>>;
 
 namespace Spark.Connect.Dotnet.Sql;
 
 public class DataFrame
 {
     private readonly DataType? _schema;
-    private readonly SparkSession _session;
     public readonly Relation Relation;
+
+    private readonly Dictionary<SparkStorageLevel, StorageLevel> StorageLevels =
+        new()
+        {
+            {
+                SparkStorageLevel.None, new StorageLevel
+                {
+                    UseDisk = false, Deserialized = false, UseMemory = false, UseOffHeap = false
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.DISK_ONLY, new StorageLevel
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = false, UseOffHeap = false
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.DISK_ONLY_2, new StorageLevel
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = false, UseOffHeap = false, Replication = 2
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.DISK_ONLY_3, new StorageLevel
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = false, UseOffHeap = false, Replication = 3
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.MEMORY_ONLY, new StorageLevel
+                {
+                    UseDisk = false, Deserialized = false, UseMemory = true, UseOffHeap = false
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.MEMORY_ONLY_2, new StorageLevel
+                {
+                    UseDisk = false, Deserialized = false, UseMemory = true, UseOffHeap = false, Replication = 2
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.MEMORY_AND_DISK, new StorageLevel
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = true, UseOffHeap = false
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.MEMORY_AND_DISK_2, new StorageLevel
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = true, UseOffHeap = false, Replication = 2
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.OFF_HEAP, new StorageLevel
+                {
+                    UseDisk = true, Deserialized = false, UseMemory = true, UseOffHeap = true
+                }
+            }
+            ,
+            {
+                SparkStorageLevel.MEMORY_AND_DISK_DESER, new StorageLevel
+                {
+                    UseDisk = true, Deserialized = true, UseMemory = true, UseOffHeap = false
+                }
+            }
+        };
 
     public DataFrame(SparkSession session, Relation relation, DataType? schema)
     {
-        _session = session;
+        SparkSession = session;
         Relation = relation;
-        
+
         if (Relation.Common == null)
         {
-            Relation.Common = new RelationCommon()
+            Relation.Common = new RelationCommon
             {
-                PlanId = _session.GetPlanId()
+                PlanId = SparkSession.GetPlanId()
             };
         }
+
         _schema = schema;
     }
 
     public DataFrame(SparkSession session, Relation relation)
     {
-        _session = session;
+        SparkSession = session;
         Relation = relation;
-        
+
         if (Relation.Common == null)
         {
-            Relation.Common = new RelationCommon()
+            Relation.Common = new RelationCommon
             {
-                PlanId = _session.GetPlanId()
+                PlanId = SparkSession.GetPlanId()
             };
         }
     }
@@ -54,13 +127,14 @@ public class DataFrame
     {
         get
         {
-            if (!ValidateThisCallColumnName && !_session.Conf.IsTrue(RuntimeConf.SparkDotnetConfigKey + "validatethiscallcolumnname"))
+            if (!ValidateThisCallColumnName &&
+                !SparkSession.Conf.IsTrue(RuntimeConf.SparkDotnetConfigKey + "validatethiscallcolumnname"))
             {
                 return new Column(name, this);
             }
-            
+
             var schema = Schema;
-            if(schema.Fields.All(p => !string.Equals(p.Name, name, StringComparison.InvariantCultureIgnoreCase)))
+            if (schema.Fields.All(p => !string.Equals(p.Name, name, StringComparison.InvariantCultureIgnoreCase)))
             {
                 throw new SparkException(
                     $"The field '{name}' was not found in the schema: '{schema.SimpleString()}', DataFrame[\"name\"] failed validation");
@@ -80,15 +154,23 @@ public class DataFrame
             {
                 Root = Relation
             };
-            
-            var explain = GrpcInternal.Schema(_session.GrpcClient, _session.SessionId, plan, _session.Headers,
-                _session.UserContext, _session.ClientType, false, "");
+
+            var explain = GrpcInternal.Schema(SparkSession.GrpcClient, SparkSession.SessionId, plan,
+                SparkSession.Headers,
+                SparkSession.UserContext, SparkSession.ClientType, false, "");
             var structType = new StructType(explain.Struct);
             return structType;
         }
     }
 
     public IEnumerable<string> Columns => Schema.FieldNames();
+
+    public IEnumerable<(string Name, string Type)> Dtypes =>
+        Schema.Fields.Select(p => (p.Name, p.DataType.SimpleString()));
+
+    public DataFrameNaFunctions Na => new(this);
+
+    public SparkSession SparkSession { get; }
 
     /// <summary>
     ///     Returns a new `DataFrame` by taking the first n rows.
@@ -108,7 +190,7 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, limitPlan.Root, _schema);
+        return new DataFrame(SparkSession, limitPlan.Root, _schema);
     }
 
     /// <summary>
@@ -119,7 +201,7 @@ public class DataFrame
     /// <param name="vertical">Print output rows vertically (one line per column value).</param>
     public void Show(int numberOfRows = 10, int truncate = 20, bool vertical = false)
     {
-        var result = Task.Run(() => ShowAsync(Relation, numberOfRows, truncate, vertical, _session));
+        var result = Task.Run(() => ShowAsync(Relation, numberOfRows, truncate, vertical, SparkSession));
         Wait(result);
     }
 
@@ -132,7 +214,8 @@ public class DataFrame
     /// <param name="vertical">Print output rows vertically (one line per column value).</param>
     /// <param name="sessionId">SessionId to make the call on</param>
     /// <param name="client">`SparkConnectServiceClient` client, must already be connected</param>
-    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical, SparkSession session)
+    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical,
+        SparkSession session)
     {
         var showStringPlan = new Plan
         {
@@ -145,13 +228,14 @@ public class DataFrame
             }
         };
 
-        var (_, _, output) = await GrpcInternal.Exec(session.GrpcClient, session.Host, session.SessionId, showStringPlan, session.Headers, session.UserContext, session.ClientType);
+        var (_, _, output) = await GrpcInternal.Exec(session.GrpcClient, session.Host, session.SessionId,
+            showStringPlan, session.Headers, session.UserContext, session.ClientType);
         session.Console.WriteLine(output);
     }
 
     public void PrintSchema(int? level = null)
     {
-        _session.Console.WriteLine(GrpcInternal.TreeString(_session, Relation));
+        SparkSession.Console.WriteLine(GrpcInternal.TreeString(SparkSession, Relation));
     }
 
     /// <summary>
@@ -174,20 +258,21 @@ public class DataFrame
                 }
             }
         };
-        
+
         RunAnalyze(relation);
 
-        return new DataFrame(_session, relation, _schema);
+        return new DataFrame(SparkSession, relation, _schema);
     }
 
     private void RunAnalyze(Relation relation)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
             Root = relation
         };
-        
-        GrpcInternal.Schema(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, false, "");
+
+        GrpcInternal.Schema(SparkSession.GrpcClient, SparkSession.SessionId, plan, SparkSession.Headers,
+            SparkSession.UserContext, SparkSession.ClientType, false, "");
     }
 
     public DataFrame Select(params Expression[] columns)
@@ -204,8 +289,8 @@ public class DataFrame
         };
 
         RunAnalyze(relation);
-        
-        return new DataFrame(_session, relation, _schema);
+
+        return new DataFrame(SparkSession, relation, _schema);
     }
 
     /// <summary>
@@ -222,18 +307,15 @@ public class DataFrame
         {
             if (p == "*")
             {
-                return new Expression()
+                return new Expression
                 {
                     UnresolvedStar = new Expression.Types.UnresolvedStar()
-                    {
-                        
-                    }
                 };
             }
-            
+
             return new Expression
             {
-                UnresolvedAttribute = new Expression.Types.UnresolvedAttribute()
+                UnresolvedAttribute = new Expression.Types.UnresolvedAttribute
                 {
                     UnparsedIdentifier = p
                 }
@@ -244,9 +326,7 @@ public class DataFrame
         {
             Project = new Project
             {
-                Input = Relation,
-
-                Expressions =
+                Input = Relation, Expressions =
                 {
                     columns.Select(p => ColumnNameToExpression(p))
                 }
@@ -254,8 +334,8 @@ public class DataFrame
         };
 
         RunAnalyze(relation);
-        
-        return new DataFrame(_session, relation, _schema);
+
+        return new DataFrame(SparkSession, relation, _schema);
     }
 
     public DataFrame Alias(string alias)
@@ -264,99 +344,25 @@ public class DataFrame
         {
             SubqueryAlias = new SubqueryAlias
             {
-                Input = Relation,
-                Alias = alias
+                Input = Relation, Alias = alias
             }
         };
 
-        return new DataFrame(_session, newRelation);
+        return new DataFrame(SparkSession, newRelation);
     }
 
     public DataFrame Cache()
     {
-        return new DataFrame(_session,
-            GrpcInternal.Persist(_session,  Relation, new StorageLevel
+        return new DataFrame(SparkSession,
+            GrpcInternal.Persist(SparkSession, Relation, new StorageLevel
             {
-                UseMemory = true,
-                UseDisk = true,
-                UseOffHeap = false,
-                Deserialized = true,
-                Replication = 1
+                UseMemory = true, UseDisk = true, UseOffHeap = false, Deserialized = true, Replication = 1
             }));
     }
 
-    private Dictionary<SparkStorageLevel, StorageLevel> StorageLevels =
-        new Dictionary<SparkStorageLevel, StorageLevel>()
-        {
-            {
-                SparkStorageLevel.None, new StorageLevel()
-                {
-                    UseDisk = false, Deserialized = false, UseMemory = false, UseOffHeap = false
-                }
-            },
-            {
-                SparkStorageLevel.DISK_ONLY, new StorageLevel()
-                {
-                    UseDisk = true, Deserialized = false, UseMemory = false, UseOffHeap = false
-                }
-                
-            },
-                {
-                SparkStorageLevel.DISK_ONLY_2, new StorageLevel()
-                {
-                    UseDisk = true, Deserialized = false, UseMemory = false, UseOffHeap = false, Replication = 2
-                }
-            },
-            {
-                SparkStorageLevel.DISK_ONLY_3, new StorageLevel()
-                {
-                    UseDisk = true, Deserialized = false, UseMemory = false, UseOffHeap = false, Replication = 3
-                }
-            }
-            ,
-            {
-                SparkStorageLevel.MEMORY_ONLY, new StorageLevel()
-                {
-                    UseDisk = false, Deserialized = false, UseMemory = true, UseOffHeap = false
-                }
-            } ,
-            {
-                SparkStorageLevel.MEMORY_ONLY_2, new StorageLevel()
-                {
-                    UseDisk = false, Deserialized = false, UseMemory = true, UseOffHeap = false, Replication = 2
-                }
-            },
-            {
-                SparkStorageLevel.MEMORY_AND_DISK, new StorageLevel()
-                {
-                    UseDisk = true, Deserialized = false, UseMemory = true, UseOffHeap = false
-                }
-            } ,
-            {
-                SparkStorageLevel.MEMORY_AND_DISK_2, new StorageLevel()
-                {
-                    UseDisk = true, Deserialized = false, UseMemory = true, UseOffHeap = false, Replication = 2
-                }
-            },
-            {
-                SparkStorageLevel.OFF_HEAP, new StorageLevel()
-                {
-                    UseDisk = true, Deserialized = false, UseMemory = true, UseOffHeap = true
-                }
-            }
-            ,
-            {
-                SparkStorageLevel.MEMORY_AND_DISK_DESER, new StorageLevel()
-                {
-                    UseDisk = true, Deserialized = true, UseMemory = true, UseOffHeap = false
-                }
-            }
-             
-        };
-    
     public DataFrame Persist(SparkStorageLevel storageLevel)
     {
-        return new DataFrame(_session, GrpcInternal.Persist(_session, Relation, StorageLevels[storageLevel]));
+        return new DataFrame(SparkSession, GrpcInternal.Persist(SparkSession, Relation, StorageLevels[storageLevel]));
     }
 
     public DataFrame Checkpoint()
@@ -366,136 +372,127 @@ public class DataFrame
 
     public DataFrame Describe(params string[] cols)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
             Root = new Relation
             {
-                Describe = new StatDescribe()
+                Describe = new StatDescribe
                 {
-                    Input = Relation, 
-                    Cols = { cols }
+                    Input = Relation, Cols = { cols }
                 }
             }
         };
-     
-        return new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+
+        return new DataFrame(SparkSession, GrpcInternal.Exec(SparkSession, plan));
     }
-    
+
     public DataFrame Distinct(bool withinWatermark = false)
     {
         var plan = new Plan
         {
             Root = new Relation
             {
-                Deduplicate = new Deduplicate()
+                Deduplicate = new Deduplicate
                 {
-                    Input = Relation,
-                    AllColumnsAsKeys = true,
-                    WithinWatermark = withinWatermark
+                    Input = Relation, AllColumnsAsKeys = true, WithinWatermark = withinWatermark
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
+        return new DataFrame(SparkSession, plan.Root);
     }
-    
+
     public DataFrame Drop(params string[] cols)
     {
         var plan = new Plan
         {
             Root = new Relation
             {
-                Drop = new Drop()
+                Drop = new Drop
                 {
-                    Input = Relation,
-                    ColumnNames = { cols }
+                    Input = Relation, ColumnNames = { cols }
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
-    } 
-    
+        return new DataFrame(SparkSession, plan.Root);
+    }
+
     public DataFrame DropDuplicates(params string[] subset)
     {
         if (subset.Length == 0)
         {
             return Distinct();
         }
-        
+
         var plan = new Plan
         {
             Root = new Relation
             {
-                Deduplicate = new Deduplicate()
+                Deduplicate = new Deduplicate
                 {
-                    Input = Relation,
-                    ColumnNames = { subset }
+                    Input = Relation, ColumnNames = { subset }
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
-    } 
-    
+        return new DataFrame(SparkSession, plan.Root);
+    }
+
     public DataFrame DropDuplicatesWithinWatermark(params string[] subset)
     {
         if (subset.Length == 0)
         {
             return Distinct(true);
         }
-        
+
         var plan = new Plan
         {
             Root = new Relation
             {
-                Deduplicate = new Deduplicate()
+                Deduplicate = new Deduplicate
                 {
-                    Input = Relation,
-                    ColumnNames = { subset },
-                    WithinWatermark = true
+                    Input = Relation, ColumnNames = { subset }, WithinWatermark = true
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
-    } 
-    
+        return new DataFrame(SparkSession, plan.Root);
+    }
+
     public DataFrame Drop(params Column[] cols)
     {
         var plan = new Plan
         {
             Root = new Relation
             {
-                Drop = new Drop()
+                Drop = new Drop
                 {
-                    Input = Relation,
-                    Columns = { cols.Select(p => p.Expression) }
+                    Input = Relation, Columns = { cols.Select(p => p.Expression) }
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
+        return new DataFrame(SparkSession, plan.Root);
     }
-    
+
     public DataFrame DropNa(string how, int? thresh, params string[] subset)
     {
-        var naDrop = new NADrop()
+        var naDrop = new NADrop
         {
-            Input = Relation,
-            Cols = { subset }
+            Input = Relation, Cols = { subset }
         };
 
         if (how == "all")
         {
             naDrop.MinNonNulls = 1;
         }
-        
+
         if (thresh.HasValue)
         {
             naDrop.MinNonNulls = thresh.Value;
         }
-        
+
         var plan = new Plan
         {
             Root = new Relation
@@ -503,11 +500,9 @@ public class DataFrame
                 DropNa = naDrop
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
-    }
 
-    public IEnumerable<(string Name, string Type)> Dtypes => Schema.Fields.Select(p => (p.Name, p.DataType.SimpleString()));
+        return new DataFrame(SparkSession, plan.Root);
+    }
 
     public DataFrame Coalesce()
     {
@@ -522,13 +517,12 @@ public class DataFrame
             {
                 Repartition = new Repartition
                 {
-                    Input = Relation,
-                    NumPartitions = numPartitions
+                    Input = Relation, NumPartitions = numPartitions
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public DataFrame Repartition(int numPartitions, params Column[] cols)
@@ -539,9 +533,7 @@ public class DataFrame
             {
                 RepartitionByExpression = new RepartitionByExpression
                 {
-                    Input = Relation,
-                    NumPartitions = numPartitions,
-                    PartitionExprs =
+                    Input = Relation, NumPartitions = numPartitions, PartitionExprs =
                     {
                         cols.Select(p => p.Expression)
                     }
@@ -549,58 +541,59 @@ public class DataFrame
             }
         };
 
-        return new DataFrame(_session, plan.Root);
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public DataFrame Repartition(params Column[] cols)
     {
         return Repartition(1, cols);
     }
-    
+
     public DataFrame RepartitionByRange(int numPartitions, params Column[] cols)
     {
         Column WrapSortOrderCols(Column column)
         {
             if (column.Expression.SortOrder == null)
             {
-                var sortOrder = new Expression.Types.SortOrder()
+                var sortOrder = new Expression.Types.SortOrder
                 {
-                    Child = column.Expression, Direction = Expression.Types.SortOrder.Types.SortDirection.Unspecified, NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
+                    Child = column.Expression, Direction = Expression.Types.SortOrder.Types.SortDirection.Unspecified
+                    , NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
                 };
             }
 
             return column;
         }
-        
+
         var sort = cols.Select(WrapSortOrderCols);
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                RepartitionByExpression = new RepartitionByExpression()
+                RepartitionByExpression = new RepartitionByExpression
                 {
                     NumPartitions = numPartitions, Input = Relation, PartitionExprs = { sort.Select(p => p.Expression) }
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public DataFrame SortWithinPartitions(params string[] cols)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Sort = new Sort()
+                Sort = new Sort
                 {
                     IsGlobal = false, Input = Relation, Order = { ColumnsToSortOrder(cols.Select(Col).ToArray()) }
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public Column ColRegex(string regex)
@@ -640,9 +633,9 @@ public class DataFrame
         relation.WithColumns.Aliases.Add(alias);
         relation.WithColumns.Input = Relation;
 
-        return new DataFrame(_session, relation, _schema);
+        return new DataFrame(SparkSession, relation, _schema);
     }
-    
+
     public DataFrame WithColumn(string columnName, Expression column)
     {
         var alias = new Expression.Types.Alias
@@ -658,7 +651,7 @@ public class DataFrame
         relation.WithColumns.Aliases.Add(alias);
         relation.WithColumns.Input = Relation;
 
-        return new DataFrame(_session, relation, _schema);
+        return new DataFrame(SparkSession, relation, _schema);
     }
 
     public DataFrame WithColumns(IDictionary<string, Column> colsMap)
@@ -682,30 +675,30 @@ public class DataFrame
 
         return df;
     }
+
     public DataFrame WithColumnRenamed(string existing, string newName)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                WithColumnsRenamed = new WithColumnsRenamed()
+                WithColumnsRenamed = new WithColumnsRenamed
                 {
-                    Input = Relation,
-                    RenameColumnsMap = { { existing, newName } }
+                    Input = Relation, RenameColumnsMap = { { existing, newName } }
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public DataFrameWriter Write()
     {
-        return new DataFrameWriter(_session, this);
+        return new DataFrameWriter(SparkSession, this);
     }
 
     /// <summary>
-    /// Collect the data back to .NET as .NET objects, doesn't currently support List[type] or Struct[type].
+    ///     Collect the data back to .NET as .NET objects, doesn't currently support List[type] or Struct[type].
     /// </summary>
     /// <returns></returns>
     public IList<Row> Collect()
@@ -722,10 +715,12 @@ public class DataFrame
             Root = Relation
         };
 
-        var physicalPlan = GrpcInternal.Explain(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, true, null);
+        var physicalPlan = GrpcInternal.Explain(SparkSession.GrpcClient, SparkSession.SessionId, plan,
+            SparkSession.Headers, SparkSession.UserContext, SparkSession.ClientType, true, null);
         Console.WriteLine(physicalPlan);
-        
-        var (arrowBatches, schema, metrics) = await GrpcInternal.ExecArrowResponse(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
+
+        var (arrowBatches, schema, metrics) = await GrpcInternal.ExecArrowResponse(SparkSession.GrpcClient,
+            SparkSession.SessionId, plan, SparkSession.Headers, SparkSession.UserContext, SparkSession.ClientType);
         var arrowWrapper = new ArrowWrapper();
         return await arrowWrapper.ArrowBatchesToRows(arrowBatches, schema);
     }
@@ -738,9 +733,9 @@ public class DataFrame
             var sparkType = SparkDataType.FromSparkConnectType(structField.DataType);
             var arrowType = sparkType.ToArrowType();
             var field = new Field(structField.Name, arrowType, structField.Nullable);
-            fields.Add(field);    
+            fields.Add(field);
         }
-        
+
         var arrowSchema = new Schema(fields, new List<KeyValuePair<string, string>>());
         return arrowSchema;
     }
@@ -778,15 +773,13 @@ public class DataFrame
             {
                 CreateDataframeView = new CreateDataFrameViewCommand
                 {
-                    Input = Relation,
-                    Name = name,
-                    Replace = replace,
-                    IsGlobal = global
+                    Input = Relation, Name = name, Replace = replace, IsGlobal = global
                 }
             }
         };
 
-        await GrpcInternal.Exec(_session.GrpcClient, _session.Host, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
+        await GrpcInternal.Exec(SparkSession.GrpcClient, SparkSession.Host, SparkSession.SessionId, plan,
+            SparkSession.Headers, SparkSession.UserContext, SparkSession.ClientType);
     }
 
     public DataFrame Union(DataFrame other)
@@ -795,16 +788,11 @@ public class DataFrame
         {
             SetOp = new SetOperation
             {
-                AllowMissingColumns = false,
-                ByName = false,
-                IsAll = false,
-                LeftInput = Relation,
-                RightInput = other.Relation,
-                SetOpType = SetOperation.Types.SetOpType.Union
+                AllowMissingColumns = false, ByName = false, IsAll = false, LeftInput = Relation, RightInput = other.Relation, SetOpType = SetOperation.Types.SetOpType.Union
             }
         };
 
-        return new DataFrame(_session, relation);
+        return new DataFrame(SparkSession, relation);
     }
 
     public DataFrame UnionAll(DataFrame other)
@@ -813,16 +801,11 @@ public class DataFrame
         {
             SetOp = new SetOperation
             {
-                AllowMissingColumns = false,
-                ByName = false,
-                IsAll = true,
-                LeftInput = Relation,
-                RightInput = other.Relation,
-                SetOpType = SetOperation.Types.SetOpType.Union
+                AllowMissingColumns = false, ByName = false, IsAll = true, LeftInput = Relation, RightInput = other.Relation, SetOpType = SetOperation.Types.SetOpType.Union
             }
         };
 
-        return new DataFrame(_session, relation);
+        return new DataFrame(SparkSession, relation);
     }
 
     public DataFrame UnionByName(DataFrame other, bool allowMissingColumns)
@@ -831,26 +814,24 @@ public class DataFrame
         {
             SetOp = new SetOperation
             {
-                AllowMissingColumns = allowMissingColumns,
-                ByName = true,
-                IsAll = false,
-                LeftInput = Relation,
-                RightInput = other.Relation,
-                SetOpType = SetOperation.Types.SetOpType.Union
+                AllowMissingColumns = allowMissingColumns, ByName = true, IsAll = false, LeftInput = Relation, RightInput = other.Relation
+                , SetOpType = SetOperation.Types.SetOpType.Union
             }
         };
 
-        return new DataFrame(_session, relation);
+        return new DataFrame(SparkSession, relation);
     }
 
     public GroupedData GroupBy(params Column[] cols)
     {
-        return new GroupedData(_session, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Groupby);
+        return new GroupedData(SparkSession, Relation, cols.Select(p => p.Expression),
+            Aggregate.Types.GroupType.Groupby);
     }
-    
+
     public GroupedData GroupBy(params string[] cols)
     {
-        return new GroupedData(_session, Relation, cols.Select(p => Col(p).Expression).ToArray(), Aggregate.Types.GroupType.Groupby);
+        return new GroupedData(SparkSession, Relation, cols.Select(p => Col(p).Expression).ToArray(),
+            Aggregate.Types.GroupType.Groupby);
     }
 
     public DataFrame Agg(params Column[] exprs)
@@ -859,13 +840,11 @@ public class DataFrame
         {
             Aggregate = new Aggregate
             {
-                Input = Relation,
-                GroupType = Aggregate.Types.GroupType.Groupby,
-                AggregateExpressions = { exprs.Select(p => p.Expression) }
+                Input = Relation, GroupType = Aggregate.Types.GroupType.Groupby, AggregateExpressions = { exprs.Select(p => p.Expression) }
             }
         };
 
-        return new DataFrame(_session, relation);
+        return new DataFrame(SparkSession, relation);
     }
 
     public long Count()
@@ -884,7 +863,11 @@ public class DataFrame
         return OrderBy(columns.ToArray());
     }
 
-    public DataFrame OrderBy(params string[] columns) => OrderBy(columns.Select(Col).ToArray());
+    public DataFrame OrderBy(params string[] columns)
+    {
+        return OrderBy(columns.Select(Col).ToArray());
+    }
+
     public DataFrame OrderBy(params Column[] columns)
     {
         var sortColumns = ColumnsToSortOrder(columns);
@@ -893,14 +876,11 @@ public class DataFrame
         {
             Sort = new Sort
             {
-                Input = Relation,
-                Order = { sortColumns },
-                IsGlobal = true,
-                
+                Input = Relation, Order = { sortColumns }, IsGlobal = true
             }
         };
 
-        return new DataFrame(_session, relation);
+        return new DataFrame(SparkSession, relation);
     }
 
     private static IEnumerable<Expression.Types.SortOrder> ColumnsToSortOrder(Column[] columns)
@@ -916,11 +896,10 @@ public class DataFrame
 
             if (column.Expression.UnresolvedAttribute != null)
             {
-                sortColumns.Add(new Expression.Types.SortOrder()
+                sortColumns.Add(new Expression.Types.SortOrder
                 {
-                    Child = column.Expression,
-                    Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
-                    NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
+                    Child = column.Expression, Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending
+                    , NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
                 });
             }
 
@@ -931,49 +910,43 @@ public class DataFrame
                     case "asc":
                         sortColumns.Add(new Expression.Types.SortOrder
                         {
-                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                            Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
-                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(), Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending
+                            , NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
                         });
                         break;
                     case "desc":
                         sortColumns.Add(new Expression.Types.SortOrder
                         {
-                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                            Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
-                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(), Direction = Expression.Types.SortOrder.Types.SortDirection.Descending
+                            , NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
                         });
                         break;
                     case "asc_nulls_last":
                         sortColumns.Add(new Expression.Types.SortOrder
                         {
-                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                            Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
-                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(), Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending
+                            , NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
                         });
                         break;
                     case "asc_nulls_first":
                         sortColumns.Add(new Expression.Types.SortOrder
                         {
-                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                            Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending,
-                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsFirst
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(), Direction = Expression.Types.SortOrder.Types.SortDirection.Ascending
+                            , NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsFirst
                         });
                         break;
                     case "desc_nulls_last":
                         sortColumns.Add(new Expression.Types.SortOrder
                         {
-                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                            Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
-                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(), Direction = Expression.Types.SortOrder.Types.SortDirection.Descending
+                            , NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsLast
                         });
                         break;
                     case "desc_nulls_first":
                         sortColumns.Add(new Expression.Types.SortOrder
                         {
-                            Child = column.Expression.UnresolvedFunction.Arguments.First(),
-                            Direction = Expression.Types.SortOrder.Types.SortDirection.Descending,
-                            NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsFirst
+                            Child = column.Expression.UnresolvedFunction.Arguments.First(), Direction = Expression.Types.SortOrder.Types.SortDirection.Descending
+                            , NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsFirst
                         });
                         break;
                 }
@@ -990,7 +963,7 @@ public class DataFrame
 
     public DataFrameWriterV2 WriteTo(string table)
     {
-        return new DataFrameWriterV2(table, _session, this);
+        return new DataFrameWriterV2(table, SparkSession, this);
     }
 
     public string Explain(bool extended = false, string? mode = null, bool outputToConsole = true)
@@ -999,8 +972,8 @@ public class DataFrame
         {
             Root = Relation
         };
-        
-        var output = GrpcInternal.Explain(_session.GrpcClient, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType, extended, mode);
+
+        var output = GrpcInternal.Explain(SparkSession.GrpcClient, SparkSession.SessionId, plan, SparkSession.Headers, SparkSession.UserContext, SparkSession.ClientType, extended, mode);
 
         if (outputToConsole)
         {
@@ -1036,7 +1009,7 @@ public class DataFrame
             }
         };
 
-        var response = new DataFrame(_session, plan.Root).Collect();
+        var response = new DataFrame(SparkSession, plan.Root).Collect();
         return (double)response[0][0];
     }
 
@@ -1053,7 +1026,7 @@ public class DataFrame
             }
         };
 
-        var response = new DataFrame(_session, plan.Root).Collect();
+        var response = new DataFrame(SparkSession, plan.Root).Collect();
         return (double)response[0][0];
     }
 
@@ -1075,17 +1048,14 @@ public class DataFrame
             {
                 Join = new Join
                 {
-                    JoinType = (Join.Types.JoinType)(int)how,
-                    Left = Relation,
-                    Right = other.Relation,
-                    UsingColumns = { on }
+                    JoinType = (Join.Types.JoinType)(int)how, Left = Relation, Right = other.Relation, UsingColumns = { on }
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
-    
+
     public DataFrame Join(DataFrame other, Column on, JoinType how = JoinType.Inner)
     {
         var plan = new Plan
@@ -1094,15 +1064,12 @@ public class DataFrame
             {
                 Join = new Join
                 {
-                    JoinType = (Join.Types.JoinType)(int)how,
-                    Left = Relation,
-                    Right = other.Relation,
-                    JoinCondition = on.Expression
+                    JoinType = (Join.Types.JoinType)(int)how, Left = Relation, Right = other.Relation, JoinCondition = on.Expression
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     private JoinType ToJoinType(string type)
@@ -1123,13 +1090,12 @@ public class DataFrame
             {
                 Crosstab = new StatCrosstab
                 {
-                    Input = Relation,
-                    Col1 = col1, Col2 = col2
+                    Input = Relation, Col1 = col1, Col2 = col2
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public GroupedData Cube(IEnumerable<string> cols)
@@ -1148,42 +1114,36 @@ public class DataFrame
         {
             GroupMap = new GroupMap
             {
-                Input = Relation,
-                GroupingExpressions = { cols.Select(p => p.Expression) }
+                Input = Relation, GroupingExpressions = { cols.Select(p => p.Expression) }
             }
         };
 
-        return new GroupedData(_session, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Cube);
+        return new GroupedData(SparkSession, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Cube);
     }
 
     public DataStreamWriter WriteStream()
     {
-        return new DataStreamWriter(_session, Relation);
+        return new DataStreamWriter(SparkSession, Relation);
     }
 
     public DataFrame ExceptAll(DataFrame other)
     {
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                SetOp = new SetOperation()
+                SetOp = new SetOperation
                 {
-                    ByName = false,
-                    SetOpType = SetOperation.Types.SetOpType.Except,
-                    LeftInput = Relation,
-                    RightInput = other.Relation,
-                    IsAll = true,
-                    AllowMissingColumns = false
+                    ByName = false, SetOpType = SetOperation.Types.SetOpType.Except, LeftInput = Relation, RightInput = other.Relation, IsAll = true, AllowMissingColumns = false
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     /// <summary>
-    /// Replace null values. Note if you pass an int, Spark may be expecting a long, it is pretty specific about this.
+    ///     Replace null values. Note if you pass an int, Spark may be expecting a long, it is pretty specific about this.
     /// </summary>
     /// <param name="value">Has to be an expression generated by Lit(value)</param>
     /// <param name="subset"></param>
@@ -1192,86 +1152,91 @@ public class DataFrame
     {
         if (value.Expression.Literal == null)
         {
-            throw new SparkException($"The Expression value must be Lit(value)");
+            throw new SparkException("The Expression value must be Lit(value)");
         }
-        
+
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                FillNa = new NAFill()
+                FillNa = new NAFill
                 {
-                    Input = Relation,
-                    Values = { value.Expression.Literal },
-                    Cols = { subset }
+                    Input = Relation, Values = { value.Expression.Literal }, Cols = { subset }
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
-    public DataFrame Where(Column condition) => Filter(condition);
-    
+    public DataFrame Where(Column condition)
+    {
+        return Filter(condition);
+    }
+
     public DataFrame Filter(Column condition)
     {
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-               Filter = new Filter()
-               {
-                   Condition = condition.Expression,
-                   Input = Relation
-               }
+                Filter = new Filter
+                {
+                    Condition = condition.Expression, Input = Relation
+                }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
-    
+
     public DataFrame Filter(string condition)
     {
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Filter = new Filter()
+                Filter = new Filter
                 {
-                    Condition = Expr(condition).Expression,
-                    Input = Relation
+                    Condition = Expr(condition).Expression, Input = Relation
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
-    public Row First() => Take(1).FirstOrDefault();
+    public Row First()
+    {
+        return Take(1).FirstOrDefault();
+    }
 
-    public IEnumerable<Row> Head(int rows = 1) => Take(rows);
+    public IEnumerable<Row> Head(int rows = 1)
+    {
+        return Take(rows);
+    }
 
     public IEnumerable<Row> Take(int limit)
     {
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Limit = new Limit()
+                Limit = new Limit
                 {
-                    Input = Relation,
-                    Limit_ = limit
+                    Input = Relation, Limit_ = limit
                 }
             }
         };
-        var dataFrame = new DataFrame(_session, plan.Root);
+        var dataFrame = new DataFrame(SparkSession, plan.Root);
         var schema = dataFrame.Schema;
 
         return dataFrame.Collect();
     }
 
     /// <summary>
-    /// Finding frequent items for columns, possibly with false positives. Using the frequent element count algorithm described in “https://doi.org/10.1145/762471.762473, proposed by Karp, Schenker, and Papadimitriou”.
+    ///     Finding frequent items for columns, possibly with false positives. Using the frequent element count algorithm
+    ///     described in “https://doi.org/10.1145/762471.762473, proposed by Karp, Schenker, and Papadimitriou”.
     /// </summary>
     /// <param name="cols"></param>
     /// <returns></returns>
@@ -1279,21 +1244,21 @@ public class DataFrame
     {
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                FreqItems = new StatFreqItems()
+                FreqItems = new StatFreqItems
                 {
-                    Input = Relation,
-                    Cols = { cols }
+                    Input = Relation, Cols = { cols }
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
-    
+
     /// <summary>
-    /// Finding frequent items for columns, possibly with false positives. Using the frequent element count algorithm described in “https://doi.org/10.1145/762471.762473, proposed by Karp, Schenker, and Papadimitriou”.
+    ///     Finding frequent items for columns, possibly with false positives. Using the frequent element count algorithm
+    ///     described in “https://doi.org/10.1145/762471.762473, proposed by Karp, Schenker, and Papadimitriou”.
     /// </summary>
     /// <param name="cols"></param>
     /// <param name="support">optional, use FreqItems(cols) if you want to use the default 1%</param>
@@ -1302,50 +1267,47 @@ public class DataFrame
     {
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                FreqItems = new StatFreqItems()
+                FreqItems = new StatFreqItems
                 {
-                    Input = Relation,
-                    Cols = { cols },
-                    Support = support
+                    Input = Relation, Cols = { cols }, Support = support
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
-    
+
     public DataFrame Hint(string hint, params Column[] values)
     {
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Hint = new Hint()
+                Hint = new Hint
                 {
-                    Input = Relation,
-                    Name = hint,
-                    Parameters = { values.Select(p => p.Expression) }
+                    Input = Relation, Name = hint, Parameters = { values.Select(p => p.Expression) }
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
-    
+
     public IEnumerable<string> InputFiles()
     {
         var plan = new Plan
         {
             Root = Relation
         };
-        
-        return GrpcInternal.InputFiles(_session, plan);
+
+        return GrpcInternal.InputFiles(SparkSession, plan);
     }
 
     /// <summary>
-    /// Return a new DataFrame containing rows only in both this DataFrame and another DataFrame. Note that any duplicates are removed. To preserve duplicates use IntersectAll().
+    ///     Return a new DataFrame containing rows only in both this DataFrame and another DataFrame. Note that any duplicates
+    ///     are removed. To preserve duplicates use IntersectAll().
     /// </summary>
     /// <param name="other"></param>
     /// <returns></returns>
@@ -1353,25 +1315,20 @@ public class DataFrame
     {
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                SetOp = new SetOperation()
+                SetOp = new SetOperation
                 {
-                     SetOpType = SetOperation.Types.SetOpType.Intersect,
-                     IsAll = false,
-                     ByName = false,
-                     LeftInput = Relation,
-                     RightInput = other.Relation,
-                     AllowMissingColumns = false
+                    SetOpType = SetOperation.Types.SetOpType.Intersect, IsAll = false, ByName = false, LeftInput = Relation, RightInput = other.Relation, AllowMissingColumns = false
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
+        return new DataFrame(SparkSession, plan.Root);
     }
-    
+
     /// <summary>
-    /// Return a new DataFrame containing rows only in both this DataFrame and another DataFrame. Preserving duplicates.
+    ///     Return a new DataFrame containing rows only in both this DataFrame and another DataFrame. Preserving duplicates.
     /// </summary>
     /// <param name="other"></param>
     /// <returns></returns>
@@ -1379,46 +1336,52 @@ public class DataFrame
     {
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                SetOp = new SetOperation()
+                SetOp = new SetOperation
                 {
-                    SetOpType = SetOperation.Types.SetOpType.Intersect,
-                    IsAll = true,
-                    ByName = false,
-                    LeftInput = Relation,
-                    RightInput = other.Relation,
-                    AllowMissingColumns = false
+                    SetOpType = SetOperation.Types.SetOpType.Intersect, IsAll = true, ByName = false, LeftInput = Relation, RightInput = other.Relation, AllowMissingColumns = false
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
+        return new DataFrame(SparkSession, plan.Root);
     }
 
 
-    private Plan Plan() => new ()
+    private Plan Plan()
     {
-        Root = Relation
-    };
-    
-    public bool IsEmpty() => Count() == 0;
-
-    public bool IsLocal() => GrpcInternal.IsLocal(_session, Plan());
-
-    public bool IsStreaming() => GrpcInternal.IsStreaming(_session, Plan());
-
-    public DataFrame Unpivot(Column[] ids, Column[] values, string? variableColumnName = null, string? valueColumnName = null)
-    {
-        var plan = new Plan()
+        return new Plan
         {
-            Root = new Relation()
+            Root = Relation
+        };
+    }
+
+    public bool IsEmpty()
+    {
+        return Count() == 0;
+    }
+
+    public bool IsLocal()
+    {
+        return GrpcInternal.IsLocal(SparkSession, Plan());
+    }
+
+    public bool IsStreaming()
+    {
+        return GrpcInternal.IsStreaming(SparkSession, Plan());
+    }
+
+    public DataFrame Unpivot(Column[] ids, Column[] values, string? variableColumnName = null,
+        string? valueColumnName = null)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation
             {
-                Unpivot = new Unpivot()
+                Unpivot = new Unpivot
                 {
-                    Input = Relation,
-                    Ids = { ids.Select(p => p.Expression) },
-                    Values = new Unpivot.Types.Values()
+                    Input = Relation, Ids = { ids.Select(p => p.Expression) }, Values = new Unpivot.Types.Values
                     {
                         Values_ = { values.Select(p => p.Expression) }
                     }
@@ -1430,38 +1393,42 @@ public class DataFrame
         {
             plan.Root.Unpivot.VariableColumnName = variableColumnName;
         }
-        
+
         if (!string.IsNullOrEmpty(valueColumnName))
         {
             plan.Root.Unpivot.ValueColumnName = valueColumnName;
         }
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
-    public DataFrame Melt(Column[] ids, Column[] values, string? variableColumnName = null, string? valueColumnName = null) => Unpivot(ids, values, variableColumnName, valueColumnName);
+    public DataFrame Melt(Column[] ids, Column[] values, string? variableColumnName = null,
+        string? valueColumnName = null)
+    {
+        return Unpivot(ids, values, variableColumnName, valueColumnName);
+    }
 
     public DataFrame Offset(int num)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Offset = new Offset()
+                Offset = new Offset
                 {
                     Input = Relation, Offset_ = num
                 }
             }
         };
-            
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public DataFrame RandomSplit(int seed, List<double> weights)
     {
         throw new NotImplementedException("PySpark does some work to flip this into Sample");
     }
-    
+
     public DataFrame RandomSplit(List<double> weights)
     {
         throw new NotImplementedException("PySpark does some work to flip this into Sample");
@@ -1471,9 +1438,9 @@ public class DataFrame
     {
         var plan = new Plan();
 
-        plan.Root = new Relation()
+        plan.Root = new Relation
         {
-            Sample = new Sample()
+            Sample = new Sample
             {
                 Input = Relation, DeterministicOrder = true, LowerBound = 0.0
             }
@@ -1497,36 +1464,33 @@ public class DataFrame
         {
             plan.Root.Sample.Seed = seed.Value;
         }
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public DataFrame SampleBy(Column col, IDictionary<int, double> fractions, long? seed = null)
     {
-        RepeatedField<StatSampleBy.Types.Fraction> DictionaryToFractions(IDictionary<int,double> dictionary)
+        RepeatedField<StatSampleBy.Types.Fraction> DictionaryToFractions(IDictionary<int, double> dictionary)
         {
             var fractions = new RepeatedField<StatSampleBy.Types.Fraction>();
             foreach (var key in dictionary.Keys.Order())
             {
-                fractions.Add(new StatSampleBy.Types.Fraction()
+                fractions.Add(new StatSampleBy.Types.Fraction
                 {
-                    Fraction_ = dictionary[key],
-                    Stratum = Lit(key).Expression.Literal
+                    Fraction_ = dictionary[key], Stratum = Lit(key).Expression.Literal
                 });
             }
 
             return fractions;
         }
-        
-        var plan = new Plan()
+
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                SampleBy = new StatSampleBy()
+                SampleBy = new StatSampleBy
                 {
-                    Input = Relation,
-                    Col = col.Expression,
-                    Fractions = { DictionaryToFractions(fractions) }
+                    Input = Relation, Col = col.Expression, Fractions = { DictionaryToFractions(fractions) }
                 }
             }
         };
@@ -1535,32 +1499,31 @@ public class DataFrame
         {
             plan.Root.SampleBy.Seed = seed.Value;
         }
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public DataFrame Replace(Column to_replace, Column value, params string[] subset)
     {
         if (to_replace.Expression?.Literal == null)
         {
-            throw new SparkException($"to_replace must have been created using Lit");
-        }
-        
-        if (value.Expression?.Literal == null)
-        {
-            throw new SparkException($"value must have been created using Lit");
+            throw new SparkException("to_replace must have been created using Lit");
         }
 
-        var plan = new Plan()
+        if (value.Expression?.Literal == null)
         {
-            Root = new Relation()
+            throw new SparkException("value must have been created using Lit");
+        }
+
+        var plan = new Plan
+        {
+            Root = new Relation
             {
-                Replace = new NAReplace()
+                Replace = new NAReplace
                 {
-                    Input = Relation,
-                    Replacements =
+                    Input = Relation, Replacements =
                     {
-                        new NAReplace.Types.Replacement()
+                        new NAReplace.Types.Replacement
                         {
                             OldValue = to_replace.Expression.Literal, NewValue = value.Expression.Literal
                         }
@@ -1573,20 +1536,24 @@ public class DataFrame
         {
             plan.Root.Replace.Cols.Add(subset);
         }
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
-    public GroupedData Rollup(params string[] cols) => Rollup(cols.Select(Col).ToArray());
+    public GroupedData Rollup(params string[] cols)
+    {
+        return Rollup(cols.Select(Col).ToArray());
+    }
 
     public GroupedData Rollup(params Column[] cols)
     {
-        return new GroupedData(_session, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Rollup);
+        return new GroupedData(SparkSession, Relation, cols.Select(p => p.Expression),
+            Aggregate.Types.GroupType.Rollup);
     }
 
     public bool SameSemantics(DataFrame other)
     {
-        return GrpcInternal.SameSemantics(_session, Relation, other.Relation);
+        return GrpcInternal.SameSemantics(SparkSession, Relation, other.Relation);
     }
 
     public DataFrame SelectExpr(params string[] expr)
@@ -1596,29 +1563,28 @@ public class DataFrame
             throw new SparkException("At least one expression is required when calling SelectExpr");
         }
 
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Project = new Project()
+                Project = new Project
                 {
-                    Input = Relation,
-                    Expressions = { expr.Select(p => Expr(p).Expression) }
+                    Input = Relation, Expressions = { expr.Select(p => Expr(p).Expression) }
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public int SemanticHash()
     {
-        return GrpcInternal.SemanticHash(_session, Relation);
+        return GrpcInternal.SemanticHash(SparkSession, Relation);
     }
-    
+
     public SparkStorageLevelRecord StorageLevel()
     {
-        var internalStorageLevel = GrpcInternal.StorageLevel(_session, Relation);
+        var internalStorageLevel = GrpcInternal.StorageLevel(SparkSession, Relation);
 
         return new SparkStorageLevelRecord(internalStorageLevel.UseDisk, internalStorageLevel.UseMemory,
             internalStorageLevel.UseOffHeap, internalStorageLevel.Deserialized, internalStorageLevel.Replication);
@@ -1628,30 +1594,25 @@ public class DataFrame
     {
         var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                SetOp = new SetOperation()
+                SetOp = new SetOperation
                 {
-                    ByName = false,
-                    SetOpType = SetOperation.Types.SetOpType.Except,
-                    LeftInput = Relation,
-                    RightInput = other.Relation,
-                    IsAll = false,
-                    AllowMissingColumns = false
+                    ByName = false, SetOpType = SetOperation.Types.SetOpType.Except, LeftInput = Relation, RightInput = other.Relation, IsAll = false, AllowMissingColumns = false
                 }
             }
         };
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public DataFrame Summary(params string[] statistics)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Summary = new StatSummary()
+                Summary = new StatSummary
                 {
                     Input = Relation
                 }
@@ -1662,130 +1623,141 @@ public class DataFrame
         {
             plan.Root.Summary.Statistics.Add(statistics);
         }
-        
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public IEnumerable<Row> Tail(int num)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Tail = new Tail()
+                Tail = new Tail
                 {
                     Input = Relation, Limit = num
                 }
             }
         };
-            
-        var df = new DataFrame(_session, GrpcInternal.Exec(_session, plan));
+
+        var df = new DataFrame(SparkSession, GrpcInternal.Exec(SparkSession, plan));
         return df.Collect().Select(p => new Row(df.Schema, p));
     }
 
     public DataFrame To(StructType schema)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                ToSchema = new ToSchema()
+                ToSchema = new ToSchema
                 {
                     Input = Relation, Schema = schema.ToDataType()
                 }
             }
         };
-            
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
-    
+
     public DataFrame ToDf(params string[] cols)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                ToDf = new ToDF()
+                ToDf = new ToDF
                 {
-                    Input = Relation,
-                    ColumnNames = { cols }
+                    Input = Relation, ColumnNames = { cols }
                 }
             }
         };
-            
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public DataFrame WithWatermark(string eventTime, string delayThreshold)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                WithWatermark = new WithWatermark()
+                WithWatermark = new WithWatermark
                 {
                     Input = Relation, EventTime = eventTime, DelayThreshold = delayThreshold
                 }
             }
         };
-            
-        return new DataFrame(_session, plan.Root);
+
+        return new DataFrame(SparkSession, plan.Root);
     }
 
     public DataFrame Hint(string what)
     {
-        var plan = new Plan()
+        var plan = new Plan
         {
-            Root = new Relation()
+            Root = new Relation
             {
-                Hint = new Hint()
+                Hint = new Hint
                 {
-                    Input = Relation,
-                    Name = what
+                    Input = Relation, Name = what
                 }
             }
         };
 
-        return new DataFrame(_session, plan.Root);
+        return new DataFrame(SparkSession, plan.Root);
     }
-    
-    public DataFrameNaFunctions Na => new DataFrameNaFunctions(this);
-    
-    public SparkSession SparkSession => _session;
-    
+
     public static IEnumerable<IEnumerable<object>> ToRows(params object[] objects)
-    {   //don't do new on List<>(){} otherwise the child objects get flattened
+    {
+        //don't do new on List<>(){} otherwise the child objects get flattened
         return objects.Cast<IEnumerable<object>>().ToList();
     }
 
-    public static IEnumerable<object> ToRow(params object[] items) => items.ToList<object>();
+    public static IEnumerable<object> ToRow(params object[] items)
+    {
+        return items.ToList();
+    }
+
+    public DataFrame Transform(TransformFunction function)
+    {
+        var callable = function.Compile();
+        var response = callable(this);
+
+        return response;
+    }
 }
 
 public enum JoinType
 {
-    Unspecified = 0,
-    Inner = 1,
-    FullOuter = 2,
-    LeftOuter = 3,
-    RightOuter = 4,
-    LeftAnti = 5,
-    LeftSemi = 6,
-    Cross = 7
+    Unspecified = 0
+    , Inner = 1
+    , FullOuter = 2
+    , LeftOuter = 3
+    , RightOuter = 4
+    , LeftAnti = 5
+    , LeftSemi = 6
+    , Cross = 7
 }
 
 public enum SparkStorageLevel
 {
-    None,
-    DISK_ONLY,
-    DISK_ONLY_2,
-    DISK_ONLY_3,
-    MEMORY_ONLY,
-    MEMORY_ONLY_2,
-    MEMORY_AND_DISK,
-    MEMORY_AND_DISK_2,
-    OFF_HEAP,
-    MEMORY_AND_DISK_DESER,
+    None
+    , DISK_ONLY
+    , DISK_ONLY_2
+    , DISK_ONLY_3
+    , MEMORY_ONLY
+    , MEMORY_ONLY_2
+    , MEMORY_AND_DISK
+    , MEMORY_AND_DISK_2
+    , OFF_HEAP
+    , MEMORY_AND_DISK_DESER
 }
 
 //Too many types with the same name in the generated code.
-public record SparkStorageLevelRecord(bool useDisk, bool useMemory, bool useOffHeap, bool deserialised, int replication=1);
+public record SparkStorageLevelRecord(
+    bool useDisk
+    , bool useMemory
+    , bool useOffHeap
+    , bool deserialised
+    , int replication = 1);

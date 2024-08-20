@@ -5,22 +5,22 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class SparkSessionBuilder
 {
+    private readonly Dictionary<string, string> _conf = new();
+
+    private readonly Dictionary<string, string> _sparkConnectDotnetConf = new();
     private string _bearerToken = string.Empty;
 
     private string _clientType = "goeddie/spark-dotnet";
     private string _clusterId = string.Empty;
+    private TimeSpan _databricksConnectionMaxVerificationTime = TimeSpan.FromMinutes(10);
+
+    private DatabricksConnectionVerification _databricksConnectionVerification =
+        DatabricksConnectionVerification.WaitForCluster;
 
     private string _remote = string.Empty;
     private SparkSession? _session;
     private string _userId = string.Empty;
     private string _userName = string.Empty;
-
-    private readonly Dictionary<string, string> _conf = new Dictionary<string, string>();
-    
-    private readonly Dictionary<string, string> _sparkConnectDotnetConf = new Dictionary<string, string>();
-    
-    private DatabricksConnectionVerification _databricksConnectionVerification = DatabricksConnectionVerification.WaitForCluster;
-    private TimeSpan _databricksConnectionMaxVerificationTime = TimeSpan.FromMinutes(10);
 
     public SparkSessionBuilder Remote(string address)
     {
@@ -33,9 +33,10 @@ public class SparkSessionBuilder
         _bearerToken = bearerToken;
         return this;
     }
-    
+
     /// <summary>
-    /// If we detect the host is at databricks *databricks* then by default when the connection is created we loop waiting for the cluster to start. If you don't want this behaviour then set wait to false.
+    ///     If we detect the host is at databricks *databricks* then by default when the connection is created we loop waiting
+    ///     for the cluster to start. If you don't want this behaviour then set wait to false.
     /// </summary>
     /// <param name="wait"></param>
     /// <returns></returns>
@@ -47,7 +48,7 @@ public class SparkSessionBuilder
     }
 
     /// <summary>
-    /// If we are waiting for databricks clusters, what is the maximum wait time in seconds? The default is ten minutes.
+    ///     If we are waiting for databricks clusters, what is the maximum wait time in seconds? The default is ten minutes.
     /// </summary>
     /// <param name="minutes"></param>
     /// <returns></returns>
@@ -58,7 +59,7 @@ public class SparkSessionBuilder
     }
 
     /// <summary>
-    /// Sets ClusterID - if ClusterId is in the profile then whichever you call last wins
+    ///     Sets ClusterID - if ClusterId is in the profile then whichever you call last wins
     /// </summary>
     /// <param name="clusterId"></param>
     /// <returns></returns>
@@ -93,6 +94,7 @@ public class SparkSessionBuilder
             _sparkConnectDotnetConf[key.ToLowerInvariant()] = value.ToLowerInvariant();
             return this;
         }
+
         _conf[key] = value;
         return this;
     }
@@ -119,20 +121,32 @@ public class SparkSessionBuilder
 
         return this;
     }
-    
+
     public SparkSession GetOrCreate()
     {
         if (_session != null)
         {
             return _session;
         }
-        
+
+        _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(), _clientType,
+            _databricksConnectionVerification, _databricksConnectionMaxVerificationTime, _sparkConnectDotnetConf);
+        if (_conf.Any())
+        {
+            GrpcInternal.ExecSetConfigCommandResponse(_session, _conf);
+        }
+
+        return _session;
+    }
+    
+    public SparkSession Create()
+    {
         _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(), _clientType, _databricksConnectionVerification, _databricksConnectionMaxVerificationTime, _sparkConnectDotnetConf);
         if (_conf.Any())
         {
             GrpcInternal.ExecSetConfigCommandResponse(_session, _conf);
         }
-        
+
         return _session;
     }
 
@@ -145,8 +159,7 @@ public class SparkSessionBuilder
 
         return new UserContext
         {
-            UserId = _userId,
-            UserName = _userName
+            UserId = _userId, UserName = _userName
         };
     }
 
@@ -169,11 +182,10 @@ public class SparkSessionBuilder
 
 public class RuntimeConf
 {
-    public IDictionary<string, string> SparkDotnetConnectOptions { get; }
     public const string SparkDotnetConfigKey = "spark.connect.dotnet.";
-    
+
     private readonly SparkSession _session;
-    
+
 
     public RuntimeConf(SparkSession session, IDictionary<string, string> sparkDotnetConnectOptions)
     {
@@ -181,9 +193,11 @@ public class RuntimeConf
         _session = session;
     }
 
+    public IDictionary<string, string> SparkDotnetConnectOptions { get; }
+
     public IDictionary<string, string> GetAll(string? prefix = null)
-    { 
-        var task =Task.Run(() => GrpcInternal.ExecGetAllConfigCommandResponse(_session, prefix));
+    {
+        var task = Task.Run(() => GrpcInternal.ExecGetAllConfigCommandResponse(_session, prefix));
         task.Wait();
         return task.Result;
     }
@@ -195,13 +209,13 @@ public class RuntimeConf
             SparkDotnetConnectOptions[key] = value;
             return;
         }
-        
-        var dict = new Dictionary<string, string>()
+
+        var dict = new Dictionary<string, string>
         {
             { key, value }
         };
-        
-        var task =Task.Run(() => GrpcInternal.ExecSetConfigCommandResponse(_session, dict));
+
+        var task = Task.Run(() => GrpcInternal.ExecSetConfigCommandResponse(_session, dict));
         task.Wait();
     }
 
@@ -212,39 +226,38 @@ public class RuntimeConf
             SparkDotnetConnectOptions.Remove(key);
             return;
         }
-        
-        
-        var task =Task.Run(() => GrpcInternal.ExecUnSetConfigCommandResponse(_session, key));
+
+
+        var task = Task.Run(() => GrpcInternal.ExecUnSetConfigCommandResponse(_session, key));
         task.Wait();
-        
     }
-    
+
     public string Get(string key)
     {
         if (key.ToLowerInvariant().StartsWith(SparkDotnetConfigKey))
         {
             if (!SparkDotnetConnectOptions.ContainsKey(key))
             {
-                return String.Empty;
+                return string.Empty;
             }
 
             return SparkDotnetConnectOptions[key];
         }
-        
-        var task =Task.Run(() => GrpcInternal.ExecGetAllConfigCommandResponse(_session));
+
+        var task = Task.Run(() => GrpcInternal.ExecGetAllConfigCommandResponse(_session));
         task.Wait();
 
         var config = task.Result;
-        return 
-            config.TryGetValue(key, out var value) 
-                ? value 
-                : String.Empty;
+        return
+            config.TryGetValue(key, out var value)
+                ? value
+                : string.Empty;
     }
 
     public bool IsTrue(string key)
     {
         var value = Get(key).ToLowerInvariant();
-        if (String.IsNullOrEmpty(value))
+        if (string.IsNullOrEmpty(value))
         {
             return false;
         }
@@ -265,6 +278,6 @@ public class RuntimeConf
 
 public enum DatabricksConnectionVerification
 {
-    None,
-    WaitForCluster
+    None
+    , WaitForCluster
 }

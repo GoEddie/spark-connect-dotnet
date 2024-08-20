@@ -217,7 +217,7 @@ public partial class Functions : FunctionsWrapper
     ///     MinBy
     ///     Returns the value associated with the minimum value of ord.
     /// </Summary>
-    public static Column 
+    public static Column
         MinBy(string col, string ord)
     {
         return new Column(FunctionWrappedCall("min_by", false, col, ord));
@@ -3358,8 +3358,7 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("array", false, cols));
     }
-    
-    
+
 
     /// <Summary>Array</Summary>
     public static Column Array()
@@ -4352,6 +4351,4 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("check_field", false, Col(field), fieldName));
     }
-    
-    
 }

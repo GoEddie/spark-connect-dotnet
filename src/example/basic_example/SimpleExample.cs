@@ -1,6 +1,6 @@
 using Spark.Connect.Dotnet.Sql;
 
-class SimpleExample
+internal class SimpleExample
 {
     private readonly SparkSession spark;
 

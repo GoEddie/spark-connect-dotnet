@@ -1,1 +1,1 @@
-[assembly:Xunit.TestFramework("XunitCustomFrameworkTests.CustomTestFramework", "Spark.Connect.Dotnet.Tests")]
+[assembly: TestFramework("XunitCustomFrameworkTests.CustomTestFramework", "Spark.Connect.Dotnet.Tests")]

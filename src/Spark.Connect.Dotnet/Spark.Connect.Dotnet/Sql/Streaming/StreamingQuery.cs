@@ -25,8 +25,7 @@ public class StreamingQuery
             {
                 StreamingQueryCommand = new StreamingQueryCommand
                 {
-                    Stop = true,
-                    QueryId = _queryId
+                    Stop = true, QueryId = _queryId
                 }
             }
         };
@@ -43,8 +42,7 @@ public class StreamingQuery
             {
                 StreamingQueryCommand = new StreamingQueryCommand
                 {
-                    Status = true,
-                    QueryId = _queryId
+                    Status = true, QueryId = _queryId
                 }
             }
         };
@@ -58,9 +56,7 @@ public class StreamingQuery
     {
         var command = new StreamingQueryCommand
         {
-            QueryId = _queryId,
-
-            AwaitTermination = new StreamingQueryCommand.Types.AwaitTerminationCommand()
+            QueryId = _queryId, AwaitTermination = new StreamingQueryCommand.Types.AwaitTerminationCommand()
         };
 
         if (timeout.HasValue)
@@ -83,9 +79,7 @@ public class StreamingQuery
     {
         var command = new StreamingQueryCommand
         {
-            QueryId = _queryId,
-
-            AwaitTermination = new StreamingQueryCommand.Types.AwaitTerminationCommand()
+            QueryId = _queryId, AwaitTermination = new StreamingQueryCommand.Types.AwaitTerminationCommand()
         };
 
         if (timeout.HasValue)
@@ -110,8 +104,7 @@ public class StreamingQuery
     {
         var command = new StreamingQueryCommand
         {
-            QueryId = _queryId,
-            Exception = true
+            QueryId = _queryId, Exception = true
         };
 
 
@@ -138,8 +131,7 @@ public class StreamingQuery
     {
         var command = new StreamingQueryCommand
         {
-            QueryId = _queryId,
-            ProcessAllAvailable = true
+            QueryId = _queryId, ProcessAllAvailable = true
         };
 
         var plan = new Plan
@@ -158,8 +150,7 @@ public class StreamingQuery
     {
         var command = new StreamingQueryCommand
         {
-            QueryId = _queryId,
-            RecentProgress = true
+            QueryId = _queryId, RecentProgress = true
         };
 
         var plan = new Plan

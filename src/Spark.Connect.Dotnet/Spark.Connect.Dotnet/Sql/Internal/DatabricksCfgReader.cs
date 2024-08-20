@@ -58,7 +58,7 @@ public class DatabricksCfgReader
 
     private enum Mode
     {
-        SearchingForProfile,
-        InProfile
+        SearchingForProfile
+        , InProfile
     }
 }

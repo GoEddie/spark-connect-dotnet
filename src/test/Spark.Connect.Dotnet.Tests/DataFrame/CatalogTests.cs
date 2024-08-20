@@ -7,14 +7,14 @@ public class CatalogTests : E2ETestBase
     public CatalogTests(ITestOutputHelper logger) : base(logger)
     {
     }
-    
+
     [Fact]
     public void CurrentCatalog_Test()
     {
         var currentCatalog = Spark.Catalog.CurrentCatalog();
         Assert.Equal("spark_catalog", currentCatalog);
     }
-    
+
     [Fact]
     public void DatabaseExists_Test()
     {
@@ -22,15 +22,14 @@ public class CatalogTests : E2ETestBase
         Assert.True(Spark.Catalog.DatabaseExists(currentDatabase));
         Assert.False(Spark.Catalog.DatabaseExists("dsadadadafdsfasdfvdjsfhk"));
     }
-    
+
     [Fact]
     public void GetDatabaseTest()
     {
         var currentDatabase = "default";
         Spark.Catalog.GetDatabase(currentDatabase);
-        
     }
-    
+
     [Fact]
     public void GetFunctionTest()
     {
@@ -39,13 +38,10 @@ public class CatalogTests : E2ETestBase
         Assert.Equal("my_func1", function.name);
         Console.WriteLine(function.ToString());
     }
-    
+
     [Fact]
     public void ListCatalogTest()
     {
         Console.WriteLine(Spark.Catalog.ListCatalogs());
     }
-
-    
-    
 }

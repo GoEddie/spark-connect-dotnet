@@ -36,5 +36,4 @@ public class ArrayType : SparkDataType
     {
         return $"array<{ElementType.SimpleString()}>";
     }
-    
 }

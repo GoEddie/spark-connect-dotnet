@@ -8,7 +8,7 @@ public class DataFrameGroupByTests : E2ETestBase
     public DataFrameGroupByTests(ITestOutputHelper logger) : base(logger)
     {
     }
-    
+
     [Fact]
     public void UnionTest()
     {

@@ -1,10 +1,10 @@
-using System.Linq.Expressions;
 using Google.Protobuf;
 using Spark.Connect.Dotnet.Grpc;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
-
-using TernaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column>>;
-using BinaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column>>;
+using TernaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column,
+    Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column>>;
+using BinaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column,
+    Spark.Connect.Dotnet.Sql.Column>>;
 using UnaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column>>;
 
 
@@ -19,10 +19,7 @@ public partial class Functions : FunctionsWrapper
     {
         return o switch
         {
-            int i => Lit(i),
-            string s => Lit(s),
-            bool b => Lit(b),
-            double d => Lit(d)
+            int i => Lit(i), string s => Lit(s), bool b => Lit(b), double d => Lit(d)
         };
     }
 
@@ -40,20 +37,19 @@ public partial class Functions : FunctionsWrapper
                         {
                             String = p
                         })
-                    },
-                    Values =
+                    }
+                    , Values =
                     {
                         dict.Values.Select(p => new Expression.Types.Literal
                         {
                             Float = p
                         })
-                    },
-
-                    KeyType = new DataType
+                    }
+                    , KeyType = new DataType
                     {
                         String = new DataType.Types.String()
-                    },
-                    ValueType = new DataType
+                    }
+                    , ValueType = new DataType
                     {
                         Integer = new DataType.Types.Integer()
                     }
@@ -77,20 +73,19 @@ public partial class Functions : FunctionsWrapper
                             {
                                 String = p
                             })
-                        },
-                        Values =
+                        }
+                        , Values =
                         {
                             dict.Values.Select(p => new Expression.Types.Literal
                             {
                                 Double = p
                             })
-                        },
-
-                        KeyType = new DataType
+                        }
+                        , KeyType = new DataType
                         {
                             String = new DataType.Types.String()
-                        },
-                        ValueType = new DataType
+                        }
+                        , ValueType = new DataType
                         {
                             Integer = new DataType.Types.Integer()
                         }
@@ -114,20 +109,19 @@ public partial class Functions : FunctionsWrapper
                         {
                             String = p
                         })
-                    },
-                    Values =
+                    }
+                    , Values =
                     {
                         dict.Values.Select(p => new Expression.Types.Literal
                         {
                             String = p
                         })
-                    },
-
-                    KeyType = new DataType
+                    }
+                    , KeyType = new DataType
                     {
                         String = new DataType.Types.String()
-                    },
-                    ValueType = new DataType
+                    }
+                    , ValueType = new DataType
                     {
                         Integer = new DataType.Types.Integer()
                     }
@@ -150,20 +144,19 @@ public partial class Functions : FunctionsWrapper
                         {
                             String = p
                         })
-                    },
-                    Values =
+                    }
+                    , Values =
                     {
                         dict.Values.Select(p => new Expression.Types.Literal
                         {
                             Integer = p
                         })
-                    },
-
-                    KeyType = new DataType
+                    }
+                    , KeyType = new DataType
                     {
                         String = new DataType.Types.String()
-                    },
-                    ValueType = new DataType
+                    }
+                    , ValueType = new DataType
                     {
                         Integer = new DataType.Types.Integer()
                     }
@@ -174,25 +167,20 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Lit(string value)
     {
-        
-        
         if (value == null)
         {
             return new Column(new Expression
             {
                 Literal = new Expression.Types.Literal
                 {
-                    Null = new DataType()
+                    Null = new DataType
                     {
                         String = new DataType.Types.String()
-                        {
-                            
-                        }
                     }
                 }
             });
         }
-        
+
         return new Column(new Expression
         {
             Literal = new Expression.Types.Literal
@@ -210,21 +198,19 @@ public partial class Functions : FunctionsWrapper
             values.Add(Lit(value.Key).Expression);
             values.Add(Lit(value.Value).Expression);
         }
-        
-        
+
+
         var functionCall = new Expression
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = "map",
-                IsDistinct = false,
-                IsUserDefinedFunction = false, Arguments = { values }
+                FunctionName = "map", IsDistinct = false, IsUserDefinedFunction = false, Arguments = { values }
             }
         };
-        
+
         return new Column(functionCall);
     }
-    
+
     public static Column Lit(object o)
     {
         if (o is null)
@@ -237,28 +223,21 @@ public partial class Functions : FunctionsWrapper
                 }
             });
         }
-        
+
         if (o.GetType().IsArray)
         {
             var lits = new List<Column>();
-            foreach (var object_ in (o as Array))
+            foreach (var object_ in o as Array)
             {
                 lits.Add(Lit((object)object_));
             }
-            
-            return Functions.Array(lits.ToArray());
+
+            return Array(lits.ToArray());
         }
-        
+
         return o switch
         {
-            int i => Lit(i),
-            string s => Lit(s),
-            double d => Lit(d),
-            float f => Lit(f),
-            short s => Lit(s),
-            long l => Lit(l),
-            
-            _ => Lit(o.ToString()) //TODO not great
+            int i => Lit(i), string s => Lit(s), double d => Lit(d), float f => Lit(f), short s => Lit(s), long l => Lit(l), _ => Lit(o.ToString()) //TODO not great
         };
     }
 
@@ -324,7 +303,7 @@ public partial class Functions : FunctionsWrapper
             }
         });
     }
-    
+
     public static Column Lit(float value)
     {
         return new Column(new Expression
@@ -335,7 +314,7 @@ public partial class Functions : FunctionsWrapper
             }
         });
     }
-    
+
     public static Column Lit(long value)
     {
         return new Column(new Expression
@@ -358,9 +337,7 @@ public partial class Functions : FunctionsWrapper
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = "array",
-                IsDistinct = false,
-                Arguments =
+                FunctionName = "array", IsDistinct = false, Arguments =
                 {
                     elements
                 }
@@ -379,9 +356,7 @@ public partial class Functions : FunctionsWrapper
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = "array",
-                IsDistinct = false,
-                Arguments =
+                FunctionName = "array", IsDistinct = false, Arguments =
                 {
                     elements
                 }
@@ -400,9 +375,7 @@ public partial class Functions : FunctionsWrapper
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = "array",
-                IsDistinct = false,
-                Arguments =
+                FunctionName = "array", IsDistinct = false, Arguments =
                 {
                     elements
                 }
@@ -420,7 +393,7 @@ public partial class Functions : FunctionsWrapper
             }
         });
     }
-    
+
     public static Column Lit(int? value)
     {
         if (!value.HasValue)
@@ -429,17 +402,14 @@ public partial class Functions : FunctionsWrapper
             {
                 Literal = new Expression.Types.Literal
                 {
-                    Null = new DataType()
+                    Null = new DataType
                     {
                         Integer = new DataType.Types.Integer()
-                        {
-                            
-                        }
                     }
                 }
             });
         }
-        
+
         return new Column(new Expression
         {
             Literal = new Expression.Types.Literal
@@ -937,9 +907,9 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Expr(string expression)
     {
-        return new Column(new Expression()
+        return new Column(new Expression
         {
-            ExpressionString = new Expression.Types.ExpressionString()
+            ExpressionString = new Expression.Types.ExpressionString
             {
                 Expression = expression
             }
@@ -950,27 +920,37 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("add_months", false, start, months));
     }
-    
-    public static Column AddMonths(Column start, int months)  => AddMonths(start, Lit(months));
-    
-    public static Column AddMonths(string start, Column months)  => AddMonths(Col(start), months);
-    public static Column AddMonths(string start, int months) => AddMonths(Col(start), Lit(months));
+
+    public static Column AddMonths(Column start, int months)
+    {
+        return AddMonths(start, Lit(months));
+    }
+
+    public static Column AddMonths(string start, Column months)
+    {
+        return AddMonths(Col(start), months);
+    }
+
+    public static Column AddMonths(string start, int months)
+    {
+        return AddMonths(Col(start), Lit(months));
+    }
 
     public static Column ApproxCountDistinct(Column col, double rsd = 0.05F)
     {
         return new Column(FunctionWrappedCall("approx_count_distinct", false, col, rsd));
     }
-    
+
     public static Column ApproxCountDistinct(string col, double rsd = 0.05F)
     {
         return new Column(FunctionWrappedCall("approx_count_distinct", false, Col(col), rsd));
     }
-    
+
     public static Column ApproxCountDistinct(string col, Column rsd)
     {
         return new Column(FunctionWrappedCall("approx_count_distinct", false, Col(col), rsd));
     }
-    
+
     public static Column ApproxCountDistinct(Column col, Column rsd)
     {
         return new Column(FunctionWrappedCall("approx_count_distinct", false, col, rsd));
@@ -980,78 +960,78 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("approx_percentile", false, col, Lit(percentage), Lit(accuracy)));
     }
-    
-    
+
+
     public static Column ApproxPercentile(Column col, float[] percentages, long accuracy = 10000)
     {
         return new Column(FunctionWrappedCall("approx_percentile", false, col, Lit(percentages), Lit(accuracy)));
     }
 
-    public static Column ApproxPercentile(string col,  float percentage, long accuracy = 10000)
+    public static Column ApproxPercentile(string col, float percentage, long accuracy = 10000)
     {
         return new Column(FunctionWrappedCall("approx_percentile", false, Col(col), Lit(percentage), Lit(accuracy)));
     }
-    
+
     public static Column ApproxPercentile(Column col, Column percentages, Column accuracy)
     {
         return new Column(FunctionWrappedCall("approx_percentile", false, col, percentages, accuracy));
     }
-    
+
     public static Column ArrayJoin(string col, string delimiter, string? nullReplacement = null)
     {
-        if (String.IsNullOrEmpty(nullReplacement))
+        if (string.IsNullOrEmpty(nullReplacement))
         {
-            return new Column(FunctionWrappedCall("array_join", false, Col(col), Lit(delimiter)));    
+            return new Column(FunctionWrappedCall("array_join", false, Col(col), Lit(delimiter)));
         }
-        
+
         return new Column(FunctionWrappedCall("array_join", false, Col(col), Lit(delimiter), Lit(nullReplacement)));
     }
-    
+
     public static Column ArrayJoin(Column col, string delimiter, string? nullReplacement = null)
     {
-        if (String.IsNullOrEmpty(nullReplacement))
+        if (string.IsNullOrEmpty(nullReplacement))
         {
-            return new Column(FunctionWrappedCall("array_join", false, col, Lit(delimiter)));    
+            return new Column(FunctionWrappedCall("array_join", false, col, Lit(delimiter)));
         }
-        
+
         return new Column(FunctionWrappedCall("array_join", false, col, Lit(delimiter), Lit(nullReplacement)));
     }
-    
+
     public static Column ArrayJoin(Column col, Column delimiter)
     {
-        return new Column(FunctionWrappedCall("array_join", false, col, delimiter));    
+        return new Column(FunctionWrappedCall("array_join", false, col, delimiter));
     }
-    
+
     public static Column ArrayJoin(Column col, Column delimiter, Column nullReplacement)
     {
-        return new Column(FunctionWrappedCall("array_join", false, col, delimiter, nullReplacement));    
+        return new Column(FunctionWrappedCall("array_join", false, col, delimiter, nullReplacement));
     }
-    
+
     public static Column ArrayInsert(Column col, int pos, Column value)
     {
         return new Column(FunctionWrappedCall("array_insert", false, col, Lit(pos), value));
     }
-    
+
     public static Column ArrayInsert(Column col, Column pos, Column value)
     {
         return new Column(FunctionWrappedCall("array_insert", false, col, pos, value));
     }
-    
+
     public static Column ArrayRepeat(Column col, int count)
     {
         return new Column(FunctionWrappedCall("array_repeat", false, col, Lit(count)));
     }
-    
+
     public static Column ArrayRepeat(Column col, Column count)
     {
         return new Column(FunctionWrappedCall("array_repeat", false, col, count));
     }
-    
+
     public static Column ArrayRepeat(string col, int count)
     {
         return new Column(FunctionWrappedCall("array_repeat", false, Col(col), Lit(count)));
     }
-    
+
     public static Column ArrayRepeat(string col, Column count)
     {
         return new Column(FunctionWrappedCall("array_repeat", false, Col(col), count));
@@ -1061,24 +1041,24 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("assert_true", false, col, errorMessage));
     }
-    
+
     public static Column BTrim(Column col, string? trim = null)
     {
-        if (String.IsNullOrEmpty(trim))
+        if (string.IsNullOrEmpty(trim))
         {
-            return new Column(FunctionWrappedCall("btrim", false, col));    
+            return new Column(FunctionWrappedCall("btrim", false, col));
         }
-        
+
         return new Column(FunctionWrappedCall("btrim", false, col, trim));
     }
-    
+
     public static Column BTrim(string col, string? trim = null)
     {
-        if (String.IsNullOrEmpty(trim))
+        if (string.IsNullOrEmpty(trim))
         {
-            return new Column(FunctionWrappedCall("btrim", false, Col(col)));    
+            return new Column(FunctionWrappedCall("btrim", false, Col(col)));
         }
-        
+
         return new Column(FunctionWrappedCall("btrim", false, Col(col), trim));
     }
 
@@ -1086,12 +1066,12 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("bucket", false, Lit(numOfBuckets), col));
     }
-    
+
     public static Column Bucket(int numOfBuckets, string col)
     {
         return new Column(FunctionWrappedCall("bucket", false, Lit(numOfBuckets), Col(col)));
     }
-    
+
     public static Column ConcatWs(string sep, params Column[] cols)
     {
         return new Column(FunctionWrappedCall("concat_ws", false, Lit(sep), cols.Select(p => p.Expression).ToArray()));
@@ -1099,16 +1079,20 @@ public partial class Functions : FunctionsWrapper
 
     public static Column ConcatWs(string sep, params string[] cols)
     {
-        return new Column(FunctionWrappedCall("concat_ws", false, Lit(sep), cols.Select(p => Col(p).Expression).ToArray()));
+        return new Column(FunctionWrappedCall("concat_ws", false, Lit(sep),
+            cols.Select(p => Col(p).Expression).ToArray()));
     }
-    
+
     public static DataFrame Broadcast(DataFrame src)
     {
         return src.Hint("broadcast");
     }
 
-    public static Column Conv(string col, int fromBase, int toBase) => Conv(Col(col), fromBase, toBase);
-    
+    public static Column Conv(string col, int fromBase, int toBase)
+    {
+        return Conv(Col(col), fromBase, toBase);
+    }
+
     public static Column Conv(Column col, int fromBase, int toBase)
     {
         return new Column(FunctionWrappedCall("conv", false, col, Lit(fromBase), Lit(toBase)));
@@ -1116,14 +1100,14 @@ public partial class Functions : FunctionsWrapper
 
     public static Column ConvertTimezone(Column sourceTzColumn, Column targetTz, Column sourceTz)
     {
-        if (object.ReferenceEquals(null, sourceTzColumn))
+        if (ReferenceEquals(null, sourceTzColumn))
         {
-            return new Column(FunctionWrappedCall("convert_timezone", false, targetTz, sourceTz));    
+            return new Column(FunctionWrappedCall("convert_timezone", false, targetTz, sourceTz));
         }
-        
+
         return new Column(FunctionWrappedCall("convert_timezone", false, sourceTzColumn, targetTz, sourceTz));
     }
-    
+
     public static Column CreateMap(string cola, string colb)
     {
         return new Column(FunctionWrappedCall("map", false, cola, colb));
@@ -1132,79 +1116,94 @@ public partial class Functions : FunctionsWrapper
     public static Column CreateMap(IDictionary<string, object> options)
     {
         var litOptions = new List<Column>();
-        
+
         foreach (var option in options)
         {
             litOptions.Add(Lit(option.Key));
             litOptions.Add(Lit(option.Value));
         }
+
         return new Column(FunctionWrappedCall("map", false, litOptions.ToArray()));
     }
     
+    public static Column CreateMap(IDictionary<string, string> options)
+    {
+        var litOptions = new List<Column>();
+
+        foreach (var option in options)
+        {
+            litOptions.Add(Lit(option.Key));
+            litOptions.Add(Lit(option.Value));
+        }
+
+        return new Column(FunctionWrappedCall("map", false, litOptions.ToArray()));
+    }
+
     public static Column CreateMap(Column cola, Column colb)
     {
         return new Column(FunctionWrappedCall("map", false, cola, colb));
     }
-    
+
     public static Column DateAdd(string start, int days)
     {
         return new Column(FunctionWrappedCall("date_add", false, Col(start), Lit(days)));
     }
-    
+
     public static Column DateAdd(Column start, int days)
     {
         return new Column(FunctionWrappedCall("date_add", false, start, Lit(days)));
     }
-    
+
     public static Column DateSub(string start, int days)
     {
         return new Column(FunctionWrappedCall("date_sub", false, Col(start), Lit(days)));
     }
-    
+
     public static Column DateSub(Column start, int days)
     {
         return new Column(FunctionWrappedCall("date_sub", false, start, Lit(days)));
     }
-    
+
     public static Column DateSub(Column start, Column days)
     {
         return new Column(FunctionWrappedCall("date_sub", false, start, days));
     }
-    
+
     public static Column DateSub(string start, Column days)
     {
         return new Column(FunctionWrappedCall("date_sub", false, Col(start), days));
     }
-    
+
     public static Column DateTrunc(string format, Column timestamp)
     {
         return new Column(FunctionWrappedCall("date_trunc", false, Lit(format), timestamp));
     }
+
     public static Column DateTrunc(string format, string timestamp)
     {
         return new Column(FunctionWrappedCall("date_trunc", false, Lit(format), Col(timestamp)));
     }
-    
+
     public static Column First(string col)
     {
         return new Column(FunctionWrappedCall("first", false, Col(col)));
     }
-    
+
     public static Column First(Column col)
     {
         return new Column(FunctionWrappedCall("first", false, col));
     }
-    
+
     public static Column Last(Column col)
     {
         return new Column(FunctionWrappedCall("last", false, col));
     }
-    
+
     public static Column Last(string col)
     {
         return new Column(FunctionWrappedCall("last", false, Col(col)));
     }
-    
+
     public static Column FormatString(string format, params Column[] cols)
     {
         var newList = new List<Column>();
@@ -1212,7 +1211,7 @@ public partial class Functions : FunctionsWrapper
         newList.AddRange(cols);
         return new Column(FunctionWrappedCall("format_string", false, newList.ToArray()));
     }
-    
+
     public static Column FormatString(string format, params string[] cols)
     {
         var newList = new List<Column>();
@@ -1225,26 +1224,26 @@ public partial class Functions : FunctionsWrapper
     {
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("from_csv", false, col, ddlSchema));    
+            return new Column(FunctionWrappedCall("from_csv", false, col, ddlSchema));
         }
 
         var mappedOptions = CreateMap(options);
         return new Column(FunctionWrappedCall("from_csv", false, col, ddlSchema, mappedOptions));
     }
-    
+
     public static Column FromJson(Column col, Column ddlSchema, IDictionary<string, object>? options = null)
     {
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema));    
+            return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema));
         }
 
         var mappedOptions = CreateMap(options);
         return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema, mappedOptions));
     }
-    
+
     /// <summary>
-    /// ddlSchema is a string with a DDL schema in such as "COLNAME INT, ANOTHERCOL STRING"
+    ///     ddlSchema is a string with a DDL schema in such as "COLNAME INT, ANOTHERCOL STRING"
     /// </summary>
     /// <param name="col"></param>
     /// <param name="ddlSchema"></param>
@@ -1254,15 +1253,15 @@ public partial class Functions : FunctionsWrapper
     {
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("from_json", false, col, Lit(ddlSchema)));    
+            return new Column(FunctionWrappedCall("from_json", false, col, Lit(ddlSchema)));
         }
 
         var mappedOptions = CreateMap(options);
         return new Column(FunctionWrappedCall("from_json", false, col, Lit(ddlSchema), mappedOptions));
     }
-    
+
     /// <summary>
-    /// Column with the json value in, a schema as a StructType, or ArrayType of StructType
+    ///     Column with the json value in, a schema as a StructType, or ArrayType of StructType
     /// </summary>
     /// <param name="col"></param>
     /// <param name="schema"></param>
@@ -1271,10 +1270,10 @@ public partial class Functions : FunctionsWrapper
     public static Column FromJson(Column col, StructType schema, IDictionary<string, object>? options = null)
     {
         var ddlSchema = Lit(schema.Json());
-        
+
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema));    
+            return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema));
         }
 
         var mappedOptions = CreateMap(options);
@@ -1285,131 +1284,155 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("from_utc_timestamp", false, Lit(timestamp), Lit(tz)));
     }
-    
+
     public static Column FromUtcTimestamp(Column timestamp, Column tz)
     {
         return new Column(FunctionWrappedCall("from_utc_timestamp", false, timestamp, tz));
     }
 
-    public static Column Grouping(string col) => Grouping(Col(col));
+    public static Column Grouping(string col)
+    {
+        return Grouping(Col(col));
+    }
 
-    public static Column Grouping(Column col) => new Column(FunctionWrappedCall("grouping", false, col));
+    public static Column Grouping(Column col)
+    {
+        return new Column(FunctionWrappedCall("grouping", false, col));
+    }
 
     public static Column JsonTuple(Column col, params string[] fields)
     {
-        return new Column(FunctionWrappedCall("json_tuple", false, col, fields.Select(p => Lit(p).Expression).ToArray()));
+        return new Column(
+            FunctionWrappedCall("json_tuple", false, col, fields.Select(p => Lit(p).Expression).ToArray()));
     }
-    
+
     public static Column JsonTuple(string col, params string[] fields)
     {
-        return new Column(FunctionWrappedCall("json_tuple", false, Col(col), fields.Select(p => Lit(p).Expression).ToArray()));
+        return new Column(FunctionWrappedCall("json_tuple", false, Col(col),
+            fields.Select(p => Lit(p).Expression).ToArray()));
     }
 
     public static Column Lag(Column col, int offset, object defaultValue)
     {
         return new Column(FunctionWrappedCall("lag", false, col, Lit(offset), Lit(defaultValue)));
     }
-    
+
     public static Column Lag(string col, int offset, object defaultValue)
     {
         return new Column(FunctionWrappedCall("lag", false, Col(col), Lit(offset), Lit(defaultValue)));
     }
-    
+
     public static Column Lag(Column col, int offset)
     {
         return new Column(FunctionWrappedCall("lag", false, col, Lit(offset)));
     }
-    
+
     public static Column Lag(string col, int offset)
     {
         return new Column(FunctionWrappedCall("lag", false, Col(col), Lit(offset)));
     }
 
-    
+
     public static Column Lag(Column col)
     {
         return new Column(FunctionWrappedCall("lag", false, col));
     }
-    
+
     public static Column Lag(string col)
     {
         return new Column(FunctionWrappedCall("lag", false, Col(col)));
     }
-    
+
     public static Column Lead(Column col, int offset, object defaultValue)
     {
         return new Column(FunctionWrappedCall("lead", false, col, Lit(offset), Lit(defaultValue)));
     }
-    
+
     public static Column Lead(string col, int offset, object defaultValue)
     {
         return new Column(FunctionWrappedCall("lead", false, Col(col), Lit(offset), Lit(defaultValue)));
     }
-    
+
     public static Column Lead(Column col, int offset)
     {
         return new Column(FunctionWrappedCall("lead", false, col, Lit(offset)));
     }
-    
+
     public static Column Lead(string col, int offset)
     {
         return new Column(FunctionWrappedCall("lead", false, Col(col), Lit(offset)));
     }
 
-    
+
     public static Column Lead(Column col)
     {
         return new Column(FunctionWrappedCall("lead", false, col));
     }
-    
+
     public static Column Lead(string col)
     {
         return new Column(FunctionWrappedCall("lead", false, Col(col)));
     }
 
-    public static Column Levenshtein(string left, string right, int? threshold = null) => Levenshtein(Col(left), Col(right), threshold);
+    public static Column Levenshtein(string left, string right, int? threshold = null)
+    {
+        return Levenshtein(Col(left), Col(right), threshold);
+    }
+
     public static Column Levenshtein(Column left, Column right, int? threshold = null)
     {
         if (!threshold.HasValue)
         {
             return new Column(FunctionWrappedCall("levenshtein", false, left, right));
         }
-        
+
         return new Column(FunctionWrappedCall("levenshtein", false, left, right, Lit(threshold.Value)));
     }
 
-    public static Column Like(string col, string pattern, string? escape = null) => Like(Col(col), Lit(pattern), escape == null ? null : Lit(escape));
+    public static Column Like(string col, string pattern, string? escape = null)
+    {
+        return Like(Col(col), Lit(pattern), escape == null ? null : Lit(escape));
+    }
 
     public static Column Like(Column col, Column pattern, Column? escape = null)
     {
-        if (Object.Equals(null, escape))
+        if (Equals(null, escape))
         {
             return new Column(FunctionWrappedCall("like", false, col, pattern));
         }
-        
+
         return new Column(FunctionWrappedCall("like", false, col, pattern, escape));
     }
 
     /// <summary>
-    /// Find the occurence of substr in col - the PySpark docs say that pos is 0-based but you need to use 1 for the first char
+    ///     Find the occurence of substr in col - the PySpark docs say that pos is 0-based but you need to use 1 for the first
+    ///     char
     /// </summary>
     /// <param name="substr"></param>
     /// <param name="col"></param>
     /// <param name="pos"></param>
     /// <returns>Column</returns>
-    public static Column Locate(string substr, string col, int? pos = null) => Locate(substr, Col(col), pos);
-    
+    public static Column Locate(string substr, string col, int? pos = null)
+    {
+        return Locate(substr, Col(col), pos);
+    }
+
     /// <summary>
-    /// Find the occurence of substr in col - the PySpark docs say that pos is 0-based but you need to use 1 for the first char
+    ///     Find the occurence of substr in col - the PySpark docs say that pos is 0-based but you need to use 1 for the first
+    ///     char
     /// </summary>
     /// <param name="substr"></param>
     /// <param name="col"></param>
     /// <param name="pos"></param>
     /// <returns>Column</returns>
-    public static Column Locate(string substr, Column col, int? pos = null) => Locate(Lit(substr), col, pos);
-    
+    public static Column Locate(string substr, Column col, int? pos = null)
+    {
+        return Locate(Lit(substr), col, pos);
+    }
+
     /// <summary>
-    /// Find the occurence of substr in col - the PySpark docs say that pos is 0-based but you need to use 1 for the first char
+    ///     Find the occurence of substr in col - the PySpark docs say that pos is 0-based but you need to use 1 for the first
+    ///     char
     /// </summary>
     /// <param name="substr"></param>
     /// <param name="col"></param>
@@ -1419,70 +1442,120 @@ public partial class Functions : FunctionsWrapper
     {
         if (pos.HasValue)
         {
-            return new Column(FunctionWrappedCall("locate", false, substr, col, Lit(pos.Value)));    
+            return new Column(FunctionWrappedCall("locate", false, substr, col, Lit(pos.Value)));
         }
-        
+
         return new Column(FunctionWrappedCall("locate", false, substr, col));
     }
 
-    public static Column LPad(string col, int len, string pad) => LPad(Col(col), len, pad);
-    
-    public static Column LPad(Column col, int len, string pad) => new (FunctionWrappedCall("lpad", false, col, Lit(len), Lit(pad)));
+    public static Column LPad(string col, int len, string pad)
+    {
+        return LPad(Col(col), len, pad);
+    }
 
-    
-    public static Column RPad(string col, int len, string pad) => RPad(Col(col), len, pad);
-    
-    public static Column RPad(Column col, int len, string pad) => new (FunctionWrappedCall("rpad", false, col, Lit(len), Lit(pad)));
+    public static Column LPad(Column col, int len, string pad)
+    {
+        return new Column(FunctionWrappedCall("lpad", false, col, Lit(len), Lit(pad)));
+    }
 
-    
-    public static Column MakeDtInterval() => new(FunctionWrappedCall("make_dt_interval", false));
 
-    public static Column MakeDtInterval(string day) => MakeDtInterval(Col(day));
+    public static Column RPad(string col, int len, string pad)
+    {
+        return RPad(Col(col), len, pad);
+    }
 
-    public static Column MakeDtInterval(Column day) => new(FunctionWrappedCall("make_dt_interval", false, day));
-    
-    public static Column MakeDtInterval(string day, string hour) => MakeDtInterval(Col(day), Col(hour));
-    
-    public static Column MakeDtInterval(Column day, Column hour) => new(FunctionWrappedCall("make_dt_interval", false, day, hour));
-    
-    public static Column MakeDtInterval(string day, string hour, string minute) => MakeDtInterval(Col(day), Col(hour), Col(minute));
-    
-    public static Column MakeDtInterval(Column day, Column hour, Column minute) => new(FunctionWrappedCall("make_dt_interval", false, day, hour, minute));
-    
-    public static Column MakeDtInterval(string day, string hour, string minute, double seconds) => MakeDtInterval(Col(day), Col(hour), Col(minute));
-    
-    public static Column MakeDtInterval(Column day, Column hour, Column minute, Column seconds) => new(FunctionWrappedCall("make_dt_interval", false, day, hour, minute, seconds));
+    public static Column RPad(Column col, int len, string pad)
+    {
+        return new Column(FunctionWrappedCall("rpad", false, col, Lit(len), Lit(pad)));
+    }
+
+
+    public static Column MakeDtInterval()
+    {
+        return new Column(FunctionWrappedCall("make_dt_interval", false));
+    }
+
+    public static Column MakeDtInterval(string day)
+    {
+        return MakeDtInterval(Col(day));
+    }
+
+    public static Column MakeDtInterval(Column day)
+    {
+        return new Column(FunctionWrappedCall("make_dt_interval", false, day));
+    }
+
+    public static Column MakeDtInterval(string day, string hour)
+    {
+        return MakeDtInterval(Col(day), Col(hour));
+    }
+
+    public static Column MakeDtInterval(Column day, Column hour)
+    {
+        return new Column(FunctionWrappedCall("make_dt_interval", false, day, hour));
+    }
+
+    public static Column MakeDtInterval(string day, string hour, string minute)
+    {
+        return MakeDtInterval(Col(day), Col(hour), Col(minute));
+    }
+
+    public static Column MakeDtInterval(Column day, Column hour, Column minute)
+    {
+        return new Column(FunctionWrappedCall("make_dt_interval", false, day, hour, minute));
+    }
+
+    public static Column MakeDtInterval(string day, string hour, string minute, double seconds)
+    {
+        return MakeDtInterval(Col(day), Col(hour), Col(minute));
+    }
+
+    public static Column MakeDtInterval(Column day, Column hour, Column minute, Column seconds)
+    {
+        return new Column(FunctionWrappedCall("make_dt_interval", false, day, hour, minute, seconds));
+    }
 
     public static Column MakeTimestamp(string years, string months, string days, string hours, string mins, string secs,
-        string? timezone = null) => MakeTimestamp(Col(years), Col(months), Col(days), Col(hours), Col(mins), Col(secs),
-        timezone == null ? null : Col(timezone));
-
-    public static Column MakeTimestamp(Column years, Column months, Column days, Column hours, Column mins, Column secs, Column? timezone = null)
+        string? timezone = null)
     {
-        if (Object.Equals(null, timezone))
-        {
-            return new(FunctionWrappedCall("make_timestamp", false, years, months, days, hours, mins, secs ));
-        }
-        
-        return new(FunctionWrappedCall("make_timestamp", false, years, months, days, hours, mins, secs , timezone));
+        return MakeTimestamp(Col(years), Col(months), Col(days), Col(hours), Col(mins), Col(secs),
+            timezone == null ? null : Col(timezone));
     }
-    
-    public static Column MakeTimestampLtz(string years, string months, string days, string hours, string mins, string secs,
-        string? timezone = null) => MakeTimestampLtz(Col(years), Col(months), Col(days), Col(hours), Col(mins), Col(secs),
-        timezone == null ? null : Col(timezone));
 
-    public static Column MakeTimestampLtz(Column years, Column months, Column days, Column hours, Column mins, Column secs, Column? timezone = null)
+    public static Column MakeTimestamp(Column years, Column months, Column days, Column hours, Column mins, Column secs,
+        Column? timezone = null)
     {
-        if (Object.Equals(null, timezone))
+        if (Equals(null, timezone))
         {
-            return new(FunctionWrappedCall("make_timestamp_ltz", false, years, months, days, hours, mins, secs ));
+            return new Column(FunctionWrappedCall("make_timestamp", false, years, months, days, hours, mins, secs));
         }
-        
-        return new(FunctionWrappedCall("make_timestamp_ltz", false, years, months, days, hours, mins, secs , timezone));
+
+        return new Column(
+            FunctionWrappedCall("make_timestamp", false, years, months, days, hours, mins, secs, timezone));
     }
-    
+
+    public static Column MakeTimestampLtz(string years, string months, string days, string hours, string mins,
+        string secs,
+        string? timezone = null)
+    {
+        return MakeTimestampLtz(Col(years), Col(months), Col(days), Col(hours), Col(mins), Col(secs),
+            timezone == null ? null : Col(timezone));
+    }
+
+    public static Column MakeTimestampLtz(Column years, Column months, Column days, Column hours, Column mins,
+        Column secs, Column? timezone = null)
+    {
+        if (Equals(null, timezone))
+        {
+            return new Column(FunctionWrappedCall("make_timestamp_ltz", false, years, months, days, hours, mins, secs));
+        }
+
+        return new Column(FunctionWrappedCall("make_timestamp_ltz", false, years, months, days, hours, mins, secs,
+            timezone));
+    }
+
     /// <summary>
-    /// col is the name of the column to apply the mask to
+    ///     col is the name of the column to apply the mask to
     /// </summary>
     /// <param name="col"></param>
     /// <param name="upperChar"></param>
@@ -1490,7 +1563,8 @@ public partial class Functions : FunctionsWrapper
     /// <param name="digitChar"></param>
     /// <param name="otherChar"></param>
     /// <returns></returns>
-    public static Column Mask(string col, string? upperChar=null, string? lowerChar=null, string? digitChar=null, string? otherChar=null)
+    public static Column Mask(string col, string? upperChar = null, string? lowerChar = null, string? digitChar = null,
+        string? otherChar = null)
     {
         if (string.IsNullOrEmpty(upperChar))
         {
@@ -1509,9 +1583,9 @@ public partial class Functions : FunctionsWrapper
 
         return Mask(Col(col), Lit(upperChar), Lit(lowerChar), Lit(digitChar), Lit(otherChar));
     }
-    
+
     /// <summary>
-    /// To use the default specify null instead of a column
+    ///     To use the default specify null instead of a column
     /// </summary>
     /// <param name="col"></param>
     /// <param name="upperChar"></param>
@@ -1519,24 +1593,25 @@ public partial class Functions : FunctionsWrapper
     /// <param name="digitChar"></param>
     /// <param name="otherChar"></param>
     /// <returns></returns>
-    public static Column Mask(Column col, Column? upperChar=null, Column? lowerChar=null, Column? digitChar=null, Column? otherChar=null)
+    public static Column Mask(Column col, Column? upperChar = null, Column? lowerChar = null, Column? digitChar = null,
+        Column? otherChar = null)
     {
-        if (Object.Equals(null, upperChar))
+        if (Equals(null, upperChar))
         {
             upperChar = Lit("X");
         }
-        
-        if (Object.Equals(null, lowerChar))
+
+        if (Equals(null, lowerChar))
         {
             lowerChar = Lit("x");
         }
-        
-        if (Object.Equals(null, digitChar))
+
+        if (Equals(null, digitChar))
         {
             digitChar = Lit("n");
         }
-        
-        if (Object.Equals(null, otherChar))
+
+        if (Equals(null, otherChar))
         {
             otherChar = Lit(null as string);
         }
@@ -1545,212 +1620,321 @@ public partial class Functions : FunctionsWrapper
         {
             throw new SparkException("upperChar must be a Lit(\"string\"), cannot be any other type (including char!)");
         }
-        
+
         if (lowerChar.Expression.Literal.String == null)
         {
             throw new SparkException("lowerChar must be a Lit(\"string\"), cannot be any other type (including char!)");
         }
-        
+
         if (digitChar.Expression.Literal.String == null)
         {
             throw new SparkException("digitChar must be a Lit(\"string\"), cannot be any other type (including char!)");
         }
-        
+
         if (otherChar.Expression.Literal.String == null)
         {
             throw new SparkException("otherChar must be a Lit(\"string\"), cannot be any other type (including char!)");
         }
-        
+
         return new Column(FunctionWrappedCall("mask", false, col, upperChar, lowerChar, digitChar, otherChar));
     }
 
-    public static Column MonthsBetween(string date1Col, string date2Col, bool? roundOff = null) => MonthsBetween(Col(date1Col), Col(date2Col), roundOff);
-    
+    public static Column MonthsBetween(string date1Col, string date2Col, bool? roundOff = null)
+    {
+        return MonthsBetween(Col(date1Col), Col(date2Col), roundOff);
+    }
+
     public static Column MonthsBetween(Column date1Col, Column date2Col, bool? roundOff = null)
     {
         if (roundOff.HasValue)
         {
-            return new Column(FunctionWrappedCall("months_between", false, date1Col, date2Col, Lit(roundOff.Value)));    
+            return new Column(FunctionWrappedCall("months_between", false, date1Col, date2Col, Lit(roundOff.Value)));
         }
-        
+
         return new Column(FunctionWrappedCall("months_between", false, date1Col, date2Col));
     }
 
-    public static Column NthValue(string col, int offset, bool? ignoreNulls = null) => NthValue(Col(col), offset, ignoreNulls);
-    
-    public static Column NthValue(Column col, int offset, bool? ignoreNulls = null)  => NthValue(col, Lit(offset), ignoreNulls);
+    public static Column NthValue(string col, int offset, bool? ignoreNulls = null)
+    {
+        return NthValue(Col(col), offset, ignoreNulls);
+    }
+
+    public static Column NthValue(Column col, int offset, bool? ignoreNulls = null)
+    {
+        return NthValue(col, Lit(offset), ignoreNulls);
+    }
 
     public static Column NthValue(Column col, Column offset, bool? ignoreNulls = null)
     {
         if (ignoreNulls.HasValue)
         {
-            return new Column(FunctionWrappedCall("nth_value", false, col, offset, Lit(ignoreNulls.Value)));  
+            return new Column(FunctionWrappedCall("nth_value", false, col, offset, Lit(ignoreNulls.Value)));
         }
-        
+
         return new Column(FunctionWrappedCall("nth_value", false, col, offset));
     }
-    
-    public static Column Ntile(int n) => new Column(FunctionWrappedCall("ntile", false, Lit(n)));
+
+    public static Column Ntile(int n)
+    {
+        return new Column(FunctionWrappedCall("ntile", false, Lit(n)));
+    }
 
 
-    public static Column Overlay(string src, string replace, int pos, int? len = null) => Overlay(Col(src), Col(replace), Lit(pos), len.HasValue ? Lit(len.Value) : null);
-    
-    public static Column Overlay(Column src, Column replace, int pos, int? len = null) => Overlay(src, replace, Lit(pos), len.HasValue ? Lit(len.Value) : null);
+    public static Column Overlay(string src, string replace, int pos, int? len = null)
+    {
+        return Overlay(Col(src), Col(replace), Lit(pos), len.HasValue ? Lit(len.Value) : null);
+    }
+
+    public static Column Overlay(Column src, Column replace, int pos, int? len = null)
+    {
+        return Overlay(src, replace, Lit(pos), len.HasValue ? Lit(len.Value) : null);
+    }
 
     public static Column Overlay(Column src, Column replace, Column pos, Column? len = null)
     {
-        if (Object.Equals(null, len))
+        if (Equals(null, len))
         {
             return new Column(FunctionWrappedCall("overlay", false, src, replace, pos));
         }
-        
+
         return new Column(FunctionWrappedCall("overlay", false, src, replace, pos, len));
     }
 
-    public static Column Percentile(string col, float[] percentage, int frequency) => Percentile(Col(col), Lit(percentage), Lit(frequency));
-    
-    public static Column Percentile(string col, float percentage, int frequency) => Percentile(Col(col), Lit(percentage), Lit(frequency));
-    
-    public static Column Percentile(Column col, float[] percentage, int frequency) => Percentile(col, Lit(percentage), Lit(frequency));
-    
-    public static Column Percentile(Column col, float percentage, int frequency) => Percentile(col, Lit(percentage), Lit(frequency));
+    public static Column Percentile(string col, float[] percentage, int frequency)
+    {
+        return Percentile(Col(col), Lit(percentage), Lit(frequency));
+    }
+
+    public static Column Percentile(string col, float percentage, int frequency)
+    {
+        return Percentile(Col(col), Lit(percentage), Lit(frequency));
+    }
+
+    public static Column Percentile(Column col, float[] percentage, int frequency)
+    {
+        return Percentile(col, Lit(percentage), Lit(frequency));
+    }
+
+    public static Column Percentile(Column col, float percentage, int frequency)
+    {
+        return Percentile(col, Lit(percentage), Lit(frequency));
+    }
 
     public static Column Percentile(Column col, Column percentage, Column frequency)
     {
         return new Column(FunctionWrappedCall("percentile", false, col, percentage, frequency));
     }
-    
-    public static Column PercentileApprox(string col, float[] percentage, int accuracy) => Percentile(Col(col), Lit(percentage), Lit(accuracy));
-    
-    public static Column PercentileApprox(string col, float percentage, int accuracy) => Percentile(Col(col), Lit(percentage), Lit(accuracy));
-    
-    public static Column PercentileApprox(Column col, float[] percentage, int accuracy) => Percentile(col, Lit(percentage), Lit(accuracy));
-    
-    public static Column PercentileApprox(Column col, float percentage, int accuracy) => Percentile(col, Lit(percentage), Lit(accuracy));
+
+    public static Column PercentileApprox(string col, float[] percentage, int accuracy)
+    {
+        return Percentile(Col(col), Lit(percentage), Lit(accuracy));
+    }
+
+    public static Column PercentileApprox(string col, float percentage, int accuracy)
+    {
+        return Percentile(Col(col), Lit(percentage), Lit(accuracy));
+    }
+
+    public static Column PercentileApprox(Column col, float[] percentage, int accuracy)
+    {
+        return Percentile(col, Lit(percentage), Lit(accuracy));
+    }
+
+    public static Column PercentileApprox(Column col, float percentage, int accuracy)
+    {
+        return Percentile(col, Lit(percentage), Lit(accuracy));
+    }
 
     public static Column PercentileApprox(Column col, Column percentage, Column accuracy)
     {
         return new Column(FunctionWrappedCall("percentile_approx", false, col, percentage, accuracy));
     }
 
-    public static Column ParseUrl(string urlCol, string partToExtractCol, string? keyCol = null) => ParseUrl(Col(urlCol), Col(partToExtractCol), keyCol == null ? null : Col(keyCol));
+    public static Column ParseUrl(string urlCol, string partToExtractCol, string? keyCol = null)
+    {
+        return ParseUrl(Col(urlCol), Col(partToExtractCol), keyCol == null ? null : Col(keyCol));
+    }
 
     public static Column ParseUrl(Column col, Column partToExtract, Column? key = null)
     {
-        if (Object.Equals(null, key))
+        if (Equals(null, key))
         {
             return new Column(FunctionWrappedCall("parse_url", false, col, partToExtract));
         }
-        
+
         return new Column(FunctionWrappedCall("parse_url", false, col, partToExtract, key));
     }
 
-    public static Column Position(string substrColumn, string strColumn, string? startColumn = null) => Position(Col(substrColumn), Col(strColumn), startColumn == null ? null : Col(startColumn));
-    
+    public static Column Position(string substrColumn, string strColumn, string? startColumn = null)
+    {
+        return Position(Col(substrColumn), Col(strColumn), startColumn == null ? null : Col(startColumn));
+    }
+
     public static Column Position(Column substrColumn, Column strColumn, Column? startColumn = null)
     {
-        if (Object.Equals(null, startColumn))
+        if (Equals(null, startColumn))
         {
             return new Column(FunctionWrappedCall("position", false, substrColumn, strColumn));
         }
-        
+
         return new Column(FunctionWrappedCall("position", false, substrColumn, strColumn, startColumn));
     }
 
-    public static Column PrintF(string format, params string[] cols) => PrintF(Col(format), cols.Select(Col).ToArray());
+    public static Column PrintF(string format, params string[] cols)
+    {
+        return PrintF(Col(format), cols.Select(Col).ToArray());
+    }
+
     public static Column PrintF(Column format, params Column[] cols)
     {
         return new Column(FunctionWrappedCall("printf", false, cols.Prepend(format).ToArray()));
     }
-    
-    public static Column RaiseError(string message) => new Column(FunctionWrappedCall("raise_error", false, Lit(message)));
-    public static Column RaiseError(Column message) => new Column(FunctionWrappedCall("raise_error", false, message));
 
-    public static Column RegexpExtract(string col, string pattern, int idx) => RegexpExtract(Col(col), pattern, idx);
-    
-    public static Column RegexpExtract(Column col, string pattern, int idx) => RegexpExtract(col, Lit(pattern), Lit(idx));
+    public static Column RaiseError(string message)
+    {
+        return new Column(FunctionWrappedCall("raise_error", false, Lit(message)));
+    }
+
+    public static Column RaiseError(Column message)
+    {
+        return new Column(FunctionWrappedCall("raise_error", false, message));
+    }
+
+    public static Column RegexpExtract(string col, string pattern, int idx)
+    {
+        return RegexpExtract(Col(col), pattern, idx);
+    }
+
+    public static Column RegexpExtract(Column col, string pattern, int idx)
+    {
+        return RegexpExtract(col, Lit(pattern), Lit(idx));
+    }
 
     public static Column RegexpExtract(Column col, Column pattern, Column idx)
     {
         return new Column(FunctionWrappedCall("regexp_extract", false, col, pattern, idx));
     }
-    
-    public static Column RegexpExtractAll(string col, string pattern, int idx) => RegexpExtractAll(Col(col), pattern, idx);
-    
-    public static Column RegexpExtractAll(Column col, string pattern, int idx) => RegexpExtractAll(col, Lit(pattern), Lit(idx));
+
+    public static Column RegexpExtractAll(string col, string pattern, int idx)
+    {
+        return RegexpExtractAll(Col(col), pattern, idx);
+    }
+
+    public static Column RegexpExtractAll(Column col, string pattern, int idx)
+    {
+        return RegexpExtractAll(col, Lit(pattern), Lit(idx));
+    }
 
     public static Column RegexpExtractAll(Column col, Column pattern, Column idx)
     {
         return new Column(FunctionWrappedCall("regexp_extract_all", false, col, pattern, idx));
     }
-    
-    public static Column RegexpExtractInstr(string col, string pattern, int idx) => RegexpExtractInstr(Col(col), pattern, idx);
-    
-    public static Column RegexpExtractInstr(Column col, string pattern, int idx) => RegexpExtractInstr(col, Lit(pattern), Lit(idx));
+
+    public static Column RegexpExtractInstr(string col, string pattern, int idx)
+    {
+        return RegexpExtractInstr(Col(col), pattern, idx);
+    }
+
+    public static Column RegexpExtractInstr(Column col, string pattern, int idx)
+    {
+        return RegexpExtractInstr(col, Lit(pattern), Lit(idx));
+    }
 
     public static Column RegexpExtractInstr(Column col, Column pattern, Column idx)
     {
         return new Column(FunctionWrappedCall("regexp_instr", false, col, pattern, idx));
     }
 
-    public static Column RegexpReplace(string col, string pattern, string replacement) => RegexpReplace(Col(col), Lit(pattern), Lit(replacement));
-    public static Column RegexpReplace(Column col, string pattern, string replacement) => RegexpReplace(col, Lit(pattern), Lit(replacement));
+    public static Column RegexpReplace(string col, string pattern, string replacement)
+    {
+        return RegexpReplace(Col(col), Lit(pattern), Lit(replacement));
+    }
+
+    public static Column RegexpReplace(Column col, string pattern, string replacement)
+    {
+        return RegexpReplace(col, Lit(pattern), Lit(replacement));
+    }
+
     public static Column RegexpReplace(Column col, Column pattern, Column replacement)
     {
         return new Column(FunctionWrappedCall("regexp_replace", false, col, pattern, replacement));
     }
-    public static Column Replace(Column src, string search, string replace) => Replace(src, Lit(search), Lit(replace));
-    public static Column Replace(string src, string search, string replace) => Replace(Col(src), search, replace);
+
+    public static Column Replace(Column src, string search, string replace)
+    {
+        return Replace(src, Lit(search), Lit(replace));
+    }
+
+    public static Column Replace(string src, string search, string replace)
+    {
+        return Replace(Col(src), search, replace);
+    }
+
     public static Column Replace(Column src, Column search, Column replace)
     {
         return new Column(FunctionWrappedCall("replace", false, src, search, replace));
     }
 
-    public static Column SchemaOfCsv(string schema, IDictionary<string, object>? dict = null) => SchemaOfCsv(Lit(schema), dict);
+    public static Column SchemaOfCsv(string schema, IDictionary<string, object>? dict = null)
+    {
+        return SchemaOfCsv(Lit(schema), dict);
+    }
+
     public static Column SchemaOfCsv(Column schema, IDictionary<string, object>? dict = null)
     {
         if (dict != null)
         {
             return new Column(FunctionWrappedCall("schema_of_csv", false, schema, Lit(dict)));
         }
-        
+
         return new Column(FunctionWrappedCall("schema_of_csv", false, schema));
     }
-    
-    public static Column SchemaOfJson(string json, IDictionary<string, object>? dict = null) => SchemaOfJson(Lit(json), dict);
-    
+
+    public static Column SchemaOfJson(string json, IDictionary<string, object>? dict = null)
+    {
+        return SchemaOfJson(Lit(json), dict);
+    }
+
     public static Column SchemaOfJson(Column json, IDictionary<string, object>? dict = null)
     {
         if (dict != null)
         {
             return new Column(FunctionWrappedCall("schema_of_json", false, json, Lit(dict)));
         }
-        
+
         return new Column(FunctionWrappedCall("schema_of_json", false, json));
     }
 
-    public static Column Sentences(string col, string? language = null, string? country = null) => Sentences(Col(col), String.IsNullOrEmpty(language) ? null : Lit(language), String.IsNullOrEmpty(country) ? null : Lit(country));
+    public static Column Sentences(string col, string? language = null, string? country = null)
+    {
+        return Sentences(Col(col), string.IsNullOrEmpty(language) ? null : Lit(language),
+            string.IsNullOrEmpty(country) ? null : Lit(country));
+    }
+
     public static Column Sentences(Column col, Column? language = null, Column? country = null)
     {
-        if (Object.Equals(null, language))
+        if (Equals(null, language))
         {
             language = Lit("");
         }
-        
-        if (Object.Equals(null, country))
+
+        if (Equals(null, country))
         {
             country = Lit("");
         }
-    
+
         return new Column(FunctionWrappedCall("sentences", false, col, language, country));
     }
 
-    public static Column ToDate(string col, string? format = null) => ToDate(Col(col), string.IsNullOrEmpty(format) ? null : Lit(format));
-    
-    
+    public static Column ToDate(string col, string? format = null)
+    {
+        return ToDate(Col(col), string.IsNullOrEmpty(format) ? null : Lit(format));
+    }
+
+
     public static Column ToDate(Column col, Column? format = null)
     {
-        if (Object.Equals(null, format))
+        if (Equals(null, format))
         {
             return new Column(FunctionWrappedCall("to_Date", false, col));
         }
@@ -1762,8 +1946,8 @@ public partial class Functions : FunctionsWrapper
     public static Column Struct(params Column[] cols)
     {
         return new Column(FunctionWrappedCall("struct", false, cols));
-    }    
-    
+    }
+
     /// <Summary>
     ///     Round
     ///     Round the given value to `scale` decimal places using HALF_UP rounding mode if `scale` >= 0 or at integral part
@@ -1773,7 +1957,7 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("round", false, col, Lit(scale)));
     }
-    
+
     /// <Summary>
     ///     Round
     ///     Round the given value to `scale` default scale = 0
@@ -1783,9 +1967,15 @@ public partial class Functions : FunctionsWrapper
         return new Column(FunctionWrappedCall("round", false, Col(col)));
     }
 
-    public static Column Get(string col, int index) => Get(Col(col), Lit(index));
-    
-    public static Column Get(string col, string index) => Get(Col(col), Col(index));
+    public static Column Get(string col, int index)
+    {
+        return Get(Col(col), Lit(index));
+    }
+
+    public static Column Get(string col, string index)
+    {
+        return Get(Col(col), Col(index));
+    }
 
     public static Column Get(Column col, Column index)
     {
@@ -1794,26 +1984,37 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Sequence(Column start, Column stop, Column? step = null)
     {
-        if (Object.Equals(null, step))
+        if (Equals(null, step))
         {
             return new Column(FunctionWrappedCall("sequence", false, start, stop));
         }
-        
+
         return new Column(FunctionWrappedCall("sequence", false, start, stop, step));
     }
-    
-    public static Column Sequence(string start, string end, string? step = null) => Sequence(Col(start), Col(end), String.IsNullOrEmpty(step) ? null : Col(step));
+
+    public static Column Sequence(string start, string end, string? step = null)
+    {
+        return Sequence(Col(start), Col(end), string.IsNullOrEmpty(step) ? null : Col(step));
+    }
 
     /// <summary>
-    /// Generates session window given a timestamp specifying column. Session window is one of dynamic windows, which means the length of window is varying according to the given inputs. The length of session window is defined as “the timestamp of latest input of the session + gap duration”, so when the new inputs are bound to the current session window, the end time of session window can be expanded according to the new inputs. Windows can support microsecond precision. Windows in the order of months are not supported. For a streaming query, you may use the function current_timestamp to generate windows on processing time. gapDuration is provided as strings, e.g. ‘1 second’, ‘1 day 12 hours’, ‘2 minutes’. Valid interval strings are ‘week’, ‘day’, ‘hour’, ‘minute’, ‘second’, ‘millisecond’, ‘microsecond’. It could also be a Column which can be evaluated to gap duration dynamically based on the input row. The output column will be a struct called ‘session_window’ by default with the nested columns ‘start’ and ‘end’, where ‘start’ and ‘end’ will be of pyspark.sql.types.TimestampType.
-    ///
-    /// Example:
-    ///
-    /// ```csharp
-    ///var df = Spark.CreateDataFrame(ToRows((ToRow(DateTime.Parse("2016-03-11 09:00:07"), 1)))).ToDf("date", "val");
-    ///var w = df.GroupBy(SessionWindow("date", "5 seconds")).Agg(Sum("val").Alias("sum"));
-    /// w.Select(w["session_window"]["start"].Cast("string").Alias("start"), w["session_window"]["end"].Cast("string").Alias("stop"), Col("sum")).Show();
-    /// ```
+    ///     Generates session window given a timestamp specifying column. Session window is one of dynamic windows, which means
+    ///     the length of window is varying according to the given inputs. The length of session window is defined as “the
+    ///     timestamp of latest input of the session + gap duration”, so when the new inputs are bound to the current session
+    ///     window, the end time of session window can be expanded according to the new inputs. Windows can support microsecond
+    ///     precision. Windows in the order of months are not supported. For a streaming query, you may use the function
+    ///     current_timestamp to generate windows on processing time. gapDuration is provided as strings, e.g. ‘1 second’, ‘1
+    ///     day 12 hours’, ‘2 minutes’. Valid interval strings are ‘week’, ‘day’, ‘hour’, ‘minute’, ‘second’, ‘millisecond’,
+    ///     ‘microsecond’. It could also be a Column which can be evaluated to gap duration dynamically based on the input row.
+    ///     The output column will be a struct called ‘session_window’ by default with the nested columns ‘start’ and ‘end’,
+    ///     where ‘start’ and ‘end’ will be of pyspark.sql.types.TimestampType.
+    ///     Example:
+    ///     ```csharp
+    ///     var df = Spark.CreateDataFrame(ToRows((ToRow(DateTime.Parse("2016-03-11 09:00:07"), 1)))).ToDf("date", "val");
+    ///     var w = df.GroupBy(SessionWindow("date", "5 seconds")).Agg(Sum("val").Alias("sum"));
+    ///     w.Select(w["session_window"]["start"].Cast("string").Alias("start"),
+    ///     w["session_window"]["end"].Cast("string").Alias("stop"), Col("sum")).Show();
+    ///     ```
     /// </summary>
     /// <param name="timeColumn"></param>
     /// <param name="gapDuration"></param>
@@ -1822,34 +2023,54 @@ public partial class Functions : FunctionsWrapper
     {
         return new Column(FunctionWrappedCall("session_window", false, timeColumn, gapDuration));
     }
-    
+
     /// <summary>
-    /// Generates session window given a timestamp specifying column. Session window is one of dynamic windows, which means the length of window is varying according to the given inputs. The length of session window is defined as “the timestamp of latest input of the session + gap duration”, so when the new inputs are bound to the current session window, the end time of session window can be expanded according to the new inputs. Windows can support microsecond precision. Windows in the order of months are not supported. For a streaming query, you may use the function current_timestamp to generate windows on processing time. gapDuration is provided as strings, e.g. ‘1 second’, ‘1 day 12 hours’, ‘2 minutes’. Valid interval strings are ‘week’, ‘day’, ‘hour’, ‘minute’, ‘second’, ‘millisecond’, ‘microsecond’. It could also be a Column which can be evaluated to gap duration dynamically based on the input row. The output column will be a struct called ‘session_window’ by default with the nested columns ‘start’ and ‘end’, where ‘start’ and ‘end’ will be of pyspark.sql.types.TimestampType.
-    ///
-    /// Example:
-    ///
-    /// ```csharp
-    ///var df = Spark.CreateDataFrame(ToRows((ToRow(DateTime.Parse("2016-03-11 09:00:07"), 1)))).ToDf("date", "val");
-    ///var w = df.GroupBy(SessionWindow("date", "5 seconds")).Agg(Sum("val").Alias("sum"));
-    /// w.Select(w["session_window"]["start"].Cast("string").Alias("start"), w["session_window"]["end"].Cast("string").Alias("stop"), Col("sum")).Show();
-    /// ```
+    ///     Generates session window given a timestamp specifying column. Session window is one of dynamic windows, which means
+    ///     the length of window is varying according to the given inputs. The length of session window is defined as “the
+    ///     timestamp of latest input of the session + gap duration”, so when the new inputs are bound to the current session
+    ///     window, the end time of session window can be expanded according to the new inputs. Windows can support microsecond
+    ///     precision. Windows in the order of months are not supported. For a streaming query, you may use the function
+    ///     current_timestamp to generate windows on processing time. gapDuration is provided as strings, e.g. ‘1 second’, ‘1
+    ///     day 12 hours’, ‘2 minutes’. Valid interval strings are ‘week’, ‘day’, ‘hour’, ‘minute’, ‘second’, ‘millisecond’,
+    ///     ‘microsecond’. It could also be a Column which can be evaluated to gap duration dynamically based on the input row.
+    ///     The output column will be a struct called ‘session_window’ by default with the nested columns ‘start’ and ‘end’,
+    ///     where ‘start’ and ‘end’ will be of pyspark.sql.types.TimestampType.
+    ///     Example:
+    ///     ```csharp
+    ///     var df = Spark.CreateDataFrame(ToRows((ToRow(DateTime.Parse("2016-03-11 09:00:07"), 1)))).ToDf("date", "val");
+    ///     var w = df.GroupBy(SessionWindow("date", "5 seconds")).Agg(Sum("val").Alias("sum"));
+    ///     w.Select(w["session_window"]["start"].Cast("string").Alias("start"),
+    ///     w["session_window"]["end"].Cast("string").Alias("stop"), Col("sum")).Show();
+    ///     ```
     /// </summary>
     /// <param name="timeColumn"></param>
     /// <param name="gapDuration"></param>
     /// <returns></returns>
-    public static Column SessionWindow(string timeColumn, string gapDuration) => SessionWindow(Col(timeColumn), Lit(gapDuration));
+    public static Column SessionWindow(string timeColumn, string gapDuration)
+    {
+        return SessionWindow(Col(timeColumn), Lit(gapDuration));
+    }
 
     public static Column Slice(Column x, Column start, Column length)
     {
         return new Column(FunctionWrappedCall("slice", false, x, start, length));
     }
 
-    public static Column Slice(string x, string start, string length) => Slice(Col(x), Col(start), Col(length));
-    
-    public static Column Slice(string x, int start, int length) => Slice(Col(x), Lit(start), Lit(length));
-    
-    public static Column Slice(Column x, int start, int length) => Slice(x, Lit(start), Lit(length));
-    
+    public static Column Slice(string x, string start, string length)
+    {
+        return Slice(Col(x), Col(start), Col(length));
+    }
+
+    public static Column Slice(string x, int start, int length)
+    {
+        return Slice(Col(x), Lit(start), Lit(length));
+    }
+
+    public static Column Slice(Column x, int start, int length)
+    {
+        return Slice(x, Lit(start), Lit(length));
+    }
+
     /// <Summary>
     ///     Array
     /// </Summary>
@@ -1864,7 +2085,7 @@ public partial class Functions : FunctionsWrapper
         {
             return new Column(FunctionWrappedCall("sort_array", false, col, Lit(asc.Value)));
         }
-        
+
         return new Column(FunctionWrappedCall("sort_array", false, col));
     }
 
@@ -1874,50 +2095,77 @@ public partial class Functions : FunctionsWrapper
         {
             return new Column(FunctionWrappedCall("split", false, str, Lit(pattern), Lit(limit.Value)));
         }
-        
+
         return new Column(FunctionWrappedCall("sort_array", false, str, Lit(pattern)));
     }
 
-    public static Column Split(string str, string pattern, int? limit = null) => Split(Col(str), pattern, limit);
+    public static Column Split(string str, string pattern, int? limit = null)
+    {
+        return Split(Col(str), pattern, limit);
+    }
 
     public static Column StrToMap(Column text, Column? pairDelim = null, Column? keyValueDelim = null)
     {
-        if (Object.Equals(null, pairDelim))
+        if (Equals(null, pairDelim))
         {
             pairDelim = Lit(",");
         }
 
-        if (Object.Equals(null, keyValueDelim))
+        if (Equals(null, keyValueDelim))
         {
             keyValueDelim = Lit(":");
         }
 
         return new Column(FunctionWrappedCall("str_to_map", false, text, pairDelim, keyValueDelim));
     }
-    
-    public static Column StrToMap(string text, string? pairDelim = null, string? keyValueDelim = null) => StrToMap(Col(text), String.IsNullOrEmpty(pairDelim) ? null : Col(pairDelim), String.IsNullOrEmpty(keyValueDelim) ? null : Col(keyValueDelim));
-    
-    
-    public static Column Substr(Column src, Column pos, Column len) => new Column(FunctionWrappedCall("substr", false, src.Expression, pos.Expression, len.Expression));
 
-    public static Column Substr(string src, string pos, string len) => Substr(Col(src), Col(pos), Col(len));
+    public static Column StrToMap(string text, string? pairDelim = null, string? keyValueDelim = null)
+    {
+        return StrToMap(Col(text), string.IsNullOrEmpty(pairDelim) ? null : Col(pairDelim),
+            string.IsNullOrEmpty(keyValueDelim) ? null : Col(keyValueDelim));
+    }
 
-    
-    public static Column Substring(Column src, int pos, int len) => new Column(FunctionWrappedCall("substring", false, src.Expression, Lit(pos).Expression, Lit(len).Expression));
 
-    public static Column Substring(string src, int pos, int len) => Substring(Col(src), pos, len);
+    public static Column Substr(Column src, Column pos, Column len)
+    {
+        return new Column(FunctionWrappedCall("substr", false, src.Expression, pos.Expression, len.Expression));
+    }
 
-    public static Column SubstringIndex(Column str, string delim, int count) => new Column(FunctionWrappedCall("substring_index", false, str.Expression, Lit(delim).Expression, Lit(count).Expression));
-    
-    public static Column SubstringIndex(string str, string delim, int count) => SubstringIndex(Col(str), delim, count);
+    public static Column Substr(string src, string pos, string len)
+    {
+        return Substr(Col(src), Col(pos), Col(len));
+    }
+
+
+    public static Column Substring(Column src, int pos, int len)
+    {
+        return new Column(FunctionWrappedCall("substring", false, src.Expression, Lit(pos).Expression,
+            Lit(len).Expression));
+    }
+
+    public static Column Substring(string src, int pos, int len)
+    {
+        return Substring(Col(src), pos, len);
+    }
+
+    public static Column SubstringIndex(Column str, string delim, int count)
+    {
+        return new Column(FunctionWrappedCall("substring_index", false, str.Expression, Lit(delim).Expression,
+            Lit(count).Expression));
+    }
+
+    public static Column SubstringIndex(string str, string delim, int count)
+    {
+        return SubstringIndex(Col(str), delim, count);
+    }
 
     public static Column ToBinary(Column col, Column? format = null)
     {
-        if (Object.Equals(null, format))
+        if (Equals(null, format))
         {
             return new Column(FunctionWrappedCall("to_binary", false, col));
         }
-        
+
         return new Column(FunctionWrappedCall("to_binary", false, col, format));
     }
 
@@ -1930,14 +2178,14 @@ public partial class Functions : FunctionsWrapper
 
         return ToBinary(Col(col), Lit(format));
     }
-    
+
     public static Column TryToBinary(Column col, Column? format = null)
     {
-        if (Object.Equals(null, format))
+        if (Equals(null, format))
         {
             return new Column(FunctionWrappedCall("try_to_binary", false, col));
         }
-        
+
         return new Column(FunctionWrappedCall("try_to_binary", false, col, format));
     }
 
@@ -1950,14 +2198,14 @@ public partial class Functions : FunctionsWrapper
 
         return TryToBinary(Col(col), Lit(format));
     }
-    
+
     public static Column ToChar(Column col, Column? format = null)
     {
-        if (Object.Equals(null, format))
+        if (Equals(null, format))
         {
             return new Column(FunctionWrappedCall("to_char", false, col));
         }
-        
+
         return new Column(FunctionWrappedCall("to_char", false, col, format));
     }
 
@@ -1970,14 +2218,14 @@ public partial class Functions : FunctionsWrapper
 
         return ToChar(Col(col), Lit(format));
     }
-    
+
     public static Column ToNumber(Column col, Column? format = null)
     {
-        if (Object.Equals(null, format))
+        if (Equals(null, format))
         {
             return new Column(FunctionWrappedCall("to_number", false, col));
         }
-        
+
         return new Column(FunctionWrappedCall("to_number", false, col, format));
     }
 
@@ -1997,134 +2245,190 @@ public partial class Functions : FunctionsWrapper
         {
             return new Column(FunctionWrappedCall("to_csv", false, col));
         }
-        
+
         return new Column(FunctionWrappedCall("to_csv", false, col, Lit(options)));
     }
-    
-    public static Column ToCsv(string col, IDictionary<string, object>? options = null) => ToCsv(Col(col), options);
-    
-    
+
+    public static Column ToCsv(string col, IDictionary<string, object>? options = null)
+    {
+        return ToCsv(Col(col), options);
+    }
+
+
     public static Column ToJson(Column col, IDictionary<string, object>? options = null)
     {
         if (options == null)
         {
             return new Column(FunctionWrappedCall("to_json", false, col));
         }
-        
+
         return new Column(FunctionWrappedCall("to_json", false, col, Lit(options)));
     }
-    
-    public static Column ToJson(string col, IDictionary<string, object>? options = null) => ToJson(Col(col), options);
-    
+
+    public static Column ToJson(string col, IDictionary<string, object>? options = null)
+    {
+        return ToJson(Col(col), options);
+    }
+
     public static Column ToTimestampLtz(Column timestamp, Column? format = null)
     {
-        if (Object.Equals(null, format))
+        if (Equals(null, format))
         {
             return new Column(FunctionWrappedCall("to_timestamp_ltz", false, timestamp));
         }
-        
+
         return new Column(FunctionWrappedCall("to_timestamp_ltz", false, timestamp, format));
     }
-    
-    public static Column ToTimestampLtz(string timestamp, string? format = null) => ToTimestampLtz(Col(timestamp), String.IsNullOrEmpty(format) ? null : Lit(format));
-    
+
+    public static Column ToTimestampLtz(string timestamp, string? format = null)
+    {
+        return ToTimestampLtz(Col(timestamp), string.IsNullOrEmpty(format) ? null : Lit(format));
+    }
+
     public static Column ToTimestampNtz(Column timestamp, Column? format = null)
     {
-        if (Object.Equals(null, format))
+        if (Equals(null, format))
         {
             return new Column(FunctionWrappedCall("to_timestamp_ntz", false, timestamp));
         }
-        
+
         return new Column(FunctionWrappedCall("to_timestamp_ntz", false, timestamp, format));
     }
-    
-    public static Column ToTimestampNtz(string timestamp, string? format = null) => ToTimestampNtz(Col(timestamp), String.IsNullOrEmpty(format) ? null : Lit(format));
+
+    public static Column ToTimestampNtz(string timestamp, string? format = null)
+    {
+        return ToTimestampNtz(Col(timestamp), string.IsNullOrEmpty(format) ? null : Lit(format));
+    }
 
     public static Column ToUnixTimestamp(Column timestamp, Column? format = null)
     {
-        if (Object.Equals(null, format))
+        if (Equals(null, format))
         {
             return new Column(FunctionWrappedCall("to_unix_timestamp", false, timestamp));
         }
-        
+
         return new Column(FunctionWrappedCall("to_unix_timestamp", false, timestamp, format));
     }
-    
-    public static Column ToUnixTimestamp(string timestamp, string? format = null) => ToUnixTimestamp(Col(timestamp), String.IsNullOrEmpty(format) ? null : Lit(format));
-    
+
+    public static Column ToUnixTimestamp(string timestamp, string? format = null)
+    {
+        return ToUnixTimestamp(Col(timestamp), string.IsNullOrEmpty(format) ? null : Lit(format));
+    }
+
     public static Column ToUtcTimestamp(Column timestamp, Column tz)
     {
         return new Column(FunctionWrappedCall("to_utc_timestamp", false, timestamp, tz));
     }
-    
-    public static Column ToUtcTimestamp(string timestamp, string tz) => ToUtcTimestamp(Col(timestamp), Lit(tz));
-    
-    public static Column Translate(Column source, string matching, string replace) => new Column(FunctionWrappedCall("translate", false, source, Lit(matching), Lit(replace)));
-    
-    public static Column Translate(string source, string matching, string replace) => Translate(Col(source), matching, replace);
+
+    public static Column ToUtcTimestamp(string timestamp, string tz)
+    {
+        return ToUtcTimestamp(Col(timestamp), Lit(tz));
+    }
+
+    public static Column Translate(Column source, string matching, string replace)
+    {
+        return new Column(FunctionWrappedCall("translate", false, source, Lit(matching), Lit(replace)));
+    }
+
+    public static Column Translate(string source, string matching, string replace)
+    {
+        return Translate(Col(source), matching, replace);
+    }
 
     public static Column WidthBucket(Column vstr, Column minstr, Column maxstr, Column numBuckets)
     {
         return new Column(FunctionWrappedCall("width_bucket", false, vstr, minstr, maxstr, numBuckets));
     }
-    
-    public static Column WidthBucket(Column vstr, Column minstr, Column maxstr, int numBuckets) => WidthBucket(vstr, minstr, maxstr, numBuckets);
-    
-    public static Column WidthBucket(string vstr, string minstr, string maxstr, int numBuckets) => WidthBucket(Col(vstr), Col(minstr), Col(maxstr), numBuckets);
-    
-    public static Column WidthBucket(string vstr, string minstr, string maxstr, string numBuckets) => WidthBucket(Col(vstr), Col(minstr), Col(maxstr), Col(numBuckets));
-    
-    public static Column WindowTime(Column windowColumn) => new Column(FunctionWrappedCall("window_time", false, windowColumn));
-    
-    public static Column CountMinSketch(Column col, Column eps, Column confidence, Column seed) => new Column(FunctionWrappedCall("count_min_sketch", false, col, eps, confidence, seed));
-    
-    public static Column CountMinSketch(string col, string eps, string confidence, string seed) => CountMinSketch(Col(col), Col(eps), Col(confidence), Col(seed));
 
-    public static Column HllSketchAgg(string col, int? lgConfigKint = null) => HllSketchAgg(Col(col), lgConfigKint);
-    
+    public static Column WidthBucket(Column vstr, Column minstr, Column maxstr, int numBuckets)
+    {
+        return WidthBucket(vstr, minstr, maxstr, numBuckets);
+    }
+
+    public static Column WidthBucket(string vstr, string minstr, string maxstr, int numBuckets)
+    {
+        return WidthBucket(Col(vstr), Col(minstr), Col(maxstr), numBuckets);
+    }
+
+    public static Column WidthBucket(string vstr, string minstr, string maxstr, string numBuckets)
+    {
+        return WidthBucket(Col(vstr), Col(minstr), Col(maxstr), Col(numBuckets));
+    }
+
+    public static Column WindowTime(Column windowColumn)
+    {
+        return new Column(FunctionWrappedCall("window_time", false, windowColumn));
+    }
+
+    public static Column CountMinSketch(Column col, Column eps, Column confidence, Column seed)
+    {
+        return new Column(FunctionWrappedCall("count_min_sketch", false, col, eps, confidence, seed));
+    }
+
+    public static Column CountMinSketch(string col, string eps, string confidence, string seed)
+    {
+        return CountMinSketch(Col(col), Col(eps), Col(confidence), Col(seed));
+    }
+
+    public static Column HllSketchAgg(string col, int? lgConfigKint = null)
+    {
+        return HllSketchAgg(Col(col), lgConfigKint);
+    }
+
     public static Column HllSketchAgg(Column col, int? lgConfigKint = null)
     {
         if (lgConfigKint.HasValue)
         {
             return new Column(FunctionWrappedCall("hll_sketch_agg", false, col, Lit(lgConfigKint.Value)));
-        }  
-        
-        return new Column(FunctionWrappedCall("hll_sketch_agg", false, col));
-    } 
-    
-    public static Column HllSketchEstimate(Column col) => new Column(FunctionWrappedCall("hll_sketch_estimate", false, col));
+        }
 
-    public static Column HllSketchEstimate(string col) => HllSketchEstimate(Col(col));
+        return new Column(FunctionWrappedCall("hll_sketch_agg", false, col));
+    }
+
+    public static Column HllSketchEstimate(Column col)
+    {
+        return new Column(FunctionWrappedCall("hll_sketch_estimate", false, col));
+    }
+
+    public static Column HllSketchEstimate(string col)
+    {
+        return HllSketchEstimate(Col(col));
+    }
 
     public static Column HllUnion(Column col1, Column col2, bool? allowDifferentLgConfigKbool = null)
     {
         if (allowDifferentLgConfigKbool.HasValue)
         {
-            return new Column(FunctionWrappedCall("hll_union", false, col1, col2, Lit(allowDifferentLgConfigKbool.Value)));
+            return new Column(FunctionWrappedCall("hll_union", false, col1, col2,
+                Lit(allowDifferentLgConfigKbool.Value)));
         }
-        
+
         return new Column(FunctionWrappedCall("hll_union", false, col1, col2));
     }
-    
-    public static Column HllUnion(string col1, string col2, bool? allowDifferentLgConfigKbool = null) => HllUnion(Col(col1), Col(col2), allowDifferentLgConfigKbool);
 
-    public static Column AesDecrypt(string input, string key, string? mode = null, string? padding = null, string? aad = null)
+    public static Column HllUnion(string col1, string col2, bool? allowDifferentLgConfigKbool = null)
+    {
+        return HllUnion(Col(col1), Col(col2), allowDifferentLgConfigKbool);
+    }
+
+    public static Column AesDecrypt(string input, string key, string? mode = null, string? padding = null,
+        string? aad = null)
     {
         Column modeCol = null;
         Column paddingCol = null;
         Column aadCol = null;
 
-        if (!String.IsNullOrEmpty(mode))
+        if (!string.IsNullOrEmpty(mode))
         {
             modeCol = Lit(mode);
         }
-        
-        if (!String.IsNullOrEmpty(padding))
+
+        if (!string.IsNullOrEmpty(padding))
         {
             paddingCol = Lit(padding);
         }
-        
-        if (!String.IsNullOrEmpty(aad))
+
+        if (!string.IsNullOrEmpty(aad))
         {
             aadCol = Lit(aad);
         }
@@ -2132,45 +2436,47 @@ public partial class Functions : FunctionsWrapper
 
         return AesDecrypt(Col(input), Col(key), modeCol, paddingCol, aadCol);
     }
-    
-    
-    public static Column AesDecrypt(Column input, Column key, Column? mode = null, Column? padding = null, Column? aad = null)
+
+
+    public static Column AesDecrypt(Column input, Column key, Column? mode = null, Column? padding = null,
+        Column? aad = null)
     {
-        if (Object.Equals(null, mode))
+        if (Equals(null, mode))
         {
             mode = Lit("GCM");
         }
-        
-        if (Object.Equals(null, padding))
+
+        if (Equals(null, padding))
         {
             padding = Lit("DEFAULT");
         }
 
-        if (Object.Equals(null, aad))
+        if (Equals(null, aad))
         {
             aad = Lit("");
         }
 
         return new Column(FunctionWrappedCall("aes_decrypt", false, input, key, mode, padding, aad));
     }
-    
-    public static Column TryAesDecrypt(string input, string key, string? mode = null, string? padding = null, string? aad = null)
+
+    public static Column TryAesDecrypt(string input, string key, string? mode = null, string? padding = null,
+        string? aad = null)
     {
         Column modeCol = null;
         Column paddingCol = null;
         Column aadCol = null;
 
-        if (!String.IsNullOrEmpty(mode))
+        if (!string.IsNullOrEmpty(mode))
         {
             modeCol = Lit(mode);
         }
-        
-        if (!String.IsNullOrEmpty(padding))
+
+        if (!string.IsNullOrEmpty(padding))
         {
             paddingCol = Lit(padding);
         }
-        
-        if (!String.IsNullOrEmpty(aad))
+
+        if (!string.IsNullOrEmpty(aad))
         {
             aadCol = Lit(aad);
         }
@@ -2178,132 +2484,139 @@ public partial class Functions : FunctionsWrapper
 
         return TryAesDecrypt(Col(input), Col(key), modeCol, paddingCol, aadCol);
     }
-    
-    
-    public static Column TryAesDecrypt(Column input, Column key, Column? mode = null, Column? padding = null, Column? aad = null)
+
+
+    public static Column TryAesDecrypt(Column input, Column key, Column? mode = null, Column? padding = null,
+        Column? aad = null)
     {
-        if (Object.Equals(null, mode))
+        if (Equals(null, mode))
         {
             mode = Lit("GCM");
         }
-        
-        if (Object.Equals(null, padding))
+
+        if (Equals(null, padding))
         {
             padding = Lit("DEFAULT");
         }
 
-        if (Object.Equals(null, aad))
+        if (Equals(null, aad))
         {
             aad = Lit("");
         }
 
         return new Column(FunctionWrappedCall("try_aes_decrypt", false, input, key, mode, padding, aad));
     }
-    
-    public static Column AesEncrypt(Column input, Column key, Column? mode = null, Column? padding = null, Column? iv = null, Column? aad = null)
+
+    public static Column AesEncrypt(Column input, Column key, Column? mode = null, Column? padding = null,
+        Column? iv = null, Column? aad = null)
     {
-        if (Object.Equals(null, mode))
+        if (Equals(null, mode))
         {
             mode = Lit("GCM");
         }
-        
-        if (Object.Equals(null, padding))
+
+        if (Equals(null, padding))
         {
             padding = Lit("DEFAULT");
         }
 
-        if (Object.Equals(null, iv))
+        if (Equals(null, iv))
         {
             iv = Lit("");
         }
-        
-        if (Object.Equals(null, aad))
+
+        if (Equals(null, aad))
         {
             aad = Lit("");
         }
 
-        return new Column(FunctionWrappedCall("aes_encrypt", false, input, key, mode, padding, iv,  aad));
+        return new Column(FunctionWrappedCall("aes_encrypt", false, input, key, mode, padding, iv, aad));
     }
 
-    
-    public static Column AesEncrypt(string input, string key, string? mode = null, string? padding = null, string? iv = null, string? aad = null)
+
+    public static Column AesEncrypt(string input, string key, string? mode = null, string? padding = null,
+        string? iv = null, string? aad = null)
     {
         Column modeCol = null;
         Column paddingCol = null;
         Column ivCol = null;
         Column aadCol = null;
 
-        if (!String.IsNullOrEmpty(mode))
+        if (!string.IsNullOrEmpty(mode))
         {
             modeCol = Lit(mode);
         }
-        
-        if (!String.IsNullOrEmpty(padding))
+
+        if (!string.IsNullOrEmpty(padding))
         {
             paddingCol = Lit(padding);
         }
 
-        if (!String.IsNullOrEmpty(iv))
+        if (!string.IsNullOrEmpty(iv))
         {
             ivCol = Lit(iv);
         }
-        
-        if (!String.IsNullOrEmpty(aad))
+
+        if (!string.IsNullOrEmpty(aad))
         {
             aadCol = Lit(aad);
         }
 
-        return AesEncrypt(Col(input), Col(key), modeCol, paddingCol,  ivCol, aadCol);
+        return AesEncrypt(Col(input), Col(key), modeCol, paddingCol, ivCol, aadCol);
     }
 
 
-
-    public static Column MakeInterval(Column? years = null, Column? months = null, Column? weeks = null, Column? days = null, Column hours = null, Column? mins = null, Column? secs = null)
+    public static Column MakeInterval(Column? years = null, Column? months = null, Column? weeks = null,
+        Column? days = null, Column hours = null, Column? mins = null, Column? secs = null)
     {
-        if (Object.Equals(null, years))
+        if (Equals(null, years))
         {
             years = Lit(0);
         }
-        
-        if (Object.Equals(null, months))
+
+        if (Equals(null, months))
         {
             months = Lit(0);
         }
-        
-        if (Object.Equals(null, weeks))
+
+        if (Equals(null, weeks))
         {
             weeks = Lit(0);
         }
-        
-        if (Object.Equals(null, days))
+
+        if (Equals(null, days))
         {
             days = Lit(0);
         }
-        
-        if (Object.Equals(null, hours))
+
+        if (Equals(null, hours))
         {
             hours = Lit(0);
         }
-        
-        if (Object.Equals(null, mins))
+
+        if (Equals(null, mins))
         {
             mins = Lit(0);
         }
-        
-        if (Object.Equals(null, secs))
+
+        if (Equals(null, secs))
         {
             secs = Lit(0.0d);
         }
 
         return new Column(FunctionWrappedCall("make_interval", false, years, months, weeks, days, hours, mins, secs));
-
-
     }
 
-    public static Column MakeYmInterval(Column years, Column months) => new Column(FunctionWrappedCall("make_ym_interval", false, years, months));
-    
-    public static Column MakeYmInterval(string years, string months) => new Column(FunctionWrappedCall("make_ym_interval", false, Col(years), Col(months)));
-    
+    public static Column MakeYmInterval(Column years, Column months)
+    {
+        return new Column(FunctionWrappedCall("make_ym_interval", false, years, months));
+    }
+
+    public static Column MakeYmInterval(string years, string months)
+    {
+        return new Column(FunctionWrappedCall("make_ym_interval", false, Col(years), Col(months)));
+    }
+
     // Callable Functions...
     public static Column ArraySort(Column col, BinaryFunction comparator)
     {
@@ -2312,34 +2625,47 @@ public partial class Functions : FunctionsWrapper
         return new Column(FunctionWrappedCall("array_sort", false, col, expression));
     }
 
-    public static Column ArraySort(string col, BinaryFunction comparator) => ArraySort(Col(col), comparator);
-    
+    public static Column ArraySort(string col, BinaryFunction comparator)
+    {
+        return ArraySort(Col(col), comparator);
+    }
+
     public static Column ForAll(Column col, UnaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
         return new Column(FunctionWrappedCall("forall", false, col, expression));
     }
-    
-    public static Column ForAll(string col,UnaryFunction function) => ForAll (Col(col), function); 
-    
+
+    public static Column ForAll(string col, UnaryFunction function)
+    {
+        return ForAll(Col(col), function);
+    }
+
     public static Column Transform(Column col, UnaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
         return new Column(FunctionWrappedCall("transform", false, col, expression));
     }
-    
+
     public static Column Transform(Column col, BinaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
         return new Column(FunctionWrappedCall("transform", false, col, expression));
     }
-    
-    public static Column Transform(string col, UnaryFunction function) => Transform(Col(col), function);
-    public static Column Transform(string col, BinaryFunction function) => Transform(Col(col), function);
-    
+
+    public static Column Transform(string col, UnaryFunction function)
+    {
+        return Transform(Col(col), function);
+    }
+
+    public static Column Transform(string col, BinaryFunction function)
+    {
+        return Transform(Col(col), function);
+    }
+
     public static Column Exists(Column col, UnaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
@@ -2347,8 +2673,11 @@ public partial class Functions : FunctionsWrapper
         return new Column(FunctionWrappedCall("exists", false, col, expression));
     }
 
-    public static Column Exists(string col, UnaryFunction function) => Exists(Col(col), function);
-    
+    public static Column Exists(string col, UnaryFunction function)
+    {
+        return Exists(Col(col), function);
+    }
+
     public static Column Filter(Column col, UnaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
@@ -2356,8 +2685,11 @@ public partial class Functions : FunctionsWrapper
         return new Column(FunctionWrappedCall("filter", false, col, expression));
     }
 
-    public static Column Filter(string col, UnaryFunction function)  => Filter(Col(col), function);
-    
+    public static Column Filter(string col, UnaryFunction function)
+    {
+        return Filter(Col(col), function);
+    }
+
     public static Column Filter(Column col, BinaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
@@ -2365,103 +2697,135 @@ public partial class Functions : FunctionsWrapper
         return new Column(FunctionWrappedCall("filter", false, col, expression));
     }
 
-    public static Column Filter(string col, BinaryFunction function) => Filter(Col(col), function);
-    
-    public static Column Aggregate(Column col, Column initialValue, BinaryFunction merge,  UnaryFunction finish)
+    public static Column Filter(string col, BinaryFunction function)
+    {
+        return Filter(Col(col), function);
+    }
+
+    public static Column Aggregate(Column col, Column initialValue, BinaryFunction merge, UnaryFunction finish)
     {
         var sparkLambdaFunction = new CallableHelper();
         var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
         var finishExpression = sparkLambdaFunction.GetLambdaExpression(finish);
-        
-        return new Column(FunctionWrappedCall("aggregate", false, col, initialValue.Expression, mergeExpression, finishExpression));
+
+        return new Column(FunctionWrappedCall("aggregate", false, col, initialValue.Expression, mergeExpression,
+            finishExpression));
     }
-    
-    public static Column Aggregate(string col, Column initialValue, BinaryFunction merge,  UnaryFunction finish) => Aggregate(Col(col), initialValue, merge, finish);
-    
+
+    public static Column Aggregate(string col, Column initialValue, BinaryFunction merge, UnaryFunction finish)
+    {
+        return Aggregate(Col(col), initialValue, merge, finish);
+    }
+
     public static Column Aggregate(Column col, Column initialValue, BinaryFunction merge)
     {
         var sparkLambdaFunction = new CallableHelper();
         var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
-        
+
         return new Column(FunctionWrappedCall("aggregate", false, col, initialValue.Expression, mergeExpression));
     }
-    
-    public static Column Aggregate(string col, Column initialValue, Expression<Func<Column, Column, Column>> merge) => Aggregate(Col(col), initialValue, merge);
-    
+
+    public static Column Aggregate(string col, Column initialValue, BinaryFunction merge)
+    {
+        return Aggregate(Col(col), initialValue, merge);
+    }
+
     //
-    public static Column Reduce(Column col, Column initialValue, BinaryFunction merge,  UnaryFunction finish)
+    public static Column Reduce(Column col, Column initialValue, BinaryFunction merge, UnaryFunction finish)
     {
         var sparkLambdaFunction = new CallableHelper();
         var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
         var finishExpression = sparkLambdaFunction.GetLambdaExpression(finish);
-        
-        return new Column(FunctionWrappedCall("reduce", false, col, initialValue.Expression, mergeExpression, finishExpression));
+
+        return new Column(FunctionWrappedCall("reduce", false, col, initialValue.Expression, mergeExpression,
+            finishExpression));
     }
-    
-    public static Column Reduce(string col, Column initialValue, BinaryFunction merge,  UnaryFunction finish) => Reduce(Col(col), initialValue, merge, finish);
-    
+
+    public static Column Reduce(string col, Column initialValue, BinaryFunction merge, UnaryFunction finish)
+    {
+        return Reduce(Col(col), initialValue, merge, finish);
+    }
+
     public static Column Reduce(Column col, Column initialValue, BinaryFunction merge)
     {
         var sparkLambdaFunction = new CallableHelper();
         var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
-        
+
         return new Column(FunctionWrappedCall("reduce", false, col, initialValue.Expression, mergeExpression));
     }
-    
-    public static Column Reduce(string col, Column initialValue, Expression<Func<Column, Column, Column>> merge) => Reduce(Col(col), initialValue, merge);
 
-    
+    public static Column Reduce(string col, Column initialValue, BinaryFunction merge)
+    {
+        return Reduce(Col(col), initialValue, merge);
+    }
+
+
     public static Column ZipWith(Column left, Column right, BinaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        
+
         return new Column(FunctionWrappedCall("zip_with", false, left.Expression, right.Expression, expression));
     }
-    
-    public static Column ZipWith(string left, string right, BinaryFunction function) => ZipWith(Col(left), Col(right), function);
-    
+
+    public static Column ZipWith(string left, string right, BinaryFunction function)
+    {
+        return ZipWith(Col(left), Col(right), function);
+    }
+
     public static Column TransformKeys(Column col, BinaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        
+
         return new Column(FunctionWrappedCall("transform_keys", false, col.Expression, expression));
     }
-    
-    public static Column TransformKeys(string col,  BinaryFunction function) => TransformKeys(Col(col),  function);
 
-    
+    public static Column TransformKeys(string col, BinaryFunction function)
+    {
+        return TransformKeys(Col(col), function);
+    }
+
+
     public static Column TransformValues(Column col, BinaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        
+
         return new Column(FunctionWrappedCall("transform_values", false, col.Expression, expression));
     }
-    
-    public static Column TransformValues(string col,  BinaryFunction function) => TransformValues(Col(col),  function);
+
+    public static Column TransformValues(string col, BinaryFunction function)
+    {
+        return TransformValues(Col(col), function);
+    }
 
     public static Column MapFilter(Column col, BinaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        
+
         return new Column(FunctionWrappedCall("map_filter", false, col.Expression, expression));
     }
-    
-    public static Column MapFilter(string col,  BinaryFunction function) => MapFilter(Col(col),  function);
+
+    public static Column MapFilter(string col, BinaryFunction function)
+    {
+        return MapFilter(Col(col), function);
+    }
 
     public static Column MapZipWith(Column col1, Column col2, TernaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        
+
         return new Column(FunctionWrappedCall("map_zip_with", false, col1.Expression, col2.Expression, expression));
     }
-    
-    public static Column MapZipWith(string col1, string col2, TernaryFunction function) => MapZipWith(Col(col1), Col(col2), function);
-    
+
+    public static Column MapZipWith(string col1, string col2, TernaryFunction function)
+    {
+        return MapZipWith(Col(col1), Col(col2), function);
+    }
+
     /// <Summary>ToTimestamp</Summary>
     public static Column TryToTimestamp(string col)
     {
@@ -2506,4 +2870,158 @@ public partial class Functions : FunctionsWrapper
         return new Column(FunctionWrappedCall("try_to_timestamp", false, Col(col), format));
     }
     
+    public static Column ParseJson(Column col)
+    {
+        return new Column(FunctionWrappedCall("parse_json", false, col));
+    }
+    
+    public static Column TryParseJson(Column col)
+    {
+        return new Column(FunctionWrappedCall("try_parse_json", false, col));
+    }
+
+    public static Column VariantGet(string col, string path, string? targetType = null) => VariantGet(Col(col), Lit(path), targetType == null ? null : Lit(targetType));
+    public static Column VariantGet(Column col, string path, string? targetType = null) => VariantGet(col, Lit(path), targetType == null ? null : Lit(targetType));
+
+    public static Column VariantGet(Column col, Column path, Column? targetType = null)
+    {
+        if (Object.Equals(null, targetType))
+        {
+            return new Column(FunctionWrappedCall("variant_get", false, col, path));
+        }
+        
+        return new Column(FunctionWrappedCall("variant_get", false, col, path, targetType));
+    }
+    
+    public static Column TryVariantGet(string col, string path, string? targetType = null) => TryVariantGet(Col(col), Lit(path), targetType == null ? null : Lit(targetType));
+    public static Column TryVariantGet(Column col, string path, string? targetType = null) => TryVariantGet(col, Lit(path), targetType == null ? null : Lit(targetType));
+
+    public static Column TryVariantGet(Column col, Column path, Column? targetType = null)
+    {
+        if (Object.Equals(null, targetType))
+        {
+            return new Column(FunctionWrappedCall("try_variant_get", false, col, path));
+        }
+        
+        return new Column(FunctionWrappedCall("try_variant_get", false, col, path, targetType));
+    }
+
+    public static Column IsVariantNull(string v) => IsVariantNull(Col(v)); 
+    public static Column IsVariantNull(Column v)
+    {
+        return new Column(FunctionWrappedCall("is_variant_null", false, v));
+    }
+    
+    public static Column SchemaOfVariant(string v) => SchemaOfVariant(Col(v));
+    
+    public static Column SchemaOfVariant(Column v)
+    {
+        return new Column(FunctionWrappedCall("schema_of_variant", false, v));
+    }  
+    
+    public static Column SchemaOfVariantAgg(string v) => SchemaOfVariantAgg(Col(v));
+    
+    public static Column SchemaOfVariantAgg(Column v)
+    {
+        return new Column(FunctionWrappedCall("schema_of_variant_agg", false, v));
+    }
+
+    public static Column FromXml(Column col, StructType schema, Dictionary<string, string> options)
+    {
+        return FromXml(col, Lit(schema.Json()), options);
+    }
+    
+    public static Column FromXml(Column col, Column schema, Dictionary<string, string> options)
+    {
+        return new Column(FunctionWrappedCall("from_xml", false, col, schema, Lit(options)));
+    }
+
+    public static Column SchemaOfXml(string xml, IDictionary<string, string>? options = null) => SchemaOfXml(Lit(xml), options);
+    
+    public static Column SchemaOfXml(Column xml, IDictionary<string, string>? options = null)
+    {
+        if (options == null)
+        {
+            return new Column(FunctionWrappedCall("schema_of_xml", false, xml));
+        }
+        
+        return new Column(FunctionWrappedCall("schema_of_xml", false, xml, CreateMap(options)));
+        
+    }
+    
+    public static Column TryRemainder(string dividend, string divisor) => TryRemainder(Col(dividend), Col(divisor));
+    
+    public static Column TryRemainder(Column dividend, Column divisor) => new (FunctionWrappedCall("try_remainder", false, dividend, divisor));
+    
+    /// <Summary>Ceil</Summary>
+    public static Column Ceil(string col, int scale)
+    {
+        return new Column(FunctionWrappedCall("ceil", false, Col(col), Lit(scale)));
+    }
+
+    /// <Summary>Ceil</Summary>
+    public static Column Ceil(Column col, Column scale)
+    {
+        return new Column(FunctionWrappedCall("ceil", false, col, scale));
+    }
+    
+    /// <Summary>Ceiling</Summary>
+    public static Column Ceiling(string col, int scale)
+    {
+        return new Column(FunctionWrappedCall("ceiling", false, Col(col), Lit(scale)));
+    }
+
+    /// <Summary>Ceiling</Summary>
+    public static Column Ceiling(Column col, Column scale)
+    {
+        return new Column(FunctionWrappedCall("ceiling", false, col, scale));
+    }
+    
+    /// <Summary>Floor</Summary>
+    public static Column Floor(string col, int scale)
+    {
+        return new Column(FunctionWrappedCall("floor", false, Col(col), Lit(scale)));
+    }
+
+    /// <Summary>Floor</Summary>
+    public static Column Floor(Column col, Column scale)
+    {
+        return new Column(FunctionWrappedCall("floor", false, col, scale));
+    }
+
+
+    public static Column Monthname(string col) => Monthname(Col(col));
+
+    public static Column Monthname(Column col) => new(FunctionWrappedCall("monthname", false, col));
+    
+    
+    public static Column Dayname(string col) => Dayname(Col(col));
+
+    public static Column Dayname(Column col) => new(FunctionWrappedCall("dayname", false, col));
+
+    public static Column TimestampDiff(string unit, string start, string end) => TimestampDiff(unit, Col(start), Col(end));
+    public static Column TimestampDiff(string unit, Column start, Column end)
+    {
+        return new Column(FunctionWrappedCall("timestampdiff", false, Lit(unit), start, end));
+    }
+    
+    public static Column TimestampAdd(string unit, int quantity, string ts) => TimestampAdd(unit, Lit(quantity), Col(ts));
+    public static Column TimestampAdd(string unit, Column quantity, Column ts)
+    {
+        return new Column(FunctionWrappedCall("timestampadd", false, Lit(unit), quantity, ts));
+    }
+
+    public static Column SessionUser() => new Column(FunctionWrappedCall("session_user", false));
+
+    public static Column Collate(string col, string collation) => Collate(Col(col), Lit(collation));
+    public static Column Collate(Column col, Column collation)
+    {
+        return new Column(FunctionWrappedCall("collate", false, col, collation));
+    }
+
+    public static Column Collation(string col) => Collation(Col(col));
+    public static Column Collation(Column col)
+    {
+        return new Column(FunctionWrappedCall("collation", false, col));
+    }
 }

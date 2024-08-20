@@ -8,7 +8,7 @@ public class StreamingTests : E2ETestBase
     public StreamingTests(ITestOutputHelper logger) : base(logger)
     {
     }
-    
+
     [Fact]
     public void Writer()
     {
@@ -44,6 +44,7 @@ public class StreamingTests : E2ETestBase
         {
             query.Stop();
         }
+
         Thread.Sleep(1000 * 3);
         Spark.Sql($"SELECT * FROM {tableName}").Show();
         Spark.Sql($"DROP TABLE IF EXISTS {tableName}");

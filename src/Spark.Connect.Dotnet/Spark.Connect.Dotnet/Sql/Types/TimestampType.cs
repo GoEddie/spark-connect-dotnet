@@ -4,7 +4,7 @@ namespace Spark.Connect.Dotnet.Sql.Types;
 
 public class TimestampType : SparkDataType
 {
-    public TimestampType() : base($"Timestamp")
+    public TimestampType() : base("Timestamp")
     {
     }
 
@@ -12,7 +12,7 @@ public class TimestampType : SparkDataType
     {
         return new DataType
         {
-            Timestamp = new DataType.Types.Timestamp(),
+            Timestamp = new DataType.Types.Timestamp()
         };
     }
 
@@ -24,6 +24,6 @@ public class TimestampType : SparkDataType
 
     public override string SimpleString()
     {
-        return $"timestamp";
+        return "timestamp";
     }
 }

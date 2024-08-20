@@ -13,15 +13,17 @@ public class DataFrameNaFunctions
     {
         return _dataFrame.DropNa(how, thresh);
     }
-    
+
     public DataFrame Drop(string? how = null, int? thresh = null, params string[] subset)
     {
         return _dataFrame.DropNa(how, thresh, subset);
     }
+
     public DataFrame Fill(Column value)
     {
         return _dataFrame.FillNa(value);
     }
+
     public DataFrame Fill(Column value, params string[] subset)
     {
         return _dataFrame.FillNa(value, subset);
@@ -31,7 +33,7 @@ public class DataFrameNaFunctions
     {
         return _dataFrame.Replace(toReplace, newValue);
     }
-    
+
     public DataFrame Replace(Column toReplace, Column newValue, params string[] subset)
     {
         return _dataFrame.Replace(toReplace, newValue, subset);

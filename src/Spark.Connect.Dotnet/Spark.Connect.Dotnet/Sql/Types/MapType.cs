@@ -5,9 +5,9 @@ namespace Spark.Connect.Dotnet.Sql.Types;
 
 public class MapType : SparkDataType
 {
+    private readonly bool _isNullableValue;
     private readonly SparkDataType _keyType;
     private readonly SparkDataType _valueType;
-    private readonly bool _isNullableValue;
 
     public MapType(SparkDataType keyType, SparkDataType valueType, bool isNullableValue) : base("Map")
     {
@@ -22,8 +22,7 @@ public class MapType : SparkDataType
         {
             Map = new DataType.Types.Map
             {
-                KeyType = _keyType.ToDataType(),
-                ValueType = _valueType.ToDataType()
+                KeyType = _keyType.ToDataType(), ValueType = _valueType.ToDataType()
             }
         };
     }

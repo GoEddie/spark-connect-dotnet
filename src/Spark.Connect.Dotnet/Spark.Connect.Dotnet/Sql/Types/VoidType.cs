@@ -4,7 +4,7 @@ namespace Spark.Connect.Dotnet.Sql.Types;
 
 public class VoidType : SparkDataType
 {
-    public VoidType() : base($"Void")
+    public VoidType() : base("Void")
     {
     }
 
@@ -23,6 +23,6 @@ public class VoidType : SparkDataType
 
     public override string SimpleString()
     {
-        return $"void";
+        return "void";
     }
 }

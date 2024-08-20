@@ -2,7 +2,6 @@ using System.Text;
 using Apache.Arrow.Ipc;
 using Google.Protobuf.Collections;
 using Grpc.Core;
-using Newtonsoft.Json;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
 using Spark.Connect.Dotnet.Sql;
 
@@ -17,13 +16,12 @@ public static class GrpcInternal
         var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(batch.Data.ToByteArray()));
         var recordBatch = await reader.ReadNextRecordBatchAsync();
         var stringBuilder = new StringBuilder();
-        
+
         foreach (var array in recordBatch.Arrays)
-        {
             //TODO: should I be using these?
             // var offsetsBuffer = array.Data.Buffers[0];
             // var validityBuffer = array.Data.Buffers[1];
-
+        {
             if (array.Data.Buffers.Length > 2)
             {
                 var dataBuffer = array.Data.Buffers[2];
@@ -50,12 +48,9 @@ public static class GrpcInternal
         {
             Explain = new AnalyzePlanRequest.Types.Explain
             {
-                Plan = plan,
-                ExplainMode = explainMode
-            },
-            SessionId = sessionId,
-            UserContext = userContext,
-            ClientType = clientType
+                Plan = plan, ExplainMode = explainMode
+            }
+            , SessionId = sessionId, UserContext = userContext, ClientType = clientType
         };
 
         var analyzeResponse = client.AnalyzePlan(analyzeRequest, headers);
@@ -68,12 +63,9 @@ public static class GrpcInternal
         {
             Persist = new AnalyzePlanRequest.Types.Persist
             {
-                Relation = relation,
-                StorageLevel = storageLevel
-            },
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            ClientType = session.ClientType
+                Relation = relation, StorageLevel = storageLevel
+            }
+            , SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
@@ -88,10 +80,8 @@ public static class GrpcInternal
             Schema = new AnalyzePlanRequest.Types.Schema
             {
                 Plan = plan
-            },
-            SessionId = sessionId,
-            UserContext = userContext,
-            ClientType = clientType
+            }
+            , SessionId = sessionId, UserContext = userContext, ClientType = clientType
         };
 
         var analyzeResponse = client.AnalyzePlan(analyzeRequest, headers);
@@ -102,149 +92,132 @@ public static class GrpcInternal
     {
         var analyzeRequest = new AnalyzePlanRequest
         {
-            SparkVersion = new AnalyzePlanRequest.Types.SparkVersion(),
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            ClientType = session.ClientType
+            SparkVersion = new AnalyzePlanRequest.Types.SparkVersion(), SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.SparkVersion.Version;
     }
-    
+
     public static IEnumerable<string> InputFiles(SparkSession session, Plan plan)
     {
         var analyzeRequest = new AnalyzePlanRequest
         {
-            InputFiles = new AnalyzePlanRequest.Types.InputFiles()
+            InputFiles = new AnalyzePlanRequest.Types.InputFiles
             {
                 Plan = plan
-            },
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            ClientType = session.ClientType
+            }
+            , SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.InputFiles.Files.Select(p => p);
     }
-    
+
     public static bool IsLocal(SparkSession session, Plan plan)
     {
         var analyzeRequest = new AnalyzePlanRequest
         {
-            IsLocal = new AnalyzePlanRequest.Types.IsLocal()
+            IsLocal = new AnalyzePlanRequest.Types.IsLocal
             {
                 Plan = plan
-            },
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            ClientType = session.ClientType
+            }
+            , SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.IsLocal.IsLocal_;
     }
-    
+
     public static string TreeString(SparkSession session, Relation relation, int? level = null)
     {
         var analyzeRequest = new AnalyzePlanRequest
         {
-            TreeString = new AnalyzePlanRequest.Types.TreeString()
+            TreeString = new AnalyzePlanRequest.Types.TreeString
             {
-                Plan = new Plan()
+                Plan = new Plan
                 {
                     Root = relation
                 }
-            }, 
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            ClientType = session.ClientType
+            }
+            , SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         if (level.HasValue)
         {
             analyzeRequest.TreeString.Level = level.Value;
         }
-        
+
         var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.TreeString.TreeString_;
     }
-    
+
     public static int SemanticHash(SparkSession session, Relation relation)
     {
         var analyzeRequest = new AnalyzePlanRequest
         {
-            
-            SemanticHash = new AnalyzePlanRequest.Types.SemanticHash()
+            SemanticHash = new AnalyzePlanRequest.Types.SemanticHash
             {
-                Plan = new Plan(){
+                Plan = new Plan
+                {
                     Root = relation
                 }
-            }, 
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            ClientType = session.ClientType
+            }
+            , SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
-        
+
         var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.SemanticHash.Result;
     }
+
     public static StorageLevel StorageLevel(SparkSession session, Relation relation)
     {
         var analyzeRequest = new AnalyzePlanRequest
         {
-            GetStorageLevel = new AnalyzePlanRequest.Types.GetStorageLevel()
+            GetStorageLevel = new AnalyzePlanRequest.Types.GetStorageLevel
             {
                 Relation = relation
-            }, 
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            ClientType = session.ClientType
+            }
+            , SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
-        
+
         var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.GetStorageLevel.StorageLevel;
     }
-    
+
     public static bool IsStreaming(SparkSession session, Plan plan)
     {
         var analyzeRequest = new AnalyzePlanRequest
         {
-            
-            IsStreaming = new AnalyzePlanRequest.Types.IsStreaming()
+            IsStreaming = new AnalyzePlanRequest.Types.IsStreaming
             {
                 Plan = plan
-            },
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            ClientType = session.ClientType
+            }
+            , SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
         return analyzeResponse.IsStreaming.IsStreaming_;
     }
-    
+
     public static bool SameSemantics(SparkSession session, Relation target, Relation other)
     {
         var analyzeRequest = new AnalyzePlanRequest
         {
-            SameSemantics = new AnalyzePlanRequest.Types.SameSemantics()
+            SameSemantics = new AnalyzePlanRequest.Types.SameSemantics
             {
-                OtherPlan = new Plan()
+                OtherPlan = new Plan
                 {
                     Root = other
-                },
-                TargetPlan = new Plan()
+                }
+                , TargetPlan = new Plan
                 {
                     Root = target
                 }
-            },
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            ClientType = session.ClientType
+            }
+            , SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         var analyzeResponse = session.GrpcClient.AnalyzePlan(analyzeRequest, session.Headers);
@@ -253,7 +226,8 @@ public static class GrpcInternal
 
     public static Relation Exec(SparkSession session, Plan plan)
     {
-        var task = Exec(session.GrpcClient, session.Host, session.SessionId, plan, session.Headers, session.UserContext, session.ClientType);
+        var task = Exec(session.GrpcClient, session.Host, session.SessionId, plan, session.Headers, session.UserContext,
+            session.ClientType);
         task.Wait();
         return task.Result.Item1;
     }
@@ -263,7 +237,7 @@ public static class GrpcInternal
     {
         // Console.WriteLine("** PLAN **");
         // Console.WriteLine(plan);
-        
+
         var executeRequest = new ExecutePlanRequest
         {
             Plan = plan, SessionId = sessionId, UserContext = userContext, ClientType = clientType
@@ -301,7 +275,7 @@ public static class GrpcInternal
         DataType? schema = null;
         var batchCount = 0;
         var outputString = "";
-        
+
         //the rust implementation looks prttier, consider switching to a match expression
         while (current != null)
         {
@@ -326,7 +300,7 @@ public static class GrpcInternal
             if (current?.WriteStreamOperationStartResult != null)
             {
             }
-            
+
             if (current.Metrics != null)
             {
                 DumpMetrics(current.Metrics);
@@ -336,8 +310,8 @@ public static class GrpcInternal
             {
                 DumpObservedMetrics(current.ObservedMetrics);
             }
-            
-            
+
+
             await execResponse.ResponseStream.MoveNext(new CancellationToken());
             current = execResponse.ResponseStream.Current;
         }
@@ -349,8 +323,7 @@ public static class GrpcInternal
     {
         var executeRequest = new ExecutePlanRequest
         {
-            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext,
-            ClientType = session.ClientType
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         LastPlan = plan.ToString();
@@ -405,8 +378,7 @@ public static class GrpcInternal
     {
         var executeRequest = new ExecutePlanRequest
         {
-            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext,
-            ClientType = session.ClientType
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         LastPlan = plan.ToString();
@@ -448,7 +420,7 @@ public static class GrpcInternal
                 queryId = current.StreamingQueryCommandResult.QueryId;
                 result = current.StreamingQueryCommandResult.Status;
             }
-            
+
             if (current.Metrics != null)
             {
                 DumpMetrics(current.Metrics);
@@ -461,9 +433,11 @@ public static class GrpcInternal
         return (queryId, result);
     }
 
-    public static async Task<(List<ExecutePlanResponse.Types.ArrowBatch>, DataType?, RepeatedField<ExecutePlanResponse.Types.Metrics.Types.MetricObject>?)> ExecArrowResponse(
-        SparkConnectService.SparkConnectServiceClient client, string sessionId, Plan plan, Metadata headers,
-        UserContext userContext, string clientType)
+    public static async
+        Task<(List<ExecutePlanResponse.Types.ArrowBatch>, DataType?,
+            RepeatedField<ExecutePlanResponse.Types.Metrics.Types.MetricObject>?)> ExecArrowResponse(
+            SparkConnectService.SparkConnectServiceClient client, string sessionId, Plan plan, Metadata headers,
+            UserContext userContext, string clientType)
     {
         var executeRequest = new ExecutePlanRequest
         {
@@ -543,27 +517,29 @@ public static class GrpcInternal
         return (batches, schema, metrics);
     }
 
-    private static void DumpObservedMetrics(RepeatedField<ExecutePlanResponse.Types.ObservedMetrics> currentObservedMetrics)
+    private static void DumpObservedMetrics(
+        RepeatedField<ExecutePlanResponse.Types.ObservedMetrics> currentObservedMetrics)
     {
         foreach (var metric in currentObservedMetrics)
         {
             for (var i = 0; i < metric.Keys.Count; i++)
             {
-                Console.WriteLine($"observed metric: {metric.Name}, {metric.PlanId}, {metric.Keys[i]} = {metric.Values[i]}");   
+                Console.WriteLine(
+                    $"observed metric: {metric.Name}, {metric.PlanId}, {metric.Keys[i]} = {metric.Values[i]}");
             }
         }
     }
 
-    private static RepeatedField<ExecutePlanResponse.Types.Metrics.Types.MetricObject> DumpMetrics(ExecutePlanResponse.Types.Metrics currentMetrics)
+    private static RepeatedField<ExecutePlanResponse.Types.Metrics.Types.MetricObject> DumpMetrics(
+        ExecutePlanResponse.Types.Metrics currentMetrics)
     {
         foreach (var metric in currentMetrics.Metrics_)
+        foreach (var value in metric.ExecutionMetrics)
         {
-            foreach (var value in metric.ExecutionMetrics)
-            {
-                Console.WriteLine($"metric: {metric.Name}, parent: {metric.Parent} planid: {metric.PlanId}, {value.Key} = {value.Value}");    
-            }
+            Console.WriteLine(
+                $"metric: {metric.Name}, parent: {metric.Parent} planid: {metric.PlanId}, {value.Key} = {value.Value}");
         }
-        
+
         return currentMetrics.Metrics_;
     }
 
@@ -572,12 +548,11 @@ public static class GrpcInternal
     {
         var executeRequest = new ExecutePlanRequest
         {
-            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, 
-            ClientType = session.ClientType
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         LastPlan = plan.ToString();
-        
+
         AsyncServerStreamingCall<ExecutePlanResponse> Exec()
         {
             try
@@ -625,8 +600,7 @@ public static class GrpcInternal
     {
         var executeRequest = new ExecutePlanRequest
         {
-            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext,
-            ClientType = session.ClientType
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         LastPlan = plan.ToString();
@@ -678,8 +652,7 @@ public static class GrpcInternal
     {
         var executeRequest = new ExecutePlanRequest
         {
-            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext,
-            ClientType = session.ClientType
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         LastPlan = plan.ToString();
@@ -723,24 +696,21 @@ public static class GrpcInternal
 
         return null;
     }
-    
-    
+
+
     public static async Task ExecUnSetConfigCommandResponse(SparkSession session, string key)
     {
-        var configRequest = new ConfigRequest()
+        var configRequest = new ConfigRequest
         {
-            ClientType = session.ClientType,
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            Operation = new ConfigRequest.Types.Operation()
+            ClientType = session.ClientType, SessionId = session.SessionId, UserContext = session.UserContext, Operation = new ConfigRequest.Types.Operation
             {
-                Unset = new ConfigRequest.Types.Unset()
+                Unset = new ConfigRequest.Types.Unset
                 {
                     Keys = { key }
                 }
             }
         };
-        
+
 
         AsyncUnaryCall<ConfigResponse> Exec()
         {
@@ -765,36 +735,32 @@ public static class GrpcInternal
         }
 
         var response = await Exec();
-        
+
         foreach (var warning in response.Warnings)
         {
             Console.WriteLine($"Config::Warning: '{warning}'");
         }
-        
     }
-    
+
     public static async Task ExecSetConfigCommandResponse(SparkSession session, IDictionary<string, string> options)
     {
-        var configRequest = new ConfigRequest()
+        var configRequest = new ConfigRequest
         {
-            ClientType = session.ClientType,
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            Operation = new ConfigRequest.Types.Operation()
+            ClientType = session.ClientType, SessionId = session.SessionId, UserContext = session.UserContext, Operation = new ConfigRequest.Types.Operation
             {
-                Set = new ConfigRequest.Types.Set()
+                Set = new ConfigRequest.Types.Set
                 {
                     Pairs =
                     {
-                        options.Select(p => (new KeyValue()
+                        options.Select(p => new KeyValue
                         {
                             Key = p.Key, Value = p.Value
-                        }))
+                        })
                     }
                 }
             }
         };
-        
+
 
         AsyncUnaryCall<ConfigResponse> Exec()
         {
@@ -819,27 +785,21 @@ public static class GrpcInternal
         }
 
         var response = await Exec();
-        
+
         foreach (var warning in response.Warnings)
         {
             Console.WriteLine($"Config::Warning: '{warning}'");
         }
-        
     }
-    
-    public static async Task<Dictionary<string, string>> ExecGetAllConfigCommandResponse(SparkSession session, string? prefix = null)
+
+    public static async Task<Dictionary<string, string>> ExecGetAllConfigCommandResponse(SparkSession session,
+        string? prefix = null)
     {
-        var configRequest = new ConfigRequest()
+        var configRequest = new ConfigRequest
         {
-            ClientType = session.ClientType,
-            SessionId = session.SessionId,
-            UserContext = session.UserContext,
-            Operation = new ConfigRequest.Types.Operation()
+            ClientType = session.ClientType, SessionId = session.SessionId, UserContext = session.UserContext, Operation = new ConfigRequest.Types.Operation
             {
                 GetAll = new ConfigRequest.Types.GetAll()
-                {
-                    
-                }
             }
         };
 
@@ -871,7 +831,7 @@ public static class GrpcInternal
         }
 
         var response = await Exec();
-        
+
         foreach (var warning in response.Warnings)
         {
             Console.WriteLine($"Config::Warning: '{warning}'");
@@ -886,14 +846,12 @@ public static class GrpcInternal
         return items;
     }
 
-    
 
     public static async Task ExecStreamingQueryProcessAvailableCommandResponse(SparkSession session, Plan plan)
     {
         var executeRequest = new ExecutePlanRequest
         {
-            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext,
-            ClientType = session.ClientType
+            Plan = plan, SessionId = session.SessionId, UserContext = session.UserContext, ClientType = session.ClientType
         };
 
         LastPlan = plan.ToString();
