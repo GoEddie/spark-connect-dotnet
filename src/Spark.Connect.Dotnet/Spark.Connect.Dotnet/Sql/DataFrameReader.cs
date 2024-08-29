@@ -1,4 +1,5 @@
 using Google.Protobuf.Collections;
+using Spark.Connect.Dotnet.Sql.Types;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -56,6 +57,12 @@ public class DataFrameReader
     public DataFrameReader Schema(string schema)
     {
         _schema = schema;
+        return this;
+    }
+
+    public DataFrameReader Schema(StructType schema)
+    {
+        _schema = schema.FieldsAsDdl();
         return this;
     }
 
@@ -118,7 +125,8 @@ public class DataFrameReader
     {
         var datasource = new Read.Types.DataSource
         {
-            Format = format, Paths = { paths }
+            Format = format,
+            Paths = { paths }
         };
 
         if (options.Count > 0)
@@ -150,7 +158,8 @@ public class DataFrameReader
     {
         var datasource = new Read.Types.DataSource
         {
-            Format = format, Paths = { paths }
+            Format = format,
+            Paths = { paths }
         };
 
         if (options.Count > 0)
