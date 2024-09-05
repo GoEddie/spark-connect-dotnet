@@ -1609,7 +1609,6 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     {
         var df = Spark.Range(1).WithColumn("x", Lit("<p><a>1</a><a>2</a></p>"));
         var schema = df.Select(SchemaOfXml("<p><a>1</a><a>2</a></p>"));
-        
     }
 
     [Fact]

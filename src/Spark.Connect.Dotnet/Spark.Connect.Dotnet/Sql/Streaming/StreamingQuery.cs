@@ -30,7 +30,8 @@ public class StreamingQuery
             }
         };
 
-        GrpcInternal.Exec(_session, plan);
+        var executor = new RequestExecutor(_session, plan);
+        executor.Exec();
         _session.Streams.Remove(this);
     }
 
@@ -46,10 +47,11 @@ public class StreamingQuery
                 }
             }
         };
+        
+        var executor = new RequestExecutor(_session, plan);
+        executor.Exec();
 
-        var task = GrpcInternal.ExecStreamingQueryCommandResponse(_session, plan);
-        task.Wait();
-        return task.Result.Item2.IsActive;
+        return executor.GetStreamingQueryCommandResult().IsActive;
     }
 
     public async Task<bool> AwaitTerminationAsync(int? timeout = null)
@@ -72,7 +74,10 @@ public class StreamingQuery
             }
         };
 
-        return await GrpcInternal.ExecStreamingQueryAwaitCommandResponse(_session, plan);
+        var executor = new RequestExecutor(_session, plan);
+        await executor.ExecAsync();
+
+        return executor.GetStreamingQueryIsTerminated();
     }
 
     public bool AwaitTermination(int? timeout = null)
@@ -95,9 +100,10 @@ public class StreamingQuery
             }
         };
 
-        var task = GrpcInternal.ExecStreamingQueryAwaitCommandResponse(_session, plan);
-        task.Wait();
-        return task.Result;
+        var executor = new RequestExecutor(_session, plan);
+        executor.Exec();
+
+        return executor.GetStreamingQueryIsTerminated();
     }
 
     public StreamingQueryException Exception()
@@ -116,9 +122,11 @@ public class StreamingQuery
             }
         };
 
-        var task = GrpcInternal.ExecStreamingQueryExceptionCommandResponse(_session, plan);
-        task.Wait();
-        var result = task.Result;
+        var executor = new RequestExecutor(_session, plan);
+        executor.Exec();
+
+        var result = executor.GetStreamingException();
+        
         if (result == null || result.HasExceptionMessage == null)
         {
             return null;
@@ -142,8 +150,8 @@ public class StreamingQuery
             }
         };
 
-        var task = GrpcInternal.ExecStreamingQueryProcessAvailableCommandResponse(_session, plan);
-        task.Wait();
+        var executor = new RequestExecutor(_session, plan);
+        executor.Exec();
     }
 
     public IEnumerable<string> RecentProgress()
@@ -161,9 +169,10 @@ public class StreamingQuery
             }
         };
 
-        var task = GrpcInternal.ExecStreamingQueryProgressCommandResponse(_session, plan);
-        task.Wait();
-        var response = task.Result;
+        var executor = new RequestExecutor(_session, plan);
+        executor.Exec();
+
+        var response = executor.GetStreamingRecentProgress();
         return response.RecentProgressJson.Select(p => p);
     }
 }

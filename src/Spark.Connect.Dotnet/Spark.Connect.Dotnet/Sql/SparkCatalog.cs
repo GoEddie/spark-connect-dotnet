@@ -21,15 +21,18 @@ public class SparkCatalog
             StorageLevel = storageLevel, TableName = tableName
         };
 
-        GrpcInternal.Exec(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan);
+        Task.Run(() => executor.ExecAsync()).Wait();
     }
 
     public void ClearCache()
     {
         var plan = Plan();
         plan.Root.Catalog.ClearCache = new ClearCache();
-
-        GrpcInternal.Exec(_sparkSession, plan);
+        
+        var executor = new RequestExecutor(_sparkSession, plan);
+        var task = Task.Run(() => executor.ExecAsync());
+        task.Wait();
     }
 
     public DataFrame CreateExternalTable(string tableName, string path, string source = "", StructType? schema = null,
@@ -59,7 +62,9 @@ public class SparkCatalog
             }
         }
 
-        return new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan));
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        return new DataFrame(_sparkSession, executor.GetRelation());
     }
 
     public DataFrame CreateTable(string tableName, string? path = null, string? source = null,
@@ -96,21 +101,27 @@ public class SparkCatalog
             plan.Root.Catalog.CreateTable.Options.Add(option.Key, option.Value);
         }
 
-        return new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan));
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        return new DataFrame(_sparkSession, executor.GetRelation());
     }
 
     public string CurrentCatalog()
     {
         var plan = Plan();
         plan.Root.Catalog.CurrentCatalog = new CurrentCatalog();
-        return new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect()[0][0].ToString();
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        return executor.GetData()[0][0].ToString();
     }
 
     public string CurrentDatabase()
     {
         var plan = Plan();
         plan.Root.Catalog.CurrentDatabase = new CurrentDatabase();
-        return new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect()[0][0].ToString();
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        return executor.GetData()[0][0].ToString();
     }
 
     public bool DatabaseExists(string dbName)
@@ -120,7 +131,10 @@ public class SparkCatalog
         {
             DbName = dbName
         };
-        return (bool)new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect()[0][0];
+        
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        return (bool)executor.GetData()[0][0];
     }
 
     public bool DropGlobalTempView(string viewName)
@@ -131,7 +145,9 @@ public class SparkCatalog
             ViewName = viewName
         };
 
-        return (bool)new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect()[0][0];
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        return (bool)executor.GetData()[0][0];
     }
 
     public bool DropTempView(string viewName)
@@ -142,7 +158,9 @@ public class SparkCatalog
             ViewName = viewName
         };
 
-        return (bool)new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect()[0][0];
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        return (bool)executor.GetData()[0][0];
     }
 
     public bool FunctionExists(string functionName, string? dbName = null)
@@ -158,7 +176,9 @@ public class SparkCatalog
             plan.Root.Catalog.FunctionExists.DbName = dbName;
         }
 
-        return (bool)new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect()[0][0];
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        return (bool)executor.GetData()[0][0];
     }
 
     public Database GetDatabase(string dbName)
@@ -169,7 +189,9 @@ public class SparkCatalog
             DbName = dbName
         };
 
-        var row = new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect().First();
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        var row = executor.GetData().First();
         return new Database((string)row[0], (string)row[1], (string)row[2], (string)row[3]);
     }
 
@@ -186,7 +208,9 @@ public class SparkCatalog
             plan.Root.Catalog.GetFunction.DbName = dbName;
         }
 
-        var row = new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect().First();
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        var row = executor.GetData().First();
         return new Function((string)row[0], (string)row[1], (string[])row[2], (string)row[3], (string)row[4],
             (bool)row[5]);
     }
@@ -204,7 +228,9 @@ public class SparkCatalog
             plan.Root.Catalog.GetTable.DbName = dbName;
         }
 
-        var row = new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect().First();
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        var row = executor.GetData().First();
         return new Table((string)row[0], (string)row[1], (string)row[2], (string)row[3], (string)row[4], (bool)row[5]);
     }
 
@@ -216,7 +242,9 @@ public class SparkCatalog
             TableName = tableName
         };
 
-        return (bool)new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect()[0][0];
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        return (bool)executor.GetData()[0][0];
     }
 
     public List<CatalogMetadata> ListCatalogs(string? patternName = null)
@@ -229,7 +257,11 @@ public class SparkCatalog
         }
 
         var catalogs = new List<CatalogMetadata>();
-        var result = new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect();
+        
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        var result = executor.GetData();
+        
         foreach (var catalog in result)
         {
             catalogs.Add(new CatalogMetadata((string)catalog[0], (string)catalog[1]));
@@ -251,7 +283,11 @@ public class SparkCatalog
         }
 
         var columns = new List<Column>();
-        var result = new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect();
+        
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        var result = executor.GetData();
+        
         foreach (var column in result)
         {
             columns.Add(new Column((string)column[0], (string)column[1], (string)column[2], (bool)column[3],
@@ -271,7 +307,11 @@ public class SparkCatalog
         }
 
         var databases = new List<Database>();
-        var result = new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect();
+        
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        var result = executor.GetData();
+        
         foreach (var database in result)
         {
             databases.Add(new Database((string)database[0], (string)database[1], (string)database[2],
@@ -296,7 +336,11 @@ public class SparkCatalog
         }
 
         var functions = new List<Function>();
-        var result = new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect();
+        
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        var result = executor.GetData();
+        
         foreach (var function in result)
         {
             functions.Add(new Function((string)function[0], (string)function[1], (string[])function[2],
@@ -321,7 +365,11 @@ public class SparkCatalog
         }
 
         var tables = new List<Table>();
-        var result = new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect();
+        
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        var result = executor.GetData();
+        
         foreach (var table in result)
         {
             tables.Add(new Table((string)table[0], (string)table[1], (string)table[2], (string)table[3],
@@ -339,7 +387,8 @@ public class SparkCatalog
             TableName = tableName
         };
 
-        GrpcInternal.Exec(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
     }
 
     public void RefreshByPath(string path)
@@ -350,7 +399,8 @@ public class SparkCatalog
             Path = path
         };
 
-        GrpcInternal.Exec(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
     }
 
     public void RefreshTable(string tableName)
@@ -361,7 +411,8 @@ public class SparkCatalog
             TableName = tableName
         };
 
-        GrpcInternal.Exec(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
     }
 
     public void SetCurrentCatalog(string catalogName)
@@ -372,7 +423,8 @@ public class SparkCatalog
             CatalogName = catalogName
         };
 
-        GrpcInternal.Exec(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
     }
 
     public void SetCurrentDatabase(string dbName)
@@ -383,7 +435,8 @@ public class SparkCatalog
             DbName = dbName
         };
 
-        GrpcInternal.Exec(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
     }
 
     public bool TableExists(string tableName, string? dbName = null)
@@ -399,7 +452,9 @@ public class SparkCatalog
             plan.Root.Catalog.TableExists.DbName = dbName;
         }
 
-        return (bool)new DataFrame(_sparkSession, GrpcInternal.Exec(_sparkSession, plan)).Collect()[0][0];
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
+        return (bool)executor.GetData()[0][0];
     }
 
     public void UncacheTable(string tableName)
@@ -410,7 +465,8 @@ public class SparkCatalog
             TableName = tableName
         };
 
-        GrpcInternal.Exec(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan);
+        executor.Exec();
     }
 
     private Plan Plan()

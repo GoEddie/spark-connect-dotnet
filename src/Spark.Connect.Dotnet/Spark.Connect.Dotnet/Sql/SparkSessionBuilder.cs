@@ -14,8 +14,7 @@ public class SparkSessionBuilder
     private string _clusterId = string.Empty;
     private TimeSpan _databricksConnectionMaxVerificationTime = TimeSpan.FromMinutes(10);
 
-    private DatabricksConnectionVerification _databricksConnectionVerification =
-        DatabricksConnectionVerification.WaitForCluster;
+    private DatabricksConnectionVerification _databricksConnectionVerification = DatabricksConnectionVerification.WaitForCluster;
 
     private string _remote = string.Empty;
     private SparkSession? _session;
@@ -180,10 +179,18 @@ public class SparkSessionBuilder
     }
 }
 
+
+public static class SparkDotnetKnownConfigKeys
+{
+    public const string GrpcLogging = RuntimeConf.SparkDotnetConfigKey + "grpclogging";
+    public const string PrintMetrics = RuntimeConf.SparkDotnetConfigKey + "showmetrics";
+}
+
 public class RuntimeConf
 {
     public const string SparkDotnetConfigKey = "spark.connect.dotnet.";
-
+    
+    
     private readonly SparkSession _session;
 
 

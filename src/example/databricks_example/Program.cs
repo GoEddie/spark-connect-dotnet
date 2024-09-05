@@ -30,7 +30,7 @@ var plan = new Plan
     }
 };
 
-var (relation, _, _) = await GrpcInternal.Exec(spark.GrpcClient, spark.Host, spark.SessionId, plan, spark.Headers,
-    spark.UserContext, spark.ClientType);
-var dataFrameFromRelation = new DataFrame(spark, relation);
+var executor = new RequestExecutor(spark, plan);
+await executor.ExecAsync();
+var dataFrameFromRelation = new DataFrame(spark, executor.GetRelation());
 dataFrameFromRelation.Show();

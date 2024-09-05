@@ -5,6 +5,7 @@ using Apache.Arrow.Types;
 using Google.Protobuf;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Grpc.Net.Client.Configuration;
 using Spark.Connect.Dotnet.Databricks;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Sql.Streaming;
@@ -55,13 +56,24 @@ public class SparkSession
         SessionId = sessionId;
         _databricksConnectionVerification = databricksConnectionVerification;
         Console = customConsole ?? new LocalConsole();
-
-
+        
         Conf = new RuntimeConf(this, sparkConnectDotnetConf);
         ClientType = clientType;
 
         Host = url.Replace("sc://", "http://");
-        var channel = GrpcChannel.ForAddress(Host, new GrpcChannelOptions());
+        var channel = GrpcChannel.ForAddress(Host, new GrpcChannelOptions()
+        {
+            ServiceConfig = new ServiceConfig()
+            {
+                MethodConfigs = { new MethodConfig()
+                {
+                    RetryPolicy = new RetryPolicy()
+                    {
+                        
+                    }
+                } }
+            }
+        });
 
         Task.Run(() => channel.ConnectAsync()).Wait();
 
@@ -116,7 +128,6 @@ public class SparkSession
 
     private void VerifyDatabricksClusterRunning(TimeSpan databricksConnectionMaxVerificationTime)
     {
-        // var timer = new Timer(databricksConnectionMaxVerificationTime, () => throw new SparkException($"The databricks cluster was not ready before the timeout"));
         bool IsPending(string message)
         {
             if (message.Contains("state=PENDING", StringComparison.OrdinalIgnoreCase))
@@ -129,8 +140,7 @@ public class SparkSession
                 return true;
             }
 
-            if (message.Contains("is not usable",
-                    StringComparison.OrdinalIgnoreCase))
+            if (message.Contains("is not usable", StringComparison.OrdinalIgnoreCase))
             {
                 return true; //If terminating then we get this
             }
@@ -138,20 +148,31 @@ public class SparkSession
             return false;
         }
 
-        if (IsDatabricks.Url(Host) &&
-            _databricksConnectionVerification == DatabricksConnectionVerification.WaitForCluster)
+        if (IsDatabricks.Url(Host) && _databricksConnectionVerification == DatabricksConnectionVerification.WaitForCluster)
         {
             while (true)
             {
                 try
-                {
+                {   
+                    Console.WriteLine(DateTime.Now + " :: Trying Connection");
                     Sql("SELECT 'spark-connect-dotnet' as client").Collect();
                     return;
                 }
                 catch (Exception ex)
                 {
+                    if (ex is SparkException s)
+                    {
+                        Console.WriteLine(DateTime.Now + " :: SparkException :: " + s.Message + " :: " +      s.InnerException?.Message);
+                        if (IsPending(s.InnerException?.Message + s.Message))
+                        {
+                            Thread.Sleep(1000 * 10);
+                            continue;
+                        }
+                    }
+                    
                     if (ex is RpcException r)
                     {
+                        Console.WriteLine(DateTime.Now + " :: RpcException :: " + r.Status.StatusCode);
                         if (IsPending(r.Status.Detail))
                         {
                             Thread.Sleep(1000 * 10);
@@ -347,9 +368,8 @@ public class SparkSession
             }
         };
 
-        var (relation, schema, output) =
-            await GrpcInternal.Exec(GrpcClient, Host, SessionId, plan, Headers, UserContext, ClientType);
-        return new DataFrame(this, relation, schema);
+        return new DataFrame(this, new Relation() { Sql = new SQL() { Query = sql } });
+        
     }
 
     /// <summary>
@@ -375,10 +395,17 @@ public class SparkSession
                 }
             }
         };
-
-        var (relation, schema, output) =
-            await GrpcInternal.Exec(GrpcClient, Host, SessionId, plan, Headers, UserContext, ClientType);
-        return new DataFrame(this, relation, schema);
+        var expressionMap = args.ToDictionary(arg => arg.Key, arg => Functions.Lit(arg.Value).Expression);
+        var relation = new Relation()
+        {
+            Sql = new SQL()
+            {
+                Query = formattedSql, NamedArguments = { expressionMap }
+            }
+        };
+        
+        return new DataFrame(this, relation);
+        
     }
 
     /// <summary>
@@ -686,8 +713,9 @@ public class SparkSession
             }
         };
 
-        var relation = GrpcInternal.Exec(this, plan);
-        return new DataFrame(this, relation);
+        var executor = new RequestExecutor(this, plan);
+        Task.Run(() => executor.ExecAsync()).Wait();
+        return new DataFrame(this, executor.GetRelation());
     }
 
     private static IEnumerable<Int32Array.Builder> AppendInt(dynamic? column, Int32Array.Builder builder)

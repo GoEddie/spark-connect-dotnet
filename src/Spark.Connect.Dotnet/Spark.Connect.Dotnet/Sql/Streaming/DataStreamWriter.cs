@@ -177,10 +177,10 @@ public class DataStreamWriter
                 WriteStreamOperationStart = writeStreamOperationStart
             }
         };
-
-        var task = GrpcInternal.ExecStreamingResponse(_session, plan);
-        task.Wait();
-        return new StreamingQuery(_session, task.Result.Item1, task.Result.Item2);
+        
+        var executor = new RequestExecutor(_session, plan);
+        executor.Exec();
+        return new StreamingQuery(_session, executor.GetStreamingQueryId(), executor.GetStreamingQueryName());
     }
 
     public StreamingQuery Start(string? path = null, string? tableName = null, string? format = null,
@@ -238,12 +238,13 @@ public class DataStreamWriter
             }
         };
 
-        var task = GrpcInternal.ExecStreamingResponse(_session, plan);
-        task.Wait();
+        var executor = new RequestExecutor(_session, plan);
+        executor.Exec();
+        
+        var streamingQuery = new StreamingQuery(_session, executor.GetStreamingQueryId(), executor.GetStreamingQueryName());
+        _session.Streams.Add(streamingQuery);
 
-        var sq = new StreamingQuery(_session, task.Result.Item1, task.Result.Item2);
-        _session.Streams.Add(sq);
-        return sq;
+        return streamingQuery;
     }
 
     // public DataStreamWriter ForEach()

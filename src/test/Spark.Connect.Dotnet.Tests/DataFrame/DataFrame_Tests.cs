@@ -488,4 +488,13 @@ public class DataFrame_Tests : E2ETestBase
         var c = b.Transform(p => TransformWithArgs(p, "C", "C"));
         c.Show();
     }
+
+    [Fact]
+    public void Tail()
+    {
+        var df = Spark.Range(10);
+        var rows = df.Tail(5);
+        Assert.Equal(5, (long)rows.First()[0]);
+        Assert.Equal(9, (long)rows.Last()[0]);
+    }
 }

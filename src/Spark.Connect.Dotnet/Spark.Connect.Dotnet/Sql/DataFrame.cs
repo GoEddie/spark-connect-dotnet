@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Apache.Arrow;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
@@ -214,8 +215,7 @@ public class DataFrame
     /// <param name="vertical">Print output rows vertically (one line per column value).</param>
     /// <param name="sessionId">SessionId to make the call on</param>
     /// <param name="client">`SparkConnectServiceClient` client, must already be connected</param>
-    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical,
-        SparkSession session)
+    public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical, SparkSession session)
     {
         var showStringPlan = new Plan
         {
@@ -227,10 +227,12 @@ public class DataFrame
                 }
             }
         };
+        
+        var executor = new RequestExecutor(session, showStringPlan);
+        await executor.ExecAsync();
 
-        var (_, _, output) = await GrpcInternal.Exec(session.GrpcClient, session.Host, session.SessionId,
-            showStringPlan, session.Headers, session.UserContext, session.ClientType);
-        session.Console.WriteLine(output);
+        var rows = executor.GetData();
+        session.Console.WriteLine(rows[0].Data[0] as string);
     }
 
     public void PrintSchema(int? level = null)
@@ -271,8 +273,7 @@ public class DataFrame
             Root = relation
         };
 
-        GrpcInternal.Schema(SparkSession.GrpcClient, SparkSession.SessionId, plan, SparkSession.Headers,
-            SparkSession.UserContext, SparkSession.ClientType, false, "");
+        GrpcInternal.Schema(SparkSession.GrpcClient, SparkSession.SessionId, plan, SparkSession.Headers, SparkSession.UserContext, SparkSession.ClientType, false, "");
     }
 
     public DataFrame Select(params Expression[] columns)
@@ -372,50 +373,41 @@ public class DataFrame
 
     public DataFrame Describe(params string[] cols)
     {
-        var plan = new Plan
-        {
-            Root = new Relation
+        var relation = new Relation
             {
                 Describe = new StatDescribe
                 {
                     Input = Relation, Cols = { cols }
                 }
-            }
         };
 
-        return new DataFrame(SparkSession, GrpcInternal.Exec(SparkSession, plan));
+        return new DataFrame(SparkSession, relation);
     }
 
     public DataFrame Distinct(bool withinWatermark = false)
     {
-        var plan = new Plan
-        {
-            Root = new Relation
+        var relation = new Relation
             {
                 Deduplicate = new Deduplicate
                 {
                     Input = Relation, AllColumnsAsKeys = true, WithinWatermark = withinWatermark
                 }
-            }
         };
 
-        return new DataFrame(SparkSession, plan.Root);
+        return new DataFrame(SparkSession, relation);
     }
 
     public DataFrame Drop(params string[] cols)
     {
-        var plan = new Plan
-        {
-            Root = new Relation
+       var relation = new Relation
             {
                 Drop = new Drop
                 {
                     Input = Relation, ColumnNames = { cols }
                 }
-            }
-        };
+            };
 
-        return new DataFrame(SparkSession, plan.Root);
+        return new DataFrame(SparkSession, relation);
     }
 
     public DataFrame DropDuplicates(params string[] subset)
@@ -425,18 +417,16 @@ public class DataFrame
             return Distinct();
         }
 
-        var plan = new Plan
-        {
-            Root = new Relation
+        var relation = new Relation
             {
                 Deduplicate = new Deduplicate
                 {
                     Input = Relation, ColumnNames = { subset }
                 }
-            }
+            
         };
 
-        return new DataFrame(SparkSession, plan.Root);
+        return new DataFrame(SparkSession, relation);
     }
 
     public DataFrame DropDuplicatesWithinWatermark(params string[] subset)
@@ -446,18 +436,15 @@ public class DataFrame
             return Distinct(true);
         }
 
-        var plan = new Plan
-        {
-            Root = new Relation
+        var relation = new Relation
             {
                 Deduplicate = new Deduplicate
                 {
                     Input = Relation, ColumnNames = { subset }, WithinWatermark = true
                 }
-            }
         };
 
-        return new DataFrame(SparkSession, plan.Root);
+        return new DataFrame(SparkSession, relation);
     }
 
     public DataFrame Drop(params Column[] cols)
@@ -493,15 +480,12 @@ public class DataFrame
             naDrop.MinNonNulls = thresh.Value;
         }
 
-        var plan = new Plan
+        var relation = new Relation
         {
-            Root = new Relation
-            {
                 DropNa = naDrop
-            }
         };
 
-        return new DataFrame(SparkSession, plan.Root);
+        return new DataFrame(SparkSession, relation);
     }
 
     public DataFrame Coalesce()
@@ -566,34 +550,28 @@ public class DataFrame
         }
 
         var sort = cols.Select(WrapSortOrderCols);
-        var plan = new Plan
-        {
-            Root = new Relation
+        var relation = new Relation
             {
                 RepartitionByExpression = new RepartitionByExpression
                 {
                     NumPartitions = numPartitions, Input = Relation, PartitionExprs = { sort.Select(p => p.Expression) }
                 }
-            }
         };
 
-        return new DataFrame(SparkSession, plan.Root);
+        return new DataFrame(SparkSession, relation);
     }
 
     public DataFrame SortWithinPartitions(params string[] cols)
     {
-        var plan = new Plan
-        {
-            Root = new Relation
+        var relation = new Relation
             {
                 Sort = new Sort
                 {
                     IsGlobal = false, Input = Relation, Order = { ColumnsToSortOrder(cols.Select(Col).ToArray()) }
                 }
-            }
         };
 
-        return new DataFrame(SparkSession, plan.Root);
+        return new DataFrame(SparkSession, relation);
     }
 
     public Column ColRegex(string regex)
@@ -678,18 +656,15 @@ public class DataFrame
 
     public DataFrame WithColumnRenamed(string existing, string newName)
     {
-        var plan = new Plan
-        {
-            Root = new Relation
+        var  relation = new Relation
             {
                 WithColumnsRenamed = new WithColumnsRenamed
                 {
                     Input = Relation, RenameColumnsMap = { { existing, newName } }
                 }
-            }
         };
 
-        return new DataFrame(SparkSession, plan.Root);
+        return new DataFrame(SparkSession, relation);
     }
 
     public DataFrameWriter Write()
@@ -714,15 +689,10 @@ public class DataFrame
         {
             Root = Relation
         };
-
-        var physicalPlan = GrpcInternal.Explain(SparkSession.GrpcClient, SparkSession.SessionId, plan,
-            SparkSession.Headers, SparkSession.UserContext, SparkSession.ClientType, true, null);
-        Console.WriteLine(physicalPlan);
-
-        var (arrowBatches, schema, metrics) = await GrpcInternal.ExecArrowResponse(SparkSession.GrpcClient,
-            SparkSession.SessionId, plan, SparkSession.Headers, SparkSession.UserContext, SparkSession.ClientType);
-        var arrowWrapper = new ArrowWrapper();
-        return await arrowWrapper.ArrowBatchesToRows(arrowBatches, schema);
+        
+        var executor = new RequestExecutor(SparkSession, plan);
+        await executor.ExecAsync();
+        return executor.GetData();
     }
 
     private Schema ToArrowSchema(DataType? schema)
@@ -778,8 +748,8 @@ public class DataFrame
             }
         };
 
-        await GrpcInternal.Exec(SparkSession.GrpcClient, SparkSession.Host, SparkSession.SessionId, plan,
-            SparkSession.Headers, SparkSession.UserContext, SparkSession.ClientType);
+        var executor = new RequestExecutor(SparkSession, plan);
+        await executor.ExecAsync();
     }
 
     public DataFrame Union(DataFrame other)
@@ -977,7 +947,7 @@ public class DataFrame
 
         if (outputToConsole)
         {
-            Console.WriteLine(output);
+            SparkSession.Console.WriteLine(output);
         }
 
         return output;
@@ -1639,9 +1609,13 @@ public class DataFrame
                 }
             }
         };
+        
+        var executor = new RequestExecutor(SparkSession, plan);
+        
+        var task = Task.Run(() => executor.ExecAsync());
+        task.Wait();
 
-        var df = new DataFrame(SparkSession, GrpcInternal.Exec(SparkSession, plan));
-        return df.Collect().Select(p => new Row(df.Schema, p));
+        return executor.GetData();
     }
 
     public DataFrame To(StructType schema)

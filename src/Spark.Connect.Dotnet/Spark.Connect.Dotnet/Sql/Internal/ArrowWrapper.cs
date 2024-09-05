@@ -19,10 +19,15 @@ public class ArrowWrapper
     /// <param name="batches"></param>
     /// <param name="connectSchema"></param>
     /// <returns></returns>
-    public async Task<IList<Row>> ArrowBatchesToRows(List<ExecutePlanResponse.Types.ArrowBatch> batches,
-        DataType connectSchema)
+    public async Task<IList<Row>> ArrowBatchesToRows(List<ExecutePlanResponse.Types.ArrowBatch> batches, DataType connectSchema)
     {
         var arrowTable = await ArrowBatchesToTable(batches, connectSchema);
+        return ArrowTableToRows(arrowTable);
+    }
+    
+    public async Task<IList<Row>> ArrowBatchToRows(ExecutePlanResponse.Types.ArrowBatch batch, DataType connectSchema)
+    {
+        var arrowTable = await ArrowBatchToTable(batch, connectSchema);
         return ArrowTableToRows(arrowTable);
     }
 
@@ -82,8 +87,7 @@ public class ArrowWrapper
         return rows;
     }
 
-    public async Task<Table> ArrowBatchesToTable(List<ExecutePlanResponse.Types.ArrowBatch> arrowBatches,
-        DataType connectSchema)
+    public async Task<Table> ArrowBatchesToTable(List<ExecutePlanResponse.Types.ArrowBatch> arrowBatches, DataType connectSchema)
     {
         var recordBatches = new List<RecordBatch>();
         foreach (var batch in arrowBatches)
@@ -96,6 +100,20 @@ public class ArrowWrapper
 
         var arrowSchema = ToArrowSchema(connectSchema);
 
+        var readSchema = ReadArrowSchema(recordBatches, arrowSchema);
+
+        return Table.TableFromRecordBatches(readSchema, recordBatches);
+    }
+    
+    public async Task<Table> ArrowBatchToTable(ExecutePlanResponse.Types.ArrowBatch batch, DataType connectSchema)
+    {
+        var recordBatches = new List<RecordBatch>();
+        var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(batch.Data.ToByteArray()));
+        var recordBatch = await reader.ReadNextRecordBatchAsync();
+
+        recordBatches.Add(recordBatch);
+        
+        var arrowSchema = ToArrowSchema(connectSchema);
         var readSchema = ReadArrowSchema(recordBatches, arrowSchema);
 
         return Table.TableFromRecordBatches(readSchema, recordBatches);

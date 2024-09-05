@@ -137,7 +137,7 @@ public class DataFrameWriter
             };
         }
 
-        await GrpcInternal.Exec(_session.GrpcClient, _session.Host, _session.SessionId, plan, _session.Headers,
-            _session.UserContext, _session.ClientType);
+        var executor = new RequestExecutor(_session, plan);
+        await executor.ExecAsync();
     }
 }

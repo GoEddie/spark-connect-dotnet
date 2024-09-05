@@ -1,3 +1,4 @@
+using Spark.Connect.Dotnet.Sql;
 using Spark.Connect.Dotnet.Sql.Types;
 using Xunit.Abstractions;
 using static Spark.Connect.Dotnet.Sql.Functions;
@@ -117,7 +118,8 @@ public class SparkSession_Tests : E2ETestBase
         Assert.Equal(1100, rows.Count);
         Assert.Equal(0L, rows[0][0]);
     }
-
+    
+    
     [Fact]
     public void SqlWithDataFramesJoin_Test()
     {
