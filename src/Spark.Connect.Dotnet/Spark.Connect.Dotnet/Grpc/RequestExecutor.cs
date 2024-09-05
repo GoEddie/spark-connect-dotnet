@@ -46,6 +46,8 @@ public class RequestExecutor : IDisposable
         _logger = GetLogger(session);
         _session = session;
         _plan = plan;
+
+        _relation = plan.Root;
     }
 
     private GrpcLogger GetLogger(SparkSession session)
