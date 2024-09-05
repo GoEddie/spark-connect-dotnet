@@ -196,6 +196,7 @@ public class RequestExecutor : IDisposable
             if (r.Status.StatusCode == StatusCode.Cancelled)    //This is a client side cancelled
             {
                 _logger.Log(GrpcLoggingLevel.Warn, "Request was cancelled aka timed out - retrying: {0}", r.Message);
+                return true;
             }
             
             if (r.Status.Detail.Contains("SPARK_JOB_CANCELLED")) //Server side "kill"
@@ -203,7 +204,8 @@ public class RequestExecutor : IDisposable
                 _logger.Log(GrpcLoggingLevel.Warn, "Request was killed from the server {0}", r.Status.Detail);
                 throw;
             }
-            
+
+            throw;
         }
         catch (Exception ex)
         {

@@ -290,7 +290,15 @@ public class SparkSession
     /// TODO: Migrate to SqlFormatter - see https://github.com/apache/spark/commit/a100e11936bcd92ac091abe94221c1b669811efa#diff-5b26ee7d224ae355b252d713e570cb03eaecbf7f8adcdb6287dc40c370b71462
     public DataFrame Sql(string sql)
     {
-        return new DataFrame(this, new Relation() { Sql = new SQL() { Query = sql } });
+        var plan = new Plan()
+        {
+            Root = new Relation() { Sql = new SQL() { Query = sql } }
+        };
+
+        var executor = new RequestExecutor(this, plan);
+        executor.Exec();    //We have to exec because the sql could be something like 'create functions blah'
+        
+        return new DataFrame(this, executor.GetRelation());
     }
 
     /// <summary>
@@ -316,27 +324,18 @@ public class SparkSession
     public DataFrame Sql(string sql, IDictionary<string, object> args)
     {
         var formattedSql = SqlFormatter.Format(sql, args);
-
-        var plan = new Plan
-        {
-            Command = new Command
-            {
-                SqlCommand = new SqlCommand
-                {
-                    Sql = formattedSql
-                }
-            }
-        };
         var expressionMap = args.ToDictionary(arg => arg.Key, arg => Functions.Lit(arg.Value).Expression);
-        var relation = new Relation()
+        var plan = new Plan(){
+            Root = new Relation()
         {
             Sql = new SQL()
             {
                 Query = formattedSql, NamedArguments = { expressionMap }
             }
-        };
-        
-        return new DataFrame(this, relation);
+        }};
+        var executor = new RequestExecutor(this, plan);
+        executor.Exec();
+        return new DataFrame(this, executor.GetRelation());
         
     }
 
