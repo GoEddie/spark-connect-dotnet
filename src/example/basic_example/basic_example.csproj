@@ -7,6 +7,14 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <WarningLevel>0</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <WarningLevel>0</WarningLevel>
+    </PropertyGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\..\Spark.Connect.Dotnet\Spark.Connect.Dotnet\Spark.Connect.Dotnet.csproj"/>
     </ItemGroup>

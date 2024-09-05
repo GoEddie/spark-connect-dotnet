@@ -7,6 +7,15 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <NoWarn>CS0000-CS9999</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <WarningLevel>0</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <WarningLevel>0</WarningLevel>
     </PropertyGroup>
 
     <ItemGroup>
