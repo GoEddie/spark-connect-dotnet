@@ -51,12 +51,12 @@ jobs:
     
     - uses: vemonet/setup-spark@v1
       with:
-        spark-version: '3.5.1'
+        spark-version: '3.5.2'
         hadoop-version: '3'
     
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
 
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.1
+    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.2
     
     - name: Install dependencies
       working-directory: ./src

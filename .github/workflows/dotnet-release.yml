@@ -48,12 +48,12 @@ jobs:
     
     - uses: vemonet/setup-spark@v1
       with:
-        spark-version: '3.5.1'
+        spark-version: '3.5.2'
         hadoop-version: '3'
     
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
 
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.1
+    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.2
     
     - name: Install dependencies
       working-directory: ./src/
@@ -77,10 +77,10 @@ jobs:
 
     - name: Pack
       working-directory: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/
-      run: dotnet pack --no-build --configuration Release --output nupkgs /p:PackageVersion=3.5.1-build.${{ github.run_number }}
+      run: dotnet pack --no-build --configuration Release --output nupkgs /p:PackageVersion=3.5.2-build.${{ github.run_number }}
     
     - name: Upload test results
       uses: actions/upload-artifact@v2
       with:
-        name: NuGet-3.5.1-build.${{ github.run_number }}
+        name: NuGet-3.5.2-build.${{ github.run_number }}
         path: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/nupkgs/*.nupkg
