@@ -14,15 +14,7 @@ public partial class Functions : FunctionsWrapper
 {
     private static readonly DateOnly UnixEpoch = new(1970, 1, 1);
     private static readonly TimeSpan UnixEpochTimespan = new(1970, 1, 1);
-
-    public static Column ObjectToLit(object o)
-    {
-        return o switch
-        {
-            int i => Lit(i), string s => Lit(s), bool b => Lit(b), double d => Lit(d)
-        };
-    }
-
+    
     public static Column Lit(Dictionary<string, float> dict)
     {
         return new Column(new Expression
@@ -2567,7 +2559,8 @@ public partial class Functions : FunctionsWrapper
 
 
     public static Column MakeInterval(Column? years = null, Column? months = null, Column? weeks = null,
-        Column? days = null, Column hours = null, Column? mins = null, Column? secs = null)
+        
+        Column? days = null, Column? hours = null, Column? mins = null, Column? secs = null)
     {
         if (Equals(null, years))
         {

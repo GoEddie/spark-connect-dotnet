@@ -15,13 +15,13 @@ public class DataStreamWriter
 
     private readonly string _udf_pythonVersion = string.Empty;
     private bool? _availableNow;
-    private string _continuous = string.Empty;
+    private string? _continuous = string.Empty;
 
     private string _format = string.Empty;
     private bool? _once;
     private string _outputMode = string.Empty;
     private string _path = string.Empty;
-    private string _processingTime = string.Empty;
+    private string? _processingTime = string.Empty;
     private string _queryName = string.Empty;
 
     public DataStreamWriter(SparkSession session, Relation input)
@@ -155,8 +155,7 @@ public class DataStreamWriter
         return this;
     }
 
-    public DataStreamWriter Trigger(string? processingTime = null, bool? once = null, string? continuous = null,
-        bool? availableNow = null)
+    public DataStreamWriter Trigger(string? processingTime = null, bool? once = null, string? continuous = null, bool? availableNow = null)
     {
         _processingTime = processingTime;
         _once = once;

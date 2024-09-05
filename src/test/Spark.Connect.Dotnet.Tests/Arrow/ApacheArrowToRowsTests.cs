@@ -12,7 +12,7 @@ public class ApacheArrowToRowsTests : E2ETestBase
     }
 
     [Fact]
-    public async Task CanConvertInt32Arrow_ToInt()
+    public void CanConvertInt32Arrow_ToInt()
     {
         var numbers = new[] { 1, 2, 3, 4, 5, 6, 7 };
 

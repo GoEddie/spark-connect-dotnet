@@ -132,7 +132,7 @@ public class SparkSessionBuilder
             _databricksConnectionVerification, _databricksConnectionMaxVerificationTime, _sparkConnectDotnetConf);
         if (_conf.Any())
         {
-            GrpcInternal.ExecSetConfigCommandResponse(_session, _conf);
+            Task.Run(() => GrpcInternal.ExecSetConfigCommandResponse(_session, _conf)).Wait();
         }
 
         return _session;
@@ -143,7 +143,7 @@ public class SparkSessionBuilder
         _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(), _clientType, _databricksConnectionVerification, _databricksConnectionMaxVerificationTime, _sparkConnectDotnetConf);
         if (_conf.Any())
         {
-            GrpcInternal.ExecSetConfigCommandResponse(_session, _conf);
+            Task.Run(() => GrpcInternal.ExecSetConfigCommandResponse(_session, _conf)).Wait();
         }
 
         return _session;

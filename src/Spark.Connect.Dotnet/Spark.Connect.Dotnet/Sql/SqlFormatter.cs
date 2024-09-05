@@ -1,5 +1,8 @@
 namespace Spark.Connect.Dotnet.Sql;
 
+#pragma warning disable CS0472
+
+
 public static class SqlFormatter
 {
     /// <summary>
@@ -100,3 +103,5 @@ public static class SqlFormatter
         return outputSql;
     }
 }
+
+#pragma warning restore CS0472

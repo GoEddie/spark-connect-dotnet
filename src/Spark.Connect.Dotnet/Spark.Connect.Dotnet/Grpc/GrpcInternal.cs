@@ -10,7 +10,7 @@ namespace Spark.Connect.Dotnet.Grpc;
 public static class GrpcInternal
 {
     public static string Explain(SparkConnectService.SparkConnectServiceClient client, string sessionId, Plan plan,
-        Metadata headers, UserContext userContext, string clientType, bool explainExtended, string mode)
+        Metadata headers, UserContext userContext, string clientType, bool explainExtended, string? mode)
     {
         var explainMode = explainExtended
             ? AnalyzePlanRequest.Types.Explain.Types.ExplainMode.Extended

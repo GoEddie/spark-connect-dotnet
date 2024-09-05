@@ -21,12 +21,12 @@ internal class SimpleExample
         dataFrame2.Show();
 
         var dfFromSl =
-            await spark.SqlAsync(
+            spark.Sql(
                 "SELECT *, id + 10, 'Hello' as abc, id * 10 m2 FROM range(100) union SELECT *, id + 10, 'Hello' as abc, id * 10 m2 FROM range(100)");
         dfFromSl.Show();
         dfFromSl.CreateOrReplaceTempView("table_a");
 
-        var dfFromView = await spark.SqlAsync("SELECT min(id), avg(m2) from table_a group by id");
+        var dfFromView = spark.Sql("SELECT min(id), avg(m2) from table_a group by id");
         dfFromView.Show();
 
         dataFrame = spark.Range(1000);

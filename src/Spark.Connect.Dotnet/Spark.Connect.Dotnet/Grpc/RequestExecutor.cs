@@ -29,17 +29,17 @@ public class RequestExecutor : IDisposable
     private string _lastResponseId = string.Empty;
     private bool _isComplete = false;
     
-    private CancellationTokenSource _currentCancellationSource;
+    private CancellationTokenSource _currentCancellationSource = new ();
 
-    private Relation _relation;
-    private DataType _schema;
+    private Relation? _relation;
+    private DataType? _schema;
     private readonly List<Row> _rows = new ();
-    private StreamingQueryInstanceId _streamingQueryId;
-    private StreamingQueryCommandResult.Types.StatusResult _streamingResultStatus;
-    private string _streamingQueryName;
-    private bool _streamingQueryIsTerminated = false;
-    private StreamingQueryCommandResult.Types.ExceptionResult _streamingQueryException;
-    private StreamingQueryCommandResult.Types.RecentProgressResult _streamingProgress;
+    private StreamingQueryInstanceId? _streamingQueryId;
+    private StreamingQueryCommandResult.Types.StatusResult? _streamingResultStatus;
+    private string? _streamingQueryName;
+    private bool? _streamingQueryIsTerminated = false;
+    private StreamingQueryCommandResult.Types.ExceptionResult? _streamingQueryException;
+    private StreamingQueryCommandResult.Types.RecentProgressResult? _streamingProgress;
 
     public RequestExecutor(SparkSession session, Plan plan)
     {
@@ -127,7 +127,16 @@ public class RequestExecutor : IDisposable
                 {
                     _logger.Log(GrpcLoggingLevel.Verbose, "Have Arrow Batch");
                     var wrapper = new ArrowWrapper();
-                    _rows.AddRange(await wrapper.ArrowBatchToRows(current.ArrowBatch, _schema));
+
+                    if (_schema == null)
+                    {
+                        _logger.Log(GrpcLoggingLevel.Verbose, "Cannot decode arrow batch as schema is null");
+                    }
+                    else
+                    {
+                        _rows.AddRange(await wrapper.ArrowBatchToRows(current.ArrowBatch, _schema));    
+                    }
+                    
                 }
 
                 if (current.Metrics != null)
@@ -301,20 +310,20 @@ public class RequestExecutor : IDisposable
 
     public IList<Row> GetData() => _rows;
 
-    public DataType GetSchema() => _schema;
+    public DataType GetSchema() => _schema!;
 
-    public Relation GetRelation() => _relation;
+    public Relation GetRelation() => _relation!;
 
-    public StreamingQueryInstanceId GetStreamingQueryId() => _streamingQueryId;
+    public StreamingQueryInstanceId GetStreamingQueryId() => _streamingQueryId!;
 
-    public StreamingQueryCommandResult.Types.StatusResult GetStreamingQueryCommandResult() => _streamingResultStatus;
+    public StreamingQueryCommandResult.Types.StatusResult GetStreamingQueryCommandResult() => _streamingResultStatus!;
 
-    public string GetStreamingQueryName() => _streamingQueryName;
+    public string GetStreamingQueryName() => _streamingQueryName!;
 
-    public bool GetStreamingQueryIsTerminated() => _streamingQueryIsTerminated;
+    public bool GetStreamingQueryIsTerminated() => _streamingQueryIsTerminated!.Value;
 
-    public StreamingQueryCommandResult.Types.ExceptionResult GetStreamingException() => _streamingQueryException;
+    public StreamingQueryCommandResult.Types.ExceptionResult? GetStreamingException() => _streamingQueryException;
 
-    public StreamingQueryCommandResult.Types.RecentProgressResult GetStreamingRecentProgress() => _streamingProgress;
+    public StreamingQueryCommandResult.Types.RecentProgressResult? GetStreamingRecentProgress() => _streamingProgress;
 }
 

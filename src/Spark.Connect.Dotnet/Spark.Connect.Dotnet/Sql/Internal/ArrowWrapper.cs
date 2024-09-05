@@ -4,6 +4,8 @@ using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Sql.Types;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using TimestampType = Apache.Arrow.Types.TimestampType;
+#pragma warning disable CS8604 
+#pragma warning disable CS8601
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -200,7 +202,7 @@ public class ArrowVisitor :
         var rowNumber = 0;
         foreach (var item in array)
         {
-            Rows[_readCount + rowNumber++][_columnIndex] = item;
+            Rows[_readCount + rowNumber++][_columnIndex] = item!;
         }
     }
 
@@ -333,7 +335,7 @@ public class ArrowVisitor :
         for (var i = 0; i < array.Length; i++)
         {
             var currentRow = new List<object>();
-            var columnNumber = 0;
+            
             foreach (var column in columns)
             {
                 currentRow.Add(column[rowNumber + i]);
@@ -506,14 +508,14 @@ public class MapVisitor :
 
     public void Visit(StringArray array)
     {
-        Console.WriteLine("HERE");
+        
     }
 }
 
 public class MapKeyVisitior :
     IArrowArrayVisitor<StringArray>
 {
-    public List<string> Keys { get; private set; }
+    public List<string> Keys { get; private set; } = null!;
 
     public void Visit(StringArray array)
     {
@@ -522,8 +524,6 @@ public class MapKeyVisitior :
         {
             Keys.Add(str);
         }
-
-        ;
     }
 
     public void Visit(IArrowArray array)
@@ -850,3 +850,6 @@ public class StructValueVisitior :
         }
     }
 }
+
+#pragma warning restore CS8604
+#pragma warning restore CS8601

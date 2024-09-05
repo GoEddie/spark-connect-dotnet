@@ -73,6 +73,18 @@
         <PackageIcon>logo.png</PackageIcon>
     </PropertyGroup>
 
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <NoWarn>1701;1702;CS0612;CS8602;CS8603;CS8600;CS8604</NoWarn>
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <NoWarn>1701;1702;CS0612;CS8602;CS8603;CS8600;CS8604</NoWarn>
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
     <ItemGroup>
         <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
         <None Include="README.md" Pack="true" PackagePath=""/>

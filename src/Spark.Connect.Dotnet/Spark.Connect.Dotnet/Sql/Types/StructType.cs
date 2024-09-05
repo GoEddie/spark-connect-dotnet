@@ -455,8 +455,8 @@ public static class DataTypeJsonSerializer
         {
             return $@"""{value}""";
         }
-
-        return value == null ? "None" : value.ToString();
+        
+        return ReferenceEquals(null, value) ? "None" : value.ToString();
     }
 
     private static string MetadataToString(StructField field)

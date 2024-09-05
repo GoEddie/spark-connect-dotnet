@@ -5,10 +5,11 @@ public class GrpcLogger
     private readonly GrpcLoggingLevel _level;
     private readonly LocalConsole _console;
 
-    public GrpcLogger(GrpcLoggingLevel level, LocalConsole console = null)
+    public GrpcLogger(GrpcLoggingLevel level, LocalConsole? console = null)
     {
         _level = level;
-        _console = console;
+        _console = console ?? new LocalConsole();
+        
     }
     
 
@@ -31,7 +32,7 @@ public class GrpcLogger
 
 public class GrpcNullLogger : GrpcLogger
 {
-    public GrpcNullLogger(GrpcLoggingLevel level, LocalConsole console = null) : base(level, console)
+    public GrpcNullLogger(GrpcLoggingLevel level, LocalConsole? console = null) : base(level, console)
     {
     }
 

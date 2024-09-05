@@ -23,7 +23,7 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class SparkSession
 {
-    private static SparkCatalog _catalog;
+    private readonly SparkCatalog _catalog;
 
     private readonly DatabricksConnectionVerification _databricksConnectionVerification;
 
@@ -49,7 +49,7 @@ public class SparkSession
     public SparkSession(string sessionId, string url, Metadata headers, UserContext userContext, string clientType,
         DatabricksConnectionVerification databricksConnectionVerification,
         TimeSpan databricksConnectionMaxVerificationTime, Dictionary<string, string> sparkConnectDotnetConf,
-        LocalConsole customConsole = null)
+        LocalConsole? customConsole = null)
     {
         Headers = headers;
         UserContext = userContext;
@@ -79,6 +79,9 @@ public class SparkSession
 
         GrpcClient = new SparkConnectService.SparkConnectServiceClient(channel);
         VerifyDatabricksClusterRunning(databricksConnectionMaxVerificationTime);
+
+        GrpcChannel = channel;
+        _catalog = new SparkCatalog(this);
     }
 
     /// <summary>
@@ -113,18 +116,7 @@ public class SparkSession
 
     public GrpcChannel GrpcChannel { get; }
 
-    public SparkCatalog Catalog
-    {
-        get
-        {
-            if (_catalog == null)
-            {
-                _catalog = new SparkCatalog(this);
-            }
-
-            return _catalog;
-        }
-    }
+    public SparkCatalog Catalog => _catalog;
 
     private void VerifyDatabricksClusterRunning(TimeSpan databricksConnectionMaxVerificationTime)
     {
@@ -291,15 +283,14 @@ public class SparkSession
     }
 
     /// <summary>
-    ///     Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
+    ///     Async Version of `Sql`. Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
     /// </summary>
     /// <param name="sql">The SPARK SQL Query to execute.</param>
     /// <returns>`DataFrame`</returns>
+    /// TODO: Migrate to SqlFormatter - see https://github.com/apache/spark/commit/a100e11936bcd92ac091abe94221c1b669811efa#diff-5b26ee7d224ae355b252d713e570cb03eaecbf7f8adcdb6287dc40c370b71462
     public DataFrame Sql(string sql)
     {
-        var task = Task.Run(() => SqlAsync(sql));
-        task.Wait();
-        return task.Result;
+        return new DataFrame(this, new Relation() { Sql = new SQL() { Query = sql } });
     }
 
     /// <summary>
@@ -323,65 +314,6 @@ public class SparkSession
     /// </param>
     /// <returns>`DataFrame`</returns>
     public DataFrame Sql(string sql, IDictionary<string, object> args)
-    {
-        var task = Task.Run(() => SqlAsync(sql, args));
-        task.Wait();
-        return task.Result;
-    }
-
-    /// <summary>
-    ///     Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
-    ///     Args is a list of DataFrames to wrap in CreateOrReplaceTempView, example (spark is a SparkSession):
-    ///     ```csharp
-    ///     var df = spark.Range(100);
-    ///     spark.Sql("SELECT * FROM {dataFramePassedIn}", ("dataFramePassedIn", df)).Show();
-    ///     ```
-    /// </summary>
-    /// <param name="sql">The SPARK SQL Query to execute.</param>
-    /// <param name="args">
-    ///     Args is a list of tuples containing the name of the token to replace in the Sql and the DataFrame to
-    ///     wrap in CreateOrReplaceTempView
-    /// </param>
-    /// <returns>`DataFrame`</returns>
-    public DataFrame Sql(string sql, params (string, DataFrame)[] args)
-    {
-        var task = Task.Run(() => SqlAsync(sql, args));
-        task.Wait();
-        return task.Result;
-    }
-
-    /// <summary>
-    ///     Async Version of `Sql`. Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
-    /// </summary>
-    /// <param name="sql">The SPARK SQL Query to execute.</param>
-    /// <returns>`DataFrame`</returns>
-    public async Task<DataFrame> SqlAsync(string sql)
-    {
-        var plan = new Plan
-        {
-            Command = new Command
-            {
-                SqlCommand = new SqlCommand
-                {
-                    Sql = sql
-                }
-            }
-        };
-
-        return new DataFrame(this, new Relation() { Sql = new SQL() { Query = sql } });
-        
-    }
-
-    /// <summary>
-    ///     Async Version of `Sql`. Creates a `DataFrame` that is the result of the SPARK SQL query that is passed as a string.
-    /// </summary>
-    /// <param name="sql">The SPARK SQL Query to execute.</param>
-    /// <param name="args">
-    ///     Args keys = name in {name} format to replace in the SQL, values = the value to use in the place of
-    ///     the token, can be a Col, Lit, native type, or a DataFrame which will be wrapped in a CreateOrReplaceTempView call
-    /// </param>
-    /// <returns>`DataFrame`</returns>
-    public async Task<DataFrame> SqlAsync(string sql, IDictionary<string, object> args)
     {
         var formattedSql = SqlFormatter.Format(sql, args);
 
@@ -418,7 +350,7 @@ public class SparkSession
     ///     createOrReplaceTempView
     /// </param>
     /// <returns>`DataFrame`</returns>
-    public async Task<DataFrame> SqlAsync(string sql, params (string, DataFrame)[] dataFrames)
+    public DataFrame Sql(string sql, params (string, DataFrame)[] dataFrames)
     {
         var dict = new Dictionary<string, object>();
         foreach (var tuple in dataFrames)
@@ -426,7 +358,7 @@ public class SparkSession
             dict[tuple.Item1] = tuple.Item2;
         }
 
-        return await SqlAsync(sql, dict);
+        return Sql(sql, dict);
     }
 
     /// <summary>

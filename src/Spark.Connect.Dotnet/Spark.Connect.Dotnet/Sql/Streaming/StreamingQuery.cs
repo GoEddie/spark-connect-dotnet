@@ -127,7 +127,7 @@ public class StreamingQuery
 
         var result = executor.GetStreamingException();
         
-        if (result == null || result.HasExceptionMessage == null)
+        if (result == null)
         {
             return null;
         }

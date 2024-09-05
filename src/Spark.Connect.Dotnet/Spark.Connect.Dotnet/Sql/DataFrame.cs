@@ -1,10 +1,7 @@
-using System.Runtime.CompilerServices;
-using Apache.Arrow;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
 using Spark.Connect.Dotnet.Sql.Streaming;
-using Spark.Connect.Dotnet.Sql.Types;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using static Spark.Connect.Dotnet.Sql.Functions;
 using TransformFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.DataFrame, Spark.Connect.Dotnet.Sql.DataFrame>>;
@@ -16,7 +13,7 @@ public class DataFrame
     private readonly DataType? _schema;
     public readonly Relation Relation;
 
-    private readonly Dictionary<SparkStorageLevel, StorageLevel> StorageLevels =
+    private readonly Dictionary<SparkStorageLevel, StorageLevel> _storageLevels =
         new()
         {
             {
@@ -145,7 +142,7 @@ public class DataFrame
         }
     }
 
-    public bool ValidateThisCallColumnName { get; set; } = false;
+    public bool ValidateThisCallColumnName { get; set; }
 
     public StructType Schema
     {
@@ -213,8 +210,7 @@ public class DataFrame
     /// <param name="numberOfRows">The number of rows to show</param>
     /// <param name="truncate">If set greater than one, truncates long strings to length truncate and align cells right.</param>
     /// <param name="vertical">Print output rows vertically (one line per column value).</param>
-    /// <param name="sessionId">SessionId to make the call on</param>
-    /// <param name="client">`SparkConnectServiceClient` client, must already be connected</param>
+    /// <param name="session">Spark Session to make the call on</param>
     public static async Task ShowAsync(Relation input, int numberOfRows, int truncate, bool vertical, SparkSession session)
     {
         var showStringPlan = new Plan
@@ -232,7 +228,7 @@ public class DataFrame
         await executor.ExecAsync();
 
         var rows = executor.GetData();
-        session.Console.WriteLine(rows[0].Data[0] as string);
+        session.Console.WriteLine(rows[0].Data[0] as string ?? "No data in row");
     }
 
     public void PrintSchema(int? level = null)
@@ -363,7 +359,7 @@ public class DataFrame
 
     public DataFrame Persist(SparkStorageLevel storageLevel)
     {
-        return new DataFrame(SparkSession, GrpcInternal.Persist(SparkSession, Relation, StorageLevels[storageLevel]));
+        return new DataFrame(SparkSession, GrpcInternal.Persist(SparkSession, Relation, _storageLevels[storageLevel]));
     }
 
     public DataFrame Checkpoint()
@@ -539,7 +535,7 @@ public class DataFrame
         {
             if (column.Expression.SortOrder == null)
             {
-                var sortOrder = new Expression.Types.SortOrder
+                column.Expression.SortOrder = new Expression.Types.SortOrder
                 {
                     Child = column.Expression, Direction = Expression.Types.SortOrder.Types.SortDirection.Unspecified
                     , NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
@@ -694,23 +690,7 @@ public class DataFrame
         await executor.ExecAsync();
         return executor.GetData();
     }
-
-    private Schema ToArrowSchema(DataType? schema)
-    {
-        var fields = new List<Field>();
-        foreach (var structField in schema.Struct.Fields)
-        {
-            var sparkType = SparkDataType.FromSparkConnectType(structField.DataType);
-            var arrowType = sparkType.ToArrowType();
-            var field = new Field(structField.Name, arrowType, structField.Nullable);
-            fields.Add(field);
-        }
-
-        var arrowSchema = new Schema(fields, new List<KeyValuePair<string, string>>());
-        return arrowSchema;
-    }
-
-
+    
     public void CreateOrReplaceTempView(string name)
     {
         var task = Task.Run(async () => await CreateDataFrameViewCommand(name, true, false));
@@ -953,12 +933,11 @@ public class DataFrame
         return output;
     }
 
-    private static Task Wait(Task on)
+    private static void Wait(Task on)
     {
         try
         {
             on.Wait();
-            return on;
         }
         catch (AggregateException aggregate)
         {
@@ -1088,7 +1067,7 @@ public class DataFrame
             }
         };
 
-        return new GroupedData(SparkSession, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Cube);
+        return new GroupedData(SparkSession, relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Cube);
     }
 
     public DataStreamWriter WriteStream()
