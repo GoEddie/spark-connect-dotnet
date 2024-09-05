@@ -150,8 +150,6 @@ public class StructType : SparkDataType
 
 public class StructField
 {
-    public IDictionary<string, object> Metadata;
-
     public StructField()
     {
         Name = string.Empty;
@@ -201,7 +199,7 @@ public class StructField
 
     public IDictionary<string, object> Metadata;
 
-    private SparkDataType FromArrowType(IArrowType type)
+    private SparkDataType FromArrowType(IArrowType type) => type.TypeId switch
     {
         ArrowTypeId.Null => VoidType(),
         ArrowTypeId.Boolean => BooleanType(),
@@ -220,7 +218,7 @@ public class StructField
         ArrowTypeId.List => ArrayType(FromArrowType((type as ListType).ValueDataType), (type as ListType).ValueField.IsNullable),
         ArrowTypeId.Map => MapType(FromArrowType((type as Apache.Arrow.Types.MapType).KeyField.DataType), FromArrowType((type as Apache.Arrow.Types.MapType).ValueField.DataType), (type as Apache.Arrow.Types.MapType).ValueField.IsNullable),
         ArrowTypeId.Interval => IntervalToType(type as IntervalType),
-
+        
         _ => throw new ArgumentOutOfRangeException($"Cannot convert Arrow Type '{type}'")
     };
 

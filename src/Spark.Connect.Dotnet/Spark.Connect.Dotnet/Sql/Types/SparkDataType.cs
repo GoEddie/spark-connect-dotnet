@@ -226,7 +226,7 @@ public abstract class SparkDataType
         throw new NotImplementedException($"Missing DataType From String: '{type}'");
     }
 
-    public static SparkDataType FromDotNetType(object o)
+    public static SparkDataType FromDotNetType(object o) => o switch
     {
         int => IntType(),
         long => LongType(),
