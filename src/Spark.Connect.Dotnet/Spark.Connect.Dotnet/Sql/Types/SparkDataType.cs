@@ -28,6 +28,19 @@ public abstract class SparkDataType
         return SimpleString();
     }
 
+    public virtual string ToDdl(string name, bool nullable)
+    {
+        var ddl = new System.Text.StringBuilder();
+        ddl.Append(name);
+        ddl.Append(" ");
+        ddl.Append(this.TypeName);
+        if (!nullable)
+        {
+            ddl.Append(" NOT NULL");
+        }
+        return ddl.ToString();
+    }
+
     public static ByteType ByteType()
     {
         return new ByteType();
@@ -213,19 +226,26 @@ public abstract class SparkDataType
         throw new NotImplementedException($"Missing DataType From String: '{type}'");
     }
 
-
     public static SparkDataType FromDotNetType(object o)
     {
-        return o switch
-        {
-            int => IntType(), long => LongType(), double => DoubleType(), float => FloatType(), short => ShortType(), string => StringType(), DateTime => TimestampType()
-            , DateOnly => DateType(), byte => ByteType(), IDictionary<string, long?> => MapType(StringType(), LongType(), true)
-            , IDictionary<string, int?> => MapType(StringType(), IntType(), true), IDictionary<string, string?> => MapType(StringType(), StringType(), true)
-            , IDictionary<string, object> dict => MapType(StringType(), FromDotNetType(dict.Values.FirstOrDefault()),
-                true)
-            , string[] => ArrayType(StringType()), _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
-        };
-    }
+        int => IntType(),
+        long => LongType(),
+        double => DoubleType(),
+        float => FloatType(),
+        short => ShortType(),
+        string => StringType(),
+        DateTime => TimestampType(),
+        DateOnly => DateType(),
+        byte => ByteType(),
+        IDictionary<string, long?> => MapType(StringType(), LongType(), true),
+        IDictionary<string, int?> => MapType(StringType(), IntType(), true),
+        IDictionary<string, string?> => MapType(StringType(), StringType(), true),
+        IDictionary<string, object> dict => MapType(StringType(), FromDotNetType(dict.Values.FirstOrDefault()), true),
+
+        string[] => ArrayType(StringType()),
+
+        _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
+    };
 
     public static SparkDataType FromSparkConnectType(DataType type)
     {

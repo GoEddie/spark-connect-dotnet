@@ -2,6 +2,7 @@ using System.Text;
 using Apache.Arrow;
 using Apache.Arrow.Types;
 using Google.Protobuf.Collections;
+using Grpc.Core;
 using Spark.Connect.Dotnet.Grpc;
 using static Spark.Connect.Dotnet.Sql.Types.SparkDataType;
 
@@ -61,6 +62,7 @@ public class StructType : SparkDataType
         {
             Fields.Add(new StructField(field.Name, field.DataType, field.Nullable));
         }
+
     }
 
     public List<StructField> Fields { get; }
@@ -84,6 +86,33 @@ public class StructType : SparkDataType
         }
 
         return $"StructType<{string.Join(",", Fields.Select(GetNameAndType))}>";
+    }
+
+    public override string ToDdl(string name, bool nullable)
+    {
+        var ddl = new StringBuilder();
+        ddl.Append(name);
+        ddl.Append(" ");
+        ddl.Append(ToDdl());
+        if (!nullable)
+        {
+            ddl.Append(" NOT NULL");
+        }
+        return ddl.ToString();
+    }
+
+    public string ToDdl()
+    {
+        var ddl = new StringBuilder();
+        ddl.Append("STRUCT<");
+        ddl.Append(FieldsAsDdl());
+        ddl.Append(">");
+        return ddl.ToString();
+    }
+
+    public string FieldsAsDdl()
+    {
+        return string.Join(", ", Fields.Select(f => f.Ddl()));
     }
 
     public string Json()
@@ -158,21 +187,42 @@ public class StructField
     public SparkDataType DataType { get; set; }
     public bool Nullable { get; set; }
 
+    public string Ddl()
+    {
+        if (DataType is ArrayType arrayDataType)
+        {
+            return arrayDataType.ToDdl(Name, Nullable);
+        }
+        else
+        {
+            return DataType.ToDdl(Name, Nullable);
+        }
+    }
+
+    public IDictionary<string, object> Metadata;
+
     private SparkDataType FromArrowType(IArrowType type)
     {
-        return type.TypeId switch
-        {
-            ArrowTypeId.Null => VoidType(), ArrowTypeId.Boolean => BooleanType(), ArrowTypeId.Int8 => ByteType(), ArrowTypeId.Int16 => ShortType(), ArrowTypeId.Int32 => IntegerType()
-            , ArrowTypeId.Int64 => LongType(), ArrowTypeId.Float => FloatType(), ArrowTypeId.Double => DoubleType(), ArrowTypeId.String => StringType()
-            , ArrowTypeId.Binary => BinaryType(), ArrowTypeId.Date32 => DateType(), ArrowTypeId.Date64 => DateType(), ArrowTypeId.Timestamp => TimestampType()
-            , ArrowTypeId.Struct => StructType(), ArrowTypeId.List => ArrayType(FromArrowType((type as ListType).ValueDataType),
-                (type as ListType).ValueField.IsNullable)
-            , ArrowTypeId.Map => MapType(FromArrowType((type as Apache.Arrow.Types.MapType).KeyField.DataType),
-                FromArrowType((type as Apache.Arrow.Types.MapType).ValueField.DataType),
-                (type as Apache.Arrow.Types.MapType).ValueField.IsNullable)
-            , ArrowTypeId.Interval => IntervalToType(type as IntervalType), _ => throw new ArgumentOutOfRangeException($"Cannot convert Arrow Type '{type}'")
-        };
-    }
+        ArrowTypeId.Null => VoidType(),
+        ArrowTypeId.Boolean => BooleanType(),
+        ArrowTypeId.Int8 => ByteType(),
+        ArrowTypeId.Int16 => ShortType(),
+        ArrowTypeId.Int32 => IntegerType(),
+        ArrowTypeId.Int64 => LongType(),
+        ArrowTypeId.Float => FloatType(),
+        ArrowTypeId.Double => DoubleType(),
+        ArrowTypeId.String => StringType(),
+        ArrowTypeId.Binary => BinaryType(),
+        ArrowTypeId.Date32 => DateType(),
+        ArrowTypeId.Date64 => DateType(),
+        ArrowTypeId.Timestamp => TimestampType(),
+        ArrowTypeId.Struct => StructType(),
+        ArrowTypeId.List => ArrayType(FromArrowType((type as ListType).ValueDataType), (type as ListType).ValueField.IsNullable),
+        ArrowTypeId.Map => MapType(FromArrowType((type as Apache.Arrow.Types.MapType).KeyField.DataType), FromArrowType((type as Apache.Arrow.Types.MapType).ValueField.DataType), (type as Apache.Arrow.Types.MapType).ValueField.IsNullable),
+        ArrowTypeId.Interval => IntervalToType(type as IntervalType),
+
+        _ => throw new ArgumentOutOfRangeException($"Cannot convert Arrow Type '{type}'")
+    };
 
     private SparkDataType IntervalToType(IntervalType type)
     {
