@@ -42,11 +42,11 @@ jobs:
     
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.12'
     
     - uses: actions/setup-java@v4
       with:
-        java-version: '8'
+        java-version: '17'
         distribution: temurin
     
     - uses: vemonet/setup-spark@v1
@@ -57,7 +57,7 @@ jobs:
     
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
 
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.2
+    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.0-preview1
     
     - name: Install dependencies
       working-directory: ./src
@@ -81,11 +81,11 @@ jobs:
 
     - name: Pack
       working-directory: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/
-      run: dotnet pack --no-build --configuration Release --output nupkgs /p:PackageVersion=3.5.1-beta-${{ github.run_number }}
+      run: dotnet pack --no-build --configuration Release --output nupkgs /p:PackageVersion=4.0.0preview-beta-${{ github.run_number }}
     
     - name: Upload test results
       uses: actions/upload-artifact@v2
       with:
-        name: NuGet-3.5.1-beta-${{ github.run_number }}
+        name: NuGet-4.0.0preview-beta-${{ github.run_number }}
         path: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/nupkgs/*.nupkg
 
