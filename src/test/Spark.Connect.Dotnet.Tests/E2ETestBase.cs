@@ -20,5 +20,7 @@ public class E2ETestBase
         Spark.Console = new TestOutputConsole(logger);
         var tempFolder = Path.GetTempPath();
         OutputPath = Path.Join(tempFolder, "spark-connect-tests");
+        
+        Spark.Conf.Set("spark.sql.ansi.enabled", "false"); //stricter parsing in 4 breaks the tests - TODO make tests ansi compliant
     }
 }

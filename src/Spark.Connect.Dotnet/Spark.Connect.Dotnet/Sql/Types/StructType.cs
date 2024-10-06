@@ -213,6 +213,7 @@ public class StructField
         ArrowTypeId.Binary => BinaryType(),
         ArrowTypeId.Date32 => DateType(),
         ArrowTypeId.Date64 => DateType(),
+        ArrowTypeId.Decimal128 => DecimalType(),
         ArrowTypeId.Timestamp => TimestampType(),
         ArrowTypeId.Struct => StructType(),
         ArrowTypeId.List => ArrayType(FromArrowType((type as ListType).ValueDataType), (type as ListType).ValueField.IsNullable),

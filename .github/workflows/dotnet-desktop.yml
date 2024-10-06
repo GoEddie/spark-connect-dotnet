@@ -49,6 +49,33 @@ jobs:
         java-version: '17'
         distribution: temurin
     
+    - name: Install dependencies
+      working-directory: ./src
+      run: dotnet restore
+
+    - name: Build the project
+      working-directory: ./src
+      run: dotnet build --configuration Release --no-restore
+
+    - uses: vemonet/setup-spark@v1
+      with:
+        spark-version: '3.5.3'
+        hadoop-version: '3'
+    
+    - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
+
+    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:3.5.3
+
+    - name: Execute unit tests
+      working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
+      run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results3.xml" --filter "SparkMinVersion!=4"
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: Test Results
+        path: ./test_results3.xml
+
     - uses: vemonet/setup-spark@v1
       with:
         spark-url: https://archive.apache.org/dist/spark/spark-4.0.0-preview1/spark-4.0.0-preview1-bin-hadoop3.tgz
@@ -58,26 +85,16 @@ jobs:
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
 
     - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.0-preview1
-    
-    - name: Install dependencies
-      working-directory: ./src
-      run: dotnet restore
 
-    - name: Build the project
-      working-directory: ./src
-      run: dotnet build --configuration Release --no-restore
-
-
-    # Execute all unit tests in the solution
     - name: Execute unit tests
       working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
-      run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results.xml"
+      run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results4.xml" --filter "SparkMinVersion=4"
 
     - name: Upload test results
       uses: actions/upload-artifact@v2
       with:
         name: Test Results
-        path: ./test_results.xml
+        path: ./test_results4.xml
 
     - name: Pack
       working-directory: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/

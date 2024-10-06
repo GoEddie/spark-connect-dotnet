@@ -601,6 +601,8 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     public void Grouping_Test()
     {
         var df = Spark.CreateDataFrame(ToRows(ToRow("Alice", 2), ToRow("Bob", 5)), "name", "age");
+        df.Cube("name").Agg(Grouping("name"), Sum("age")).Show();
+
         df.Cube("name").Agg(Grouping("name"), Sum("age")).OrderBy("name").Show();
         df.Cube("name").Agg(Grouping("name"), Sum("age")).OrderBy("name").Collect();
     }
@@ -1534,6 +1536,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
 
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void ParseJson_Test()
     {
         var df = Spark.Range(10).WithColumn("a", ParseJson(Lit("{\"abc\": 123}")));
@@ -1543,6 +1546,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
     
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void TryParseJson_Test()
     {
         var df = Spark.Range(10).WithColumn("a", TryParseJson(Lit("cxcaal;dkcfas;l{\"abc\": 123}")));
@@ -1552,6 +1556,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
 
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void VariantGet_Test()
     {
         var df = Spark.Range(10).WithColumn("a", ParseJson(Lit("{\"abc\": 123}")));
@@ -1560,6 +1565,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
 
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void TryVariantGet_Test()
     {
         var df = Spark.Range(10).WithColumn("a", ParseJson(Lit("{\"abc\": 123}")));
@@ -1571,6 +1577,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
     
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void IsVariantNull_Test()
     {
         var df = Spark.Range(10).WithColumn("a", TryParseJson(Lit("{\"a\": null")));
@@ -1580,6 +1587,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
     
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void SchemaOfVariant_Test()
     {
         var df = Spark.Range(1).WithColumn("a", ParseJson(Lit("{\"a\": 123.0}")));
@@ -1589,6 +1597,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
     
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void SchemaOfVariantAgg_Test()
     {
         var df = Spark.Range(1).WithColumn("a", ParseJson(Lit("{\"a\": 123.0}")));
@@ -1598,6 +1607,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
 
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void SchemaOfXml_Test()
     {
         var df = Spark.Range(1).WithColumn("x", Lit("<p><a>1</a><a>2</a></p>"));
@@ -1605,6 +1615,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
     
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void FromXml_Test()
     {
         var df = Spark.Range(1).WithColumn("x", Lit("<p><a>1</a><a>2</a></p>"));
@@ -1612,6 +1623,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
 
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void TryRemainder_Test()
     {
         var df = Spark.Range(10).WithColumnRenamed("id", "a").WithColumn("b", Lit(0));
@@ -1646,24 +1658,28 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
 
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void Monthname_Test()
     {
         Spark.Sql("SELECT current_timestamp() as ct").Select(Monthname("ct")).Show();
     }
 
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void Dayname_Test()
     {
         Spark.Sql("SELECT current_timestamp() as ct").Select(Dayname("ct")).Show();
     }
 
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void TimestampDiff_Test()
     {
         Spark.Sql("SELECT current_timestamp() as ct, current_timestamp()  as end").Select(TimestampDiff("MICROSECOND", "ct", "end")).Show();
     }
     
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void TimestampAdd_Test()
     {
         Spark.Sql("SELECT current_timestamp() as ct").Select(TimestampAdd("YEAR", 10000, "ct")).Show();
@@ -1676,6 +1692,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
 
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void Collate_Test()
     {
         Spark.Conf.Set("spark.sql.collation.enabled", "true");  //is hidden behind feature flag
@@ -1685,6 +1702,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
     
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void Collation_Test()
     {
         Spark.Conf.Set("spark.sql.collation.enabled", "true");  //is hidden behind feature flag

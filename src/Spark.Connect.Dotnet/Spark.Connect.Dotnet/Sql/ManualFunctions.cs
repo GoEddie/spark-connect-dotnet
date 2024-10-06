@@ -3006,6 +3006,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column SessionUser() => new Column(FunctionWrappedCall("session_user", false));
 
+    
     public static Column Collate(string col, string collation) => Collate(Col(col), Lit(collation));
     public static Column Collate(Column col, Column collation)
     {

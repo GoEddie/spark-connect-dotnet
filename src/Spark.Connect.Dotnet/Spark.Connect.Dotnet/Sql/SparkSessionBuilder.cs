@@ -184,6 +184,7 @@ public static class SparkDotnetKnownConfigKeys
 {
     public const string GrpcLogging = RuntimeConf.SparkDotnetConfigKey + "grpclogging";
     public const string PrintMetrics = RuntimeConf.SparkDotnetConfigKey + "showmetrics";
+    public const string DontDecodeArrow = RuntimeConf.SparkDotnetConfigKey + "dontdecodearrow";
 }
 
 public class RuntimeConf

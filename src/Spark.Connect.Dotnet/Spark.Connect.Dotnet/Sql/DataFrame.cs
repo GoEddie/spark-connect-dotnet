@@ -153,6 +153,14 @@ public class DataFrame
                 Root = Relation
             };
 
+            if (plan.Root.Common == null)
+            {
+                plan.Root.Common = new RelationCommon()
+                {
+                    PlanId = SparkSession.GetPlanId()
+                };
+            }
+
             var explain = GrpcInternal.Schema(SparkSession.GrpcClient, SparkSession.SessionId, plan,
                 SparkSession.Headers,
                 SparkSession.UserContext, SparkSession.ClientType, false, "");
@@ -188,6 +196,14 @@ public class DataFrame
             }
         };
 
+        if (limitPlan.Root.Common == null)
+        {
+            limitPlan.Root.Common = new RelationCommon()
+            {
+                PlanId = SparkSession.GetPlanId()
+            };
+        }
+
         return new DataFrame(SparkSession, limitPlan.Root, _schema);
     }
 
@@ -217,11 +233,15 @@ public class DataFrame
         {
             Root = new Relation
             {
+                Common = new RelationCommon()
+                {
+                    PlanId = session.GetPlanId()
+                },
                 ShowString = new ShowString
                 {
                     Truncate = truncate, Input = input, NumRows = numberOfRows, Vertical = vertical
                 }
-            }
+            },
         };
         
         var executor = new RequestExecutor(session, showStringPlan);
@@ -266,8 +286,16 @@ public class DataFrame
     {
         var plan = new Plan
         {
-            Root = relation
+            Root = relation,
         };
+
+        if (plan.Root.Common == null)
+        {
+            plan.Root.Common = new RelationCommon()
+            {
+                PlanId = SparkSession.GetPlanId()
+            };
+        } 
 
         GrpcInternal.Schema(SparkSession.GrpcClient, SparkSession.SessionId, plan, SparkSession.Headers, SparkSession.UserContext, SparkSession.ClientType, false, "");
     }
@@ -533,15 +561,16 @@ public class DataFrame
     {
         Column WrapSortOrderCols(Column column)
         {
-            if (column.Expression.SortOrder == null)
-            {
-                column.Expression.SortOrder = new Expression.Types.SortOrder
-                {
-                    Child = column.Expression, Direction = Expression.Types.SortOrder.Types.SortDirection.Unspecified
-                    , NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
-                };
-            }
-
+            // if (column.Expression.SortOrder == null)
+            // {
+            //     column.Expression.SortOrder = new Expression.Types.SortOrder
+            //     {
+            //         // Child = column.Expression, 
+            //         Direction = Expression.Types.SortOrder.Types.SortDirection.Unspecified, 
+            //         NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
+            //     };
+            // }
+            
             return column;
         }
 
@@ -1066,8 +1095,8 @@ public class DataFrame
                 Input = Relation, GroupingExpressions = { cols.Select(p => p.Expression) }
             }
         };
-
-        return new GroupedData(SparkSession, relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Cube);
+        //TODO - is this working?
+        return new GroupedData(SparkSession, Relation, cols.Select(p => p.Expression), Aggregate.Types.GroupType.Cube);
     }
 
     public DataStreamWriter WriteStream()

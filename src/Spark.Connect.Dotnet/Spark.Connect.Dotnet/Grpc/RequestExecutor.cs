@@ -41,6 +41,14 @@ public class RequestExecutor : IDisposable
     private StreamingQueryCommandResult.Types.ExceptionResult? _streamingQueryException;
     private StreamingQueryCommandResult.Types.RecentProgressResult? _streamingProgress;
 
+    private enum RetryableState
+    {
+        Network,
+        Processing
+    }
+
+    private RetryableState _retryableState = RetryableState.Processing;
+    
     public RequestExecutor(SparkSession session, Plan plan)
     {
         _logger = GetLogger(session);
@@ -94,8 +102,10 @@ public class RequestExecutor : IDisposable
         
         try
         {
+            _retryableState = RetryableState.Network;
             var response = GetResponse();
             await response.ResponseStream.MoveNext();
+            _retryableState = RetryableState.Processing;
             
             while (response.ResponseStream.Current != null)
             {
@@ -134,9 +144,15 @@ public class RequestExecutor : IDisposable
                     }
                     else
                     {
-                        _rows.AddRange(await wrapper.ArrowBatchToRows(current.ArrowBatch, _schema));    
+                        if (!_session.Conf.IsTrue(SparkDotnetKnownConfigKeys.DontDecodeArrow))
+                        {
+                            _rows.AddRange(await wrapper.ArrowBatchToRows(current.ArrowBatch, _schema));    
+                        }
+                        else
+                        {
+                            _logger.Log(GrpcLoggingLevel.Verbose, "Not decoding Arrow as DontDecodeArrow is true");
+                        }
                     }
-                    
                 }
 
                 if (current.Metrics != null)
@@ -178,7 +194,6 @@ public class RequestExecutor : IDisposable
                     _streamingProgress = current.StreamingQueryCommandResult.RecentProgress;
                 }
                 
-                
                 //ResponseId always has to come last because it is the marker to tell the server
                 // where we are if we get disconnected, if we haven't finished reading the response 
                 // then we can ask for it again (_lastResponseId)
@@ -215,6 +230,11 @@ public class RequestExecutor : IDisposable
                 _logger.Log(GrpcLoggingLevel.Warn, "Request was killed from the server {0}", ex.Message);
                 throw;
             }
+
+            if (_retryableState == RetryableState.Processing)
+            {
+                throw; 
+            }
         }
 
         return true;
@@ -232,7 +252,6 @@ public class RequestExecutor : IDisposable
         {
             var request = CreateReattachRequest();
             _logger.Log(GrpcLoggingLevel.Verbose, "Calling ReattachExecute Plan on session {0}", _session.SessionId);
-             Thread.Sleep(TimeSpan.FromSeconds(30));
             return _session.GrpcClient.ReattachExecute(request, _session.Headers, null, GetScheduledCancellationToken());
         }
     }

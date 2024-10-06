@@ -141,6 +141,16 @@ public abstract class SparkDataType
         return new VariantType();
     }
 
+    public static NullType NullType()
+    {
+        return new NullType();
+    }
+
+    public static DecimalType DecimalType()
+    {
+        return new DecimalType();
+    }
+
     public static SparkDataType FromString(string type)
     {
         var lower = type.ToLowerInvariant();
@@ -163,6 +173,9 @@ public abstract class SparkDataType
             case "int":
             case "int32":
                 return new IntegerType();
+            
+            case "decimal":
+                return new DecimalType();
 
             case "byte":
                 return new ByteType();
@@ -181,6 +194,7 @@ public abstract class SparkDataType
                 return new BooleanType();
 
             case "null":
+                return new NullType();
             case "void":
                 return new VoidType();
 
@@ -326,6 +340,21 @@ public abstract class SparkDataType
             return new VariantType();
         }
 
-        throw new NotImplementedException();
+        if (type.Float != null)
+        {
+            return new FloatType();
+        }
+
+        if (type.Null != null)
+        {
+            return new NullType();
+        }
+
+        if (type.Decimal != null)
+        {
+            return new DecimalType();
+        }
+        
+        throw new NotImplementedException($"Need Type For '{type.KindCase}'");
     }
 }

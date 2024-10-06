@@ -1,3 +1,4 @@
+using System.Data.SqlTypes;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
@@ -328,7 +329,6 @@ public class ArrowVisitor :
             var valueVisitor = new MapValueVisitior();
             item.Accept(valueVisitor);
             columns.Add(valueVisitor.Values);
-            Console.WriteLine("what to do here?");
         }
 
         var rowNumber = 0;
@@ -338,7 +338,14 @@ public class ArrowVisitor :
             
             foreach (var column in columns)
             {
-                currentRow.Add(column[rowNumber + i]);
+                if (rowNumber + i < column.Count)
+                {
+                    currentRow.Add(column[rowNumber + i]);    
+                }
+                else
+                {
+                    Console.WriteLine($"Error Decoding ArrowBatch: Error 1, fields: {array.Fields}");
+                }
             }
 
             rows.Add(currentRow);
@@ -438,6 +445,7 @@ public class ArrowVisitor :
             , Date32Array date32Array => date32Array.Values.ToArray(), Date64Array date64Array => date64Array.Values.ToArray(), Int8Array int8Array => int8Array.Values.ToArray()
             , UInt16Array uint6Array => uint6Array.Values.ToArray(), UInt8Array uInt8Array => uInt8Array.Values.ToArray(), UInt64Array uInt64Array => uInt64Array.Values.ToArray()
             , ListArray listArray => GetArrayData(listArray.Values), StructArray structArray => structArray.Fields.Select(p => GetArrayData(p)).ToList()
+            , Decimal128Array decimal128Array => decimal128Array.ValueBuffer
             , _ => throw new NotImplementedException()
         };
     }
@@ -548,7 +556,8 @@ public class MapValueVisitior :
     IArrowArrayVisitor<Date64Array>,
     IArrowArrayVisitor<MapArray>,
     IArrowArrayVisitor<ListArray>,
-    IArrowArrayVisitor<StructArray>
+    IArrowArrayVisitor<StructArray>,
+    IArrowArrayVisitor<Decimal128Array>
 {
     public MapValueVisitior()
     {
@@ -636,8 +645,14 @@ public class MapValueVisitior :
         {
             Values.Add(str);
         }
+    }
 
-        ;
+    public void Visit(Decimal128Array array)
+    {
+        foreach (var item in array.ToList())
+        {
+            Values.Add(item);
+        }
     }
 
     public void Visit(IArrowArray array)

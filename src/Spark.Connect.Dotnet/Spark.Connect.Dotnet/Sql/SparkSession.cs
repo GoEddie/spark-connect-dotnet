@@ -32,7 +32,7 @@ public class SparkSession
 
     public readonly string SessionId;
 
-    private int _planId;
+    private int _planId = 1;
     public LocalConsole Console;
 
     /// <summary>
@@ -206,9 +206,7 @@ public class SparkSession
         }
     }
 
-
-    //TODO: Should we be setting plan id everytime we send a new plan?
-    //      - should we be caching existing plans?
+    
     public int GetPlanId()
     {
         return _planId++;
