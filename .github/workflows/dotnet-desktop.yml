@@ -71,7 +71,7 @@ jobs:
       run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results3.xml" --filter "SparkMinVersion!=4"
 
     - name: Upload test results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: Test Results
         path: ./test_results3.xml
@@ -91,7 +91,7 @@ jobs:
       run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results4.xml" --filter "SparkMinVersion=4"
 
     - name: Upload test results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: Test Results
         path: ./test_results4.xml
@@ -101,7 +101,7 @@ jobs:
       run: dotnet pack --no-build --configuration Release --output nupkgs /p:PackageVersion=4.0.0preview-beta-${{ github.run_number }}
     
     - name: Upload test results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: NuGet-4.0.0preview-beta-${{ github.run_number }}
         path: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/nupkgs/*.nupkg
