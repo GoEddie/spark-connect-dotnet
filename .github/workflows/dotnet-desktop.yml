@@ -66,8 +66,6 @@ jobs:
 
     - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.3
 
-    - run: cat /home/runner/work/spark-connect-dotnet/spark-3.5.3-bin-hadoop3/logs/*.out
-
     - name: Execute unit tests
       working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
       run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results3.xml" --filter "SparkMinVersion!=4"
