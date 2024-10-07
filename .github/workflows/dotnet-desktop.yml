@@ -64,9 +64,7 @@ jobs:
     
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
 
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:3.5.3
-        
-    - run: sleep 30
+    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.3
 
     - run: cat /home/runner/work/spark-connect-dotnet/spark-3.5.3-bin-hadoop3/logs/*.out
 
