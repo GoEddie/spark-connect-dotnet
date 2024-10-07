@@ -65,9 +65,11 @@ jobs:
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
 
     - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:3.5.3 -conf spark.connect.server.log.file=/home/runner/work/spark-connect-dotnet/spark-3.5.3-bin-hadoop3/logs/spark-runner-org.apache.spark.sql.connect.service.SparkConnectServer-353.log
-    
+        
+    - run: sleep 30
+
     - run: cat /home/runner/work/spark-connect-dotnet/spark-3.5.3-bin-hadoop3/logs/spark-runner-org.apache.spark.sql.connect.service.SparkConnectServer-353.log
-    
+
     - name: Execute unit tests
       working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
       run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results3.xml" --filter "SparkMinVersion!=4"
@@ -85,7 +87,8 @@ jobs:
         hadoop-version: '3'
     
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
-
+    
+    
     - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.0-preview1
 
     - name: Execute unit tests
