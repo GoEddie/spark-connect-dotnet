@@ -437,28 +437,28 @@ public partial class Functions : FunctionsWrapper
     /// <Summary>Returns a new :class:`Column` for distinct count of ``col`` or ``cols``.</Summary>
     public static Column CountDistinct(List<string> cols)
     {
-        return new Column(FunctionWrappedCall("count", true, cols.ToArray()));
+        return new Column(CreateExpression("count", true, cols.ToArray()));
     }
 
     /// <param name="cols">List&lt;Column&gt;</param>
     /// <Summary>Returns a new :class:`Column` for distinct count of ``col`` or ``cols``.</Summary>
     public static Column CountDistinct(List<Column> cols)
     {
-        return new Column(FunctionWrappedCall("count", true, cols.ToArray()));
+        return new Column(CreateExpression("count", true, cols.ToArray()));
     }
 
     /// <param name="col">String</param>
     /// <Summary>Returns a new :class:`Column` for distinct count of ``col`` or ``cols``.</Summary>
     public static Column CountDistinct(string col)
     {
-        return new Column(FunctionWrappedCall("count", true, col));
+        return new Column(CreateExpression("count", true, col));
     }
 
     /// <param name="col">Column</param>
     /// <Summary>Returns a new :class:`Column` for distinct count of ``col`` or ``cols``.</Summary>
     public static Column CountDistinct(Column col)
     {
-        return new Column(FunctionWrappedCall("count", true, col));
+        return new Column(CreateExpression("count", true, col));
     }
 
     /// <summary>
@@ -472,7 +472,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns>Col</returns>
     public static Column DatePart(Expression field, Column source)
     {
-        return new Column(FunctionWrappedCall("date_part", false, field, source));
+        return new Column(CreateExpression("date_part", false, field, source));
     }
 
     /// <summary>
@@ -486,7 +486,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns>Col</returns>
     public static Column DatePart(Expression field, string source)
     {
-        return new Column(FunctionWrappedCall("date_part", false, field, Column(source)));
+        return new Column(CreateExpression("date_part", false, field, Column(source)));
     }
 
     /// <summary>
@@ -500,7 +500,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns>Col</returns>
     public static Column DatePart(Column field, Column source)
     {
-        return new Column(FunctionWrappedCall("date_part", false, field, source));
+        return new Column(CreateExpression("date_part", false, field, source));
     }
 
     /// <summary>
@@ -514,7 +514,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns>Col</returns>
     public static Column DatePart(Column field, string source)
     {
-        return new Column(FunctionWrappedCall("date_part", false, field, Column(source)));
+        return new Column(CreateExpression("date_part", false, field, Column(source)));
     }
 
 
@@ -529,7 +529,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns>Col</returns>
     public static Column Extract(Column field, Column source)
     {
-        return new Column(FunctionWrappedCall("extract", false, field, source));
+        return new Column(CreateExpression("extract", false, field, source));
     }
 
     /// <summary>
@@ -543,7 +543,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns>Col</returns>
     public static Column Extract(Column field, string source)
     {
-        return new Column(FunctionWrappedCall("extract", false, field, Column(source)));
+        return new Column(CreateExpression("extract", false, field, Column(source)));
     }
 
 
@@ -554,7 +554,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column TryToNumber(string col, string format)
     {
-        return new Column(FunctionWrappedCall("try_to_number", false, Col(col), Lit(format)));
+        return new Column(CreateExpression("try_to_number", false, Col(col), Lit(format)));
     }
 
     /// <Summary>
@@ -564,7 +564,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column TryToNumber(Column col, string format)
     {
-        return new Column(FunctionWrappedCall("try_to_number", false, col, Lit(format)));
+        return new Column(CreateExpression("try_to_number", false, col, Lit(format)));
     }
 
     /// <Summary>
@@ -574,7 +574,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column TryToNumber(Column col, Column format)
     {
-        return new Column(FunctionWrappedCall("try_to_number", false, col, format));
+        return new Column(CreateExpression("try_to_number", false, col, format));
     }
 
     /// <Summary>
@@ -585,7 +585,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column TryElementAt(Column col, Column extraction)
     {
-        return new Column(FunctionWrappedCall("try_element_at", false, col, extraction));
+        return new Column(CreateExpression("try_element_at", false, col, extraction));
     }
 
     /// <Summary>
@@ -596,7 +596,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column TryElementAt(string col, Column extraction)
     {
-        return new Column(FunctionWrappedCall("try_element_at", false, Col(col), extraction));
+        return new Column(CreateExpression("try_element_at", false, Col(col), extraction));
     }
 
 
@@ -617,7 +617,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column ToVarchar(string col, string format)
     {
-        return new Column(FunctionWrappedCall("to_varchar", false, Col(col), Lit(format)));
+        return new Column(CreateExpression("to_varchar", false, Col(col), Lit(format)));
     }
 
     /// <Summary>
@@ -637,7 +637,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column ToVarchar(Column col, string format)
     {
-        return new Column(FunctionWrappedCall("to_varchar", false, col, Lit(format)));
+        return new Column(CreateExpression("to_varchar", false, col, Lit(format)));
     }
 
     /// <Summary>
@@ -657,7 +657,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column ToVarchar(Column col, Column format)
     {
-        return new Column(FunctionWrappedCall("to_varchar", false, col, format));
+        return new Column(CreateExpression("to_varchar", false, col, format));
     }
 
     /// <Summary>
@@ -669,7 +669,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column SplitPart(string src, Column delimiter, Column partNum)
     {
-        return new Column(FunctionWrappedCall("split_part", false, Col(src), delimiter, partNum));
+        return new Column(CreateExpression("split_part", false, Col(src), delimiter, partNum));
     }
 
     /// <Summary>
@@ -681,7 +681,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column SplitPart(Column src, Column delimiter, Column partNum)
     {
-        return new Column(FunctionWrappedCall("split_part", false, src, delimiter, partNum));
+        return new Column(CreateExpression("split_part", false, src, delimiter, partNum));
     }
 
     /// <Summary>
@@ -693,7 +693,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column SplitPart(string src, string delimiter, string partNum)
     {
-        return new Column(FunctionWrappedCall("split_part", false, Col(src), Col(delimiter), Col(partNum)));
+        return new Column(CreateExpression("split_part", false, Col(src), Col(delimiter), Col(partNum)));
     }
 
     /// <Summary>
@@ -708,7 +708,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column HistogramNumeric(string col, Column nBins)
     {
-        return new Column(FunctionWrappedCall("histogram_numeric", false, Col(col), nBins));
+        return new Column(CreateExpression("histogram_numeric", false, Col(col), nBins));
     }
 
     /// <Summary>
@@ -723,7 +723,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column HistogramNumeric(Column col, Column nBins)
     {
-        return new Column(FunctionWrappedCall("histogram_numeric", false, col, nBins));
+        return new Column(CreateExpression("histogram_numeric", false, col, nBins));
     }
 
     /// <Summary>
@@ -734,7 +734,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column Sha2(string col, Column numBits)
     {
-        return new Column(FunctionWrappedCall("sha2", false, col, numBits));
+        return new Column(CreateExpression("sha2", false, col, numBits));
     }
 
     /// <Summary>
@@ -745,7 +745,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column Sha2(Column col, Column numBits)
     {
-        return new Column(FunctionWrappedCall("sha2", false, col, numBits));
+        return new Column(CreateExpression("sha2", false, col, numBits));
     }
 
 
@@ -758,7 +758,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns></returns>
     public static Column Atan2(string col1, string col2)
     {
-        return new Column(FunctionWrappedCall("atan2", false, Col(col1), Col(col2)));
+        return new Column(CreateExpression("atan2", false, Col(col1), Col(col2)));
     }
 
 
@@ -771,7 +771,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns></returns>
     public static Column Atan2(Column col1, Column col2)
     {
-        return new Column(FunctionWrappedCall("atan2", false, col1, col2));
+        return new Column(CreateExpression("atan2", false, col1, col2));
     }
 
 
@@ -784,7 +784,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns></returns>
     public static Column Atan2(Column col1, string col2)
     {
-        return new Column(FunctionWrappedCall("atan2", false, col1, Col(col2)));
+        return new Column(CreateExpression("atan2", false, col1, Col(col2)));
     }
 
     /// <summary>
@@ -796,7 +796,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns></returns>
     public static Column Atan2(string col1, Column col2)
     {
-        return new Column(FunctionWrappedCall("atan2", false, Col(col1), col2));
+        return new Column(CreateExpression("atan2", false, Col(col1), col2));
     }
 
     /// <summary>
@@ -808,7 +808,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns></returns>
     public static Column Atan2(float col1, float col2)
     {
-        return new Column(FunctionWrappedCall("atan2", false, Lit(col1), Lit(col2)));
+        return new Column(CreateExpression("atan2", false, Lit(col1), Lit(col2)));
     }
 
     /// <summary>
@@ -820,7 +820,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns></returns>
     public static Column Atan2(Column col1, float col2)
     {
-        return new Column(FunctionWrappedCall("atan2", false, col1, Lit(col2)));
+        return new Column(CreateExpression("atan2", false, col1, Lit(col2)));
     }
 
     /// <summary>
@@ -832,7 +832,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns></returns>
     public static Column Atan2(float col1, Column col2)
     {
-        return new Column(FunctionWrappedCall("atan2", false, Lit(col1), col2));
+        return new Column(CreateExpression("atan2", false, Lit(col1), col2));
     }
 
 
@@ -845,7 +845,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns></returns>
     public static Column Atan2(string col1, float col2)
     {
-        return new Column(FunctionWrappedCall("atan2", false, Col(col1), Lit(col2)));
+        return new Column(CreateExpression("atan2", false, Col(col1), Lit(col2)));
     }
 
     /// <Summary>
@@ -854,7 +854,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column Reflect(params Column[] cols)
     {
-        return new Column(FunctionWrappedCall("reflect", false, cols));
+        return new Column(CreateExpression("reflect", false, cols));
     }
 
     /// <Summary>
@@ -863,7 +863,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column Reflect(params string[] cols)
     {
-        return new Column(FunctionWrappedCall("reflect", false, cols.Select(Col).ToArray()));
+        return new Column(CreateExpression("reflect", false, cols.Select(Col).ToArray()));
     }
 
     /// <Summary>
@@ -889,12 +889,12 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column When(Column condition, Column value)
     {
-        return new Column(FunctionWrappedCall("when", false, condition, value));
+        return new Column(CreateExpression("when", false, condition, value));
     }
 
     public static Column When(Column condition, object value)
     {
-        return new Column(FunctionWrappedCall("when", false, condition, Lit(value)));
+        return new Column(CreateExpression("when", false, condition, Lit(value)));
     }
 
     public static Column Expr(string expression)
@@ -910,7 +910,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column AddMonths(Column start, Column months)
     {
-        return new Column(FunctionWrappedCall("add_months", false, start, months));
+        return new Column(CreateExpression("add_months", false, start, months));
     }
 
     public static Column AddMonths(Column start, int months)
@@ -930,148 +930,148 @@ public partial class Functions : FunctionsWrapper
 
     public static Column ApproxCountDistinct(Column col, double rsd = 0.05F)
     {
-        return new Column(FunctionWrappedCall("approx_count_distinct", false, col, rsd));
+        return new Column(CreateExpression("approx_count_distinct", false, col, rsd));
     }
 
     public static Column ApproxCountDistinct(string col, double rsd = 0.05F)
     {
-        return new Column(FunctionWrappedCall("approx_count_distinct", false, Col(col), rsd));
+        return new Column(CreateExpression("approx_count_distinct", false, Col(col), rsd));
     }
 
     public static Column ApproxCountDistinct(string col, Column rsd)
     {
-        return new Column(FunctionWrappedCall("approx_count_distinct", false, Col(col), rsd));
+        return new Column(CreateExpression("approx_count_distinct", false, Col(col), rsd));
     }
 
     public static Column ApproxCountDistinct(Column col, Column rsd)
     {
-        return new Column(FunctionWrappedCall("approx_count_distinct", false, col, rsd));
+        return new Column(CreateExpression("approx_count_distinct", false, col, rsd));
     }
 
     public static Column ApproxPercentile(Column col, float percentage, long accuracy = 10000)
     {
-        return new Column(FunctionWrappedCall("approx_percentile", false, col, Lit(percentage), Lit(accuracy)));
+        return new Column(CreateExpression("approx_percentile", false, col, Lit(percentage), Lit(accuracy)));
     }
 
 
     public static Column ApproxPercentile(Column col, float[] percentages, long accuracy = 10000)
     {
-        return new Column(FunctionWrappedCall("approx_percentile", false, col, Lit(percentages), Lit(accuracy)));
+        return new Column(CreateExpression("approx_percentile", false, col, Lit(percentages), Lit(accuracy)));
     }
 
     public static Column ApproxPercentile(string col, float percentage, long accuracy = 10000)
     {
-        return new Column(FunctionWrappedCall("approx_percentile", false, Col(col), Lit(percentage), Lit(accuracy)));
+        return new Column(CreateExpression("approx_percentile", false, Col(col), Lit(percentage), Lit(accuracy)));
     }
 
     public static Column ApproxPercentile(Column col, Column percentages, Column accuracy)
     {
-        return new Column(FunctionWrappedCall("approx_percentile", false, col, percentages, accuracy));
+        return new Column(CreateExpression("approx_percentile", false, col, percentages, accuracy));
     }
 
     public static Column ArrayJoin(string col, string delimiter, string? nullReplacement = null)
     {
         if (string.IsNullOrEmpty(nullReplacement))
         {
-            return new Column(FunctionWrappedCall("array_join", false, Col(col), Lit(delimiter)));
+            return new Column(CreateExpression("array_join", false, Col(col), Lit(delimiter)));
         }
 
-        return new Column(FunctionWrappedCall("array_join", false, Col(col), Lit(delimiter), Lit(nullReplacement)));
+        return new Column(CreateExpression("array_join", false, Col(col), Lit(delimiter), Lit(nullReplacement)));
     }
 
     public static Column ArrayJoin(Column col, string delimiter, string? nullReplacement = null)
     {
         if (string.IsNullOrEmpty(nullReplacement))
         {
-            return new Column(FunctionWrappedCall("array_join", false, col, Lit(delimiter)));
+            return new Column(CreateExpression("array_join", false, col, Lit(delimiter)));
         }
 
-        return new Column(FunctionWrappedCall("array_join", false, col, Lit(delimiter), Lit(nullReplacement)));
+        return new Column(CreateExpression("array_join", false, col, Lit(delimiter), Lit(nullReplacement)));
     }
 
     public static Column ArrayJoin(Column col, Column delimiter)
     {
-        return new Column(FunctionWrappedCall("array_join", false, col, delimiter));
+        return new Column(CreateExpression("array_join", false, col, delimiter));
     }
 
     public static Column ArrayJoin(Column col, Column delimiter, Column nullReplacement)
     {
-        return new Column(FunctionWrappedCall("array_join", false, col, delimiter, nullReplacement));
+        return new Column(CreateExpression("array_join", false, col, delimiter, nullReplacement));
     }
 
     public static Column ArrayInsert(Column col, int pos, Column value)
     {
-        return new Column(FunctionWrappedCall("array_insert", false, col, Lit(pos), value));
+        return new Column(CreateExpression("array_insert", false, col, Lit(pos), value));
     }
 
     public static Column ArrayInsert(Column col, Column pos, Column value)
     {
-        return new Column(FunctionWrappedCall("array_insert", false, col, pos, value));
+        return new Column(CreateExpression("array_insert", false, col, pos, value));
     }
 
     public static Column ArrayRepeat(Column col, int count)
     {
-        return new Column(FunctionWrappedCall("array_repeat", false, col, Lit(count)));
+        return new Column(CreateExpression("array_repeat", false, col, Lit(count)));
     }
 
     public static Column ArrayRepeat(Column col, Column count)
     {
-        return new Column(FunctionWrappedCall("array_repeat", false, col, count));
+        return new Column(CreateExpression("array_repeat", false, col, count));
     }
 
     public static Column ArrayRepeat(string col, int count)
     {
-        return new Column(FunctionWrappedCall("array_repeat", false, Col(col), Lit(count)));
+        return new Column(CreateExpression("array_repeat", false, Col(col), Lit(count)));
     }
 
     public static Column ArrayRepeat(string col, Column count)
     {
-        return new Column(FunctionWrappedCall("array_repeat", false, Col(col), count));
+        return new Column(CreateExpression("array_repeat", false, Col(col), count));
     }
 
     public static Column AssertTrue(Column col, string? errorMessage = null)
     {
-        return new Column(FunctionWrappedCall("assert_true", false, col, errorMessage));
+        return new Column(CreateExpression("assert_true", false, col, errorMessage));
     }
 
     public static Column BTrim(Column col, string? trim = null)
     {
         if (string.IsNullOrEmpty(trim))
         {
-            return new Column(FunctionWrappedCall("btrim", false, col));
+            return new Column(CreateExpression("btrim", false, col));
         }
 
-        return new Column(FunctionWrappedCall("btrim", false, col, trim));
+        return new Column(CreateExpression("btrim", false, col, trim));
     }
 
     public static Column BTrim(string col, string? trim = null)
     {
         if (string.IsNullOrEmpty(trim))
         {
-            return new Column(FunctionWrappedCall("btrim", false, Col(col)));
+            return new Column(CreateExpression("btrim", false, Col(col)));
         }
 
-        return new Column(FunctionWrappedCall("btrim", false, Col(col), trim));
+        return new Column(CreateExpression("btrim", false, Col(col), trim));
     }
 
     public static Column Bucket(int numOfBuckets, Column col)
     {
-        return new Column(FunctionWrappedCall("bucket", false, Lit(numOfBuckets), col));
+        return new Column(CreateExpression("bucket", false, Lit(numOfBuckets), col));
     }
 
     public static Column Bucket(int numOfBuckets, string col)
     {
-        return new Column(FunctionWrappedCall("bucket", false, Lit(numOfBuckets), Col(col)));
+        return new Column(CreateExpression("bucket", false, Lit(numOfBuckets), Col(col)));
     }
 
     public static Column ConcatWs(string sep, params Column[] cols)
     {
-        return new Column(FunctionWrappedCall("concat_ws", false, Lit(sep), cols.Select(p => p.Expression).ToArray()));
+        return new Column(CreateExpression("concat_ws", false, Lit(sep), cols.Select(p => p.Expression).ToArray()));
     }
 
     public static Column ConcatWs(string sep, params string[] cols)
     {
-        return new Column(FunctionWrappedCall("concat_ws", false, Lit(sep),
+        return new Column(CreateExpression("concat_ws", false, Lit(sep),
             cols.Select(p => Col(p).Expression).ToArray()));
     }
 
@@ -1087,22 +1087,22 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Conv(Column col, int fromBase, int toBase)
     {
-        return new Column(FunctionWrappedCall("conv", false, col, Lit(fromBase), Lit(toBase)));
+        return new Column(CreateExpression("conv", false, col, Lit(fromBase), Lit(toBase)));
     }
 
     public static Column ConvertTimezone(Column sourceTzColumn, Column targetTz, Column sourceTz)
     {
         if (ReferenceEquals(null, sourceTzColumn))
         {
-            return new Column(FunctionWrappedCall("convert_timezone", false, targetTz, sourceTz));
+            return new Column(CreateExpression("convert_timezone", false, targetTz, sourceTz));
         }
 
-        return new Column(FunctionWrappedCall("convert_timezone", false, sourceTzColumn, targetTz, sourceTz));
+        return new Column(CreateExpression("convert_timezone", false, sourceTzColumn, targetTz, sourceTz));
     }
 
     public static Column CreateMap(string cola, string colb)
     {
-        return new Column(FunctionWrappedCall("map", false, cola, colb));
+        return new Column(CreateExpression("map", false, cola, colb));
     }
 
     public static Column CreateMap(IDictionary<string, object> options)
@@ -1115,7 +1115,7 @@ public partial class Functions : FunctionsWrapper
             litOptions.Add(Lit(option.Value));
         }
 
-        return new Column(FunctionWrappedCall("map", false, litOptions.ToArray()));
+        return new Column(CreateExpression("map", false, litOptions.ToArray()));
     }
     
     public static Column CreateMap(IDictionary<string, string> options)
@@ -1128,72 +1128,72 @@ public partial class Functions : FunctionsWrapper
             litOptions.Add(Lit(option.Value));
         }
 
-        return new Column(FunctionWrappedCall("map", false, litOptions.ToArray()));
+        return new Column(CreateExpression("map", false, litOptions.ToArray()));
     }
 
     public static Column CreateMap(Column cola, Column colb)
     {
-        return new Column(FunctionWrappedCall("map", false, cola, colb));
+        return new Column(CreateExpression("map", false, cola, colb));
     }
 
     public static Column DateAdd(string start, int days)
     {
-        return new Column(FunctionWrappedCall("date_add", false, Col(start), Lit(days)));
+        return new Column(CreateExpression("date_add", false, Col(start), Lit(days)));
     }
 
     public static Column DateAdd(Column start, int days)
     {
-        return new Column(FunctionWrappedCall("date_add", false, start, Lit(days)));
+        return new Column(CreateExpression("date_add", false, start, Lit(days)));
     }
 
     public static Column DateSub(string start, int days)
     {
-        return new Column(FunctionWrappedCall("date_sub", false, Col(start), Lit(days)));
+        return new Column(CreateExpression("date_sub", false, Col(start), Lit(days)));
     }
 
     public static Column DateSub(Column start, int days)
     {
-        return new Column(FunctionWrappedCall("date_sub", false, start, Lit(days)));
+        return new Column(CreateExpression("date_sub", false, start, Lit(days)));
     }
 
     public static Column DateSub(Column start, Column days)
     {
-        return new Column(FunctionWrappedCall("date_sub", false, start, days));
+        return new Column(CreateExpression("date_sub", false, start, days));
     }
 
     public static Column DateSub(string start, Column days)
     {
-        return new Column(FunctionWrappedCall("date_sub", false, Col(start), days));
+        return new Column(CreateExpression("date_sub", false, Col(start), days));
     }
 
     public static Column DateTrunc(string format, Column timestamp)
     {
-        return new Column(FunctionWrappedCall("date_trunc", false, Lit(format), timestamp));
+        return new Column(CreateExpression("date_trunc", false, Lit(format), timestamp));
     }
 
     public static Column DateTrunc(string format, string timestamp)
     {
-        return new Column(FunctionWrappedCall("date_trunc", false, Lit(format), Col(timestamp)));
+        return new Column(CreateExpression("date_trunc", false, Lit(format), Col(timestamp)));
     }
 
     public static Column First(string col)
     {
-        return new Column(FunctionWrappedCall("first", false, Col(col)));
+        return new Column(CreateExpression("first", false, Col(col)));
     }
 
     public static Column First(Column col)
     {
-        return new Column(FunctionWrappedCall("first", false, col));
+        return new Column(CreateExpression("first", false, col));
     }
 
     public static Column Last(Column col)
     {
-        return new Column(FunctionWrappedCall("last", false, col));
+        return new Column(CreateExpression("last", false, col));
     }
 
     public static Column Last(string col)
     {
-        return new Column(FunctionWrappedCall("last", false, Col(col)));
+        return new Column(CreateExpression("last", false, Col(col)));
     }
 
     public static Column FormatString(string format, params Column[] cols)
@@ -1201,7 +1201,7 @@ public partial class Functions : FunctionsWrapper
         var newList = new List<Column>();
         newList.Add(Lit(format));
         newList.AddRange(cols);
-        return new Column(FunctionWrappedCall("format_string", false, newList.ToArray()));
+        return new Column(CreateExpression("format_string", false, newList.ToArray()));
     }
 
     public static Column FormatString(string format, params string[] cols)
@@ -1209,29 +1209,29 @@ public partial class Functions : FunctionsWrapper
         var newList = new List<Column>();
         newList.Add(Lit(format));
         newList.AddRange(cols.Select(Col));
-        return new Column(FunctionWrappedCall("format_string", false, newList.ToArray()));
+        return new Column(CreateExpression("format_string", false, newList.ToArray()));
     }
 
     public static Column FromCsv(Column col, Column ddlSchema, IDictionary<string, object>? options = null)
     {
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("from_csv", false, col, ddlSchema));
+            return new Column(CreateExpression("from_csv", false, col, ddlSchema));
         }
 
         var mappedOptions = CreateMap(options);
-        return new Column(FunctionWrappedCall("from_csv", false, col, ddlSchema, mappedOptions));
+        return new Column(CreateExpression("from_csv", false, col, ddlSchema, mappedOptions));
     }
 
     public static Column FromJson(Column col, Column ddlSchema, IDictionary<string, object>? options = null)
     {
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema));
+            return new Column(CreateExpression("from_json", false, col, ddlSchema));
         }
 
         var mappedOptions = CreateMap(options);
-        return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema, mappedOptions));
+        return new Column(CreateExpression("from_json", false, col, ddlSchema, mappedOptions));
     }
 
     /// <summary>
@@ -1245,11 +1245,11 @@ public partial class Functions : FunctionsWrapper
     {
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("from_json", false, col, Lit(ddlSchema)));
+            return new Column(CreateExpression("from_json", false, col, Lit(ddlSchema)));
         }
 
         var mappedOptions = CreateMap(options);
-        return new Column(FunctionWrappedCall("from_json", false, col, Lit(ddlSchema), mappedOptions));
+        return new Column(CreateExpression("from_json", false, col, Lit(ddlSchema), mappedOptions));
     }
 
     /// <summary>
@@ -1265,21 +1265,21 @@ public partial class Functions : FunctionsWrapper
 
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema));
+            return new Column(CreateExpression("from_json", false, col, ddlSchema));
         }
 
         var mappedOptions = CreateMap(options);
-        return new Column(FunctionWrappedCall("from_json", false, col, ddlSchema, mappedOptions));
+        return new Column(CreateExpression("from_json", false, col, ddlSchema, mappedOptions));
     }
 
     public static Column FromUtcTimestamp(string timestamp, string tz)
     {
-        return new Column(FunctionWrappedCall("from_utc_timestamp", false, Lit(timestamp), Lit(tz)));
+        return new Column(CreateExpression("from_utc_timestamp", false, Lit(timestamp), Lit(tz)));
     }
 
     public static Column FromUtcTimestamp(Column timestamp, Column tz)
     {
-        return new Column(FunctionWrappedCall("from_utc_timestamp", false, timestamp, tz));
+        return new Column(CreateExpression("from_utc_timestamp", false, timestamp, tz));
     }
 
     public static Column Grouping(string col)
@@ -1289,81 +1289,81 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Grouping(Column col)
     {
-        return new Column(FunctionWrappedCall("grouping", false, col));
+        return new Column(CreateExpression("grouping", false, col));
     }
 
     public static Column JsonTuple(Column col, params string[] fields)
     {
         return new Column(
-            FunctionWrappedCall("json_tuple", false, col, fields.Select(p => Lit(p).Expression).ToArray()));
+            CreateExpression("json_tuple", false, col, fields.Select(p => Lit(p).Expression).ToArray()));
     }
 
     public static Column JsonTuple(string col, params string[] fields)
     {
-        return new Column(FunctionWrappedCall("json_tuple", false, Col(col),
+        return new Column(CreateExpression("json_tuple", false, Col(col),
             fields.Select(p => Lit(p).Expression).ToArray()));
     }
 
     public static Column Lag(Column col, int offset, object defaultValue)
     {
-        return new Column(FunctionWrappedCall("lag", false, col, Lit(offset), Lit(defaultValue)));
+        return new Column(CreateExpression("lag", false, col, Lit(offset), Lit(defaultValue)));
     }
 
     public static Column Lag(string col, int offset, object defaultValue)
     {
-        return new Column(FunctionWrappedCall("lag", false, Col(col), Lit(offset), Lit(defaultValue)));
+        return new Column(CreateExpression("lag", false, Col(col), Lit(offset), Lit(defaultValue)));
     }
 
     public static Column Lag(Column col, int offset)
     {
-        return new Column(FunctionWrappedCall("lag", false, col, Lit(offset)));
+        return new Column(CreateExpression("lag", false, col, Lit(offset)));
     }
 
     public static Column Lag(string col, int offset)
     {
-        return new Column(FunctionWrappedCall("lag", false, Col(col), Lit(offset)));
+        return new Column(CreateExpression("lag", false, Col(col), Lit(offset)));
     }
 
 
     public static Column Lag(Column col)
     {
-        return new Column(FunctionWrappedCall("lag", false, col));
+        return new Column(CreateExpression("lag", false, col));
     }
 
     public static Column Lag(string col)
     {
-        return new Column(FunctionWrappedCall("lag", false, Col(col)));
+        return new Column(CreateExpression("lag", false, Col(col)));
     }
 
     public static Column Lead(Column col, int offset, object defaultValue)
     {
-        return new Column(FunctionWrappedCall("lead", false, col, Lit(offset), Lit(defaultValue)));
+        return new Column(CreateExpression("lead", false, col, Lit(offset), Lit(defaultValue)));
     }
 
     public static Column Lead(string col, int offset, object defaultValue)
     {
-        return new Column(FunctionWrappedCall("lead", false, Col(col), Lit(offset), Lit(defaultValue)));
+        return new Column(CreateExpression("lead", false, Col(col), Lit(offset), Lit(defaultValue)));
     }
 
     public static Column Lead(Column col, int offset)
     {
-        return new Column(FunctionWrappedCall("lead", false, col, Lit(offset)));
+        return new Column(CreateExpression("lead", false, col, Lit(offset)));
     }
 
     public static Column Lead(string col, int offset)
     {
-        return new Column(FunctionWrappedCall("lead", false, Col(col), Lit(offset)));
+        return new Column(CreateExpression("lead", false, Col(col), Lit(offset)));
     }
 
 
     public static Column Lead(Column col)
     {
-        return new Column(FunctionWrappedCall("lead", false, col));
+        return new Column(CreateExpression("lead", false, col));
     }
 
     public static Column Lead(string col)
     {
-        return new Column(FunctionWrappedCall("lead", false, Col(col)));
+        return new Column(CreateExpression("lead", false, Col(col)));
     }
 
     public static Column Levenshtein(string left, string right, int? threshold = null)
@@ -1375,10 +1375,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (!threshold.HasValue)
         {
-            return new Column(FunctionWrappedCall("levenshtein", false, left, right));
+            return new Column(CreateExpression("levenshtein", false, left, right));
         }
 
-        return new Column(FunctionWrappedCall("levenshtein", false, left, right, Lit(threshold.Value)));
+        return new Column(CreateExpression("levenshtein", false, left, right, Lit(threshold.Value)));
     }
 
     public static Column Like(string col, string pattern, string? escape = null)
@@ -1390,10 +1390,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, escape))
         {
-            return new Column(FunctionWrappedCall("like", false, col, pattern));
+            return new Column(CreateExpression("like", false, col, pattern));
         }
 
-        return new Column(FunctionWrappedCall("like", false, col, pattern, escape));
+        return new Column(CreateExpression("like", false, col, pattern, escape));
     }
 
     /// <summary>
@@ -1434,10 +1434,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (pos.HasValue)
         {
-            return new Column(FunctionWrappedCall("locate", false, substr, col, Lit(pos.Value)));
+            return new Column(CreateExpression("locate", false, substr, col, Lit(pos.Value)));
         }
 
-        return new Column(FunctionWrappedCall("locate", false, substr, col));
+        return new Column(CreateExpression("locate", false, substr, col));
     }
 
     public static Column LPad(string col, int len, string pad)
@@ -1447,7 +1447,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column LPad(Column col, int len, string pad)
     {
-        return new Column(FunctionWrappedCall("lpad", false, col, Lit(len), Lit(pad)));
+        return new Column(CreateExpression("lpad", false, col, Lit(len), Lit(pad)));
     }
 
 
@@ -1458,13 +1458,13 @@ public partial class Functions : FunctionsWrapper
 
     public static Column RPad(Column col, int len, string pad)
     {
-        return new Column(FunctionWrappedCall("rpad", false, col, Lit(len), Lit(pad)));
+        return new Column(CreateExpression("rpad", false, col, Lit(len), Lit(pad)));
     }
 
 
     public static Column MakeDtInterval()
     {
-        return new Column(FunctionWrappedCall("make_dt_interval", false));
+        return new Column(CreateExpression("make_dt_interval", false));
     }
 
     public static Column MakeDtInterval(string day)
@@ -1474,7 +1474,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column MakeDtInterval(Column day)
     {
-        return new Column(FunctionWrappedCall("make_dt_interval", false, day));
+        return new Column(CreateExpression("make_dt_interval", false, day));
     }
 
     public static Column MakeDtInterval(string day, string hour)
@@ -1484,7 +1484,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column MakeDtInterval(Column day, Column hour)
     {
-        return new Column(FunctionWrappedCall("make_dt_interval", false, day, hour));
+        return new Column(CreateExpression("make_dt_interval", false, day, hour));
     }
 
     public static Column MakeDtInterval(string day, string hour, string minute)
@@ -1494,7 +1494,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column MakeDtInterval(Column day, Column hour, Column minute)
     {
-        return new Column(FunctionWrappedCall("make_dt_interval", false, day, hour, minute));
+        return new Column(CreateExpression("make_dt_interval", false, day, hour, minute));
     }
 
     public static Column MakeDtInterval(string day, string hour, string minute, double seconds)
@@ -1504,7 +1504,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column MakeDtInterval(Column day, Column hour, Column minute, Column seconds)
     {
-        return new Column(FunctionWrappedCall("make_dt_interval", false, day, hour, minute, seconds));
+        return new Column(CreateExpression("make_dt_interval", false, day, hour, minute, seconds));
     }
 
     public static Column MakeTimestamp(string years, string months, string days, string hours, string mins, string secs,
@@ -1519,11 +1519,11 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, timezone))
         {
-            return new Column(FunctionWrappedCall("make_timestamp", false, years, months, days, hours, mins, secs));
+            return new Column(CreateExpression("make_timestamp", false, years, months, days, hours, mins, secs));
         }
 
         return new Column(
-            FunctionWrappedCall("make_timestamp", false, years, months, days, hours, mins, secs, timezone));
+            CreateExpression("make_timestamp", false, years, months, days, hours, mins, secs, timezone));
     }
 
     public static Column MakeTimestampLtz(string years, string months, string days, string hours, string mins,
@@ -1539,10 +1539,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, timezone))
         {
-            return new Column(FunctionWrappedCall("make_timestamp_ltz", false, years, months, days, hours, mins, secs));
+            return new Column(CreateExpression("make_timestamp_ltz", false, years, months, days, hours, mins, secs));
         }
 
-        return new Column(FunctionWrappedCall("make_timestamp_ltz", false, years, months, days, hours, mins, secs,
+        return new Column(CreateExpression("make_timestamp_ltz", false, years, months, days, hours, mins, secs,
             timezone));
     }
 
@@ -1628,7 +1628,7 @@ public partial class Functions : FunctionsWrapper
             throw new SparkException("otherChar must be a Lit(\"string\"), cannot be any other type (including char!)");
         }
 
-        return new Column(FunctionWrappedCall("mask", false, col, upperChar, lowerChar, digitChar, otherChar));
+        return new Column(CreateExpression("mask", false, col, upperChar, lowerChar, digitChar, otherChar));
     }
 
     public static Column MonthsBetween(string date1Col, string date2Col, bool? roundOff = null)
@@ -1640,10 +1640,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (roundOff.HasValue)
         {
-            return new Column(FunctionWrappedCall("months_between", false, date1Col, date2Col, Lit(roundOff.Value)));
+            return new Column(CreateExpression("months_between", false, date1Col, date2Col, Lit(roundOff.Value)));
         }
 
-        return new Column(FunctionWrappedCall("months_between", false, date1Col, date2Col));
+        return new Column(CreateExpression("months_between", false, date1Col, date2Col));
     }
 
     public static Column NthValue(string col, int offset, bool? ignoreNulls = null)
@@ -1660,15 +1660,15 @@ public partial class Functions : FunctionsWrapper
     {
         if (ignoreNulls.HasValue)
         {
-            return new Column(FunctionWrappedCall("nth_value", false, col, offset, Lit(ignoreNulls.Value)));
+            return new Column(CreateExpression("nth_value", false, col, offset, Lit(ignoreNulls.Value)));
         }
 
-        return new Column(FunctionWrappedCall("nth_value", false, col, offset));
+        return new Column(CreateExpression("nth_value", false, col, offset));
     }
 
     public static Column Ntile(int n)
     {
-        return new Column(FunctionWrappedCall("ntile", false, Lit(n)));
+        return new Column(CreateExpression("ntile", false, Lit(n)));
     }
 
 
@@ -1686,10 +1686,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, len))
         {
-            return new Column(FunctionWrappedCall("overlay", false, src, replace, pos));
+            return new Column(CreateExpression("overlay", false, src, replace, pos));
         }
 
-        return new Column(FunctionWrappedCall("overlay", false, src, replace, pos, len));
+        return new Column(CreateExpression("overlay", false, src, replace, pos, len));
     }
 
     public static Column Percentile(string col, float[] percentage, int frequency)
@@ -1714,7 +1714,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Percentile(Column col, Column percentage, Column frequency)
     {
-        return new Column(FunctionWrappedCall("percentile", false, col, percentage, frequency));
+        return new Column(CreateExpression("percentile", false, col, percentage, frequency));
     }
 
     public static Column PercentileApprox(string col, float[] percentage, int accuracy)
@@ -1739,7 +1739,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column PercentileApprox(Column col, Column percentage, Column accuracy)
     {
-        return new Column(FunctionWrappedCall("percentile_approx", false, col, percentage, accuracy));
+        return new Column(CreateExpression("percentile_approx", false, col, percentage, accuracy));
     }
 
     public static Column ParseUrl(string urlCol, string partToExtractCol, string? keyCol = null)
@@ -1751,10 +1751,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, key))
         {
-            return new Column(FunctionWrappedCall("parse_url", false, col, partToExtract));
+            return new Column(CreateExpression("parse_url", false, col, partToExtract));
         }
 
-        return new Column(FunctionWrappedCall("parse_url", false, col, partToExtract, key));
+        return new Column(CreateExpression("parse_url", false, col, partToExtract, key));
     }
 
     public static Column Position(string substrColumn, string strColumn, string? startColumn = null)
@@ -1766,10 +1766,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, startColumn))
         {
-            return new Column(FunctionWrappedCall("position", false, substrColumn, strColumn));
+            return new Column(CreateExpression("position", false, substrColumn, strColumn));
         }
 
-        return new Column(FunctionWrappedCall("position", false, substrColumn, strColumn, startColumn));
+        return new Column(CreateExpression("position", false, substrColumn, strColumn, startColumn));
     }
 
     public static Column PrintF(string format, params string[] cols)
@@ -1779,17 +1779,17 @@ public partial class Functions : FunctionsWrapper
 
     public static Column PrintF(Column format, params Column[] cols)
     {
-        return new Column(FunctionWrappedCall("printf", false, cols.Prepend(format).ToArray()));
+        return new Column(CreateExpression("printf", false, cols.Prepend(format).ToArray()));
     }
 
     public static Column RaiseError(string message)
     {
-        return new Column(FunctionWrappedCall("raise_error", false, Lit(message)));
+        return new Column(CreateExpression("raise_error", false, Lit(message)));
     }
 
     public static Column RaiseError(Column message)
     {
-        return new Column(FunctionWrappedCall("raise_error", false, message));
+        return new Column(CreateExpression("raise_error", false, message));
     }
 
     public static Column RegexpExtract(string col, string pattern, int idx)
@@ -1804,7 +1804,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column RegexpExtract(Column col, Column pattern, Column idx)
     {
-        return new Column(FunctionWrappedCall("regexp_extract", false, col, pattern, idx));
+        return new Column(CreateExpression("regexp_extract", false, col, pattern, idx));
     }
 
     public static Column RegexpExtractAll(string col, string pattern, int idx)
@@ -1819,7 +1819,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column RegexpExtractAll(Column col, Column pattern, Column idx)
     {
-        return new Column(FunctionWrappedCall("regexp_extract_all", false, col, pattern, idx));
+        return new Column(CreateExpression("regexp_extract_all", false, col, pattern, idx));
     }
 
     public static Column RegexpExtractInstr(string col, string pattern, int idx)
@@ -1834,7 +1834,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column RegexpExtractInstr(Column col, Column pattern, Column idx)
     {
-        return new Column(FunctionWrappedCall("regexp_instr", false, col, pattern, idx));
+        return new Column(CreateExpression("regexp_instr", false, col, pattern, idx));
     }
 
     public static Column RegexpReplace(string col, string pattern, string replacement)
@@ -1849,7 +1849,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column RegexpReplace(Column col, Column pattern, Column replacement)
     {
-        return new Column(FunctionWrappedCall("regexp_replace", false, col, pattern, replacement));
+        return new Column(CreateExpression("regexp_replace", false, col, pattern, replacement));
     }
 
     public static Column Replace(Column src, string search, string replace)
@@ -1864,7 +1864,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Replace(Column src, Column search, Column replace)
     {
-        return new Column(FunctionWrappedCall("replace", false, src, search, replace));
+        return new Column(CreateExpression("replace", false, src, search, replace));
     }
 
     public static Column SchemaOfCsv(string schema, IDictionary<string, object>? dict = null)
@@ -1876,10 +1876,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (dict != null)
         {
-            return new Column(FunctionWrappedCall("schema_of_csv", false, schema, Lit(dict)));
+            return new Column(CreateExpression("schema_of_csv", false, schema, Lit(dict)));
         }
 
-        return new Column(FunctionWrappedCall("schema_of_csv", false, schema));
+        return new Column(CreateExpression("schema_of_csv", false, schema));
     }
 
     public static Column SchemaOfJson(string json, IDictionary<string, object>? dict = null)
@@ -1891,10 +1891,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (dict != null)
         {
-            return new Column(FunctionWrappedCall("schema_of_json", false, json, Lit(dict)));
+            return new Column(CreateExpression("schema_of_json", false, json, Lit(dict)));
         }
 
-        return new Column(FunctionWrappedCall("schema_of_json", false, json));
+        return new Column(CreateExpression("schema_of_json", false, json));
     }
 
     public static Column Sentences(string col, string? language = null, string? country = null)
@@ -1915,7 +1915,7 @@ public partial class Functions : FunctionsWrapper
             country = Lit("");
         }
 
-        return new Column(FunctionWrappedCall("sentences", false, col, language, country));
+        return new Column(CreateExpression("sentences", false, col, language, country));
     }
 
     public static Column ToDate(string col, string? format = null)
@@ -1928,16 +1928,16 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, format))
         {
-            return new Column(FunctionWrappedCall("to_Date", false, col));
+            return new Column(CreateExpression("to_Date", false, col));
         }
 
-        return new Column(FunctionWrappedCall("to_Date", false, col, format));
+        return new Column(CreateExpression("to_Date", false, col, format));
     }
 
 
     public static Column Struct(params Column[] cols)
     {
-        return new Column(FunctionWrappedCall("struct", false, cols));
+        return new Column(CreateExpression("struct", false, cols));
     }
 
     /// <Summary>
@@ -1947,7 +1947,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column Round(Column col, int scale)
     {
-        return new Column(FunctionWrappedCall("round", false, col, Lit(scale)));
+        return new Column(CreateExpression("round", false, col, Lit(scale)));
     }
 
     /// <Summary>
@@ -1956,7 +1956,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column Round(string col)
     {
-        return new Column(FunctionWrappedCall("round", false, Col(col)));
+        return new Column(CreateExpression("round", false, Col(col)));
     }
 
     public static Column Get(string col, int index)
@@ -1971,17 +1971,17 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Get(Column col, Column index)
     {
-        return new Column(FunctionWrappedCall("get", false, col, index));
+        return new Column(CreateExpression("get", false, col, index));
     }
 
     public static Column Sequence(Column start, Column stop, Column? step = null)
     {
         if (Equals(null, step))
         {
-            return new Column(FunctionWrappedCall("sequence", false, start, stop));
+            return new Column(CreateExpression("sequence", false, start, stop));
         }
 
-        return new Column(FunctionWrappedCall("sequence", false, start, stop, step));
+        return new Column(CreateExpression("sequence", false, start, stop, step));
     }
 
     public static Column Sequence(string start, string end, string? step = null)
@@ -2013,7 +2013,7 @@ public partial class Functions : FunctionsWrapper
     /// <returns></returns>
     public static Column SessionWindow(Column timeColumn, Column gapDuration)
     {
-        return new Column(FunctionWrappedCall("session_window", false, timeColumn, gapDuration));
+        return new Column(CreateExpression("session_window", false, timeColumn, gapDuration));
     }
 
     /// <summary>
@@ -2045,7 +2045,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Slice(Column x, Column start, Column length)
     {
-        return new Column(FunctionWrappedCall("slice", false, x, start, length));
+        return new Column(CreateExpression("slice", false, x, start, length));
     }
 
     public static Column Slice(string x, string start, string length)
@@ -2068,27 +2068,27 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column Array(params int?[] cols)
     {
-        return new Column(FunctionWrappedCall("array", false, cols.Select(Lit).ToArray()));
+        return new Column(CreateExpression("array", false, cols.Select(Lit).ToArray()));
     }
 
     public static Column SortArray(Column col, bool? asc = null)
     {
         if (asc.HasValue)
         {
-            return new Column(FunctionWrappedCall("sort_array", false, col, Lit(asc.Value)));
+            return new Column(CreateExpression("sort_array", false, col, Lit(asc.Value)));
         }
 
-        return new Column(FunctionWrappedCall("sort_array", false, col));
+        return new Column(CreateExpression("sort_array", false, col));
     }
 
     public static Column Split(Column str, string pattern, int? limit = null)
     {
         if (limit.HasValue)
         {
-            return new Column(FunctionWrappedCall("split", false, str, Lit(pattern), Lit(limit.Value)));
+            return new Column(CreateExpression("split", false, str, Lit(pattern), Lit(limit.Value)));
         }
 
-        return new Column(FunctionWrappedCall("sort_array", false, str, Lit(pattern)));
+        return new Column(CreateExpression("sort_array", false, str, Lit(pattern)));
     }
 
     public static Column Split(string str, string pattern, int? limit = null)
@@ -2108,7 +2108,7 @@ public partial class Functions : FunctionsWrapper
             keyValueDelim = Lit(":");
         }
 
-        return new Column(FunctionWrappedCall("str_to_map", false, text, pairDelim, keyValueDelim));
+        return new Column(CreateExpression("str_to_map", false, text, pairDelim, keyValueDelim));
     }
 
     public static Column StrToMap(string text, string? pairDelim = null, string? keyValueDelim = null)
@@ -2120,7 +2120,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Substr(Column src, Column pos, Column len)
     {
-        return new Column(FunctionWrappedCall("substr", false, src.Expression, pos.Expression, len.Expression));
+        return new Column(CreateExpression("substr", false, src.Expression, pos.Expression, len.Expression));
     }
 
     public static Column Substr(string src, string pos, string len)
@@ -2131,7 +2131,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Substring(Column src, int pos, int len)
     {
-        return new Column(FunctionWrappedCall("substring", false, src.Expression, Lit(pos).Expression,
+        return new Column(CreateExpression("substring", false, src.Expression, Lit(pos).Expression,
             Lit(len).Expression));
     }
 
@@ -2142,7 +2142,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column SubstringIndex(Column str, string delim, int count)
     {
-        return new Column(FunctionWrappedCall("substring_index", false, str.Expression, Lit(delim).Expression,
+        return new Column(CreateExpression("substring_index", false, str.Expression, Lit(delim).Expression,
             Lit(count).Expression));
     }
 
@@ -2155,10 +2155,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, format))
         {
-            return new Column(FunctionWrappedCall("to_binary", false, col));
+            return new Column(CreateExpression("to_binary", false, col));
         }
 
-        return new Column(FunctionWrappedCall("to_binary", false, col, format));
+        return new Column(CreateExpression("to_binary", false, col, format));
     }
 
     public static Column ToBinary(string col, string? format = null)
@@ -2175,10 +2175,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, format))
         {
-            return new Column(FunctionWrappedCall("try_to_binary", false, col));
+            return new Column(CreateExpression("try_to_binary", false, col));
         }
 
-        return new Column(FunctionWrappedCall("try_to_binary", false, col, format));
+        return new Column(CreateExpression("try_to_binary", false, col, format));
     }
 
     public static Column TryToBinary(string col, string? format = null)
@@ -2195,10 +2195,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, format))
         {
-            return new Column(FunctionWrappedCall("to_char", false, col));
+            return new Column(CreateExpression("to_char", false, col));
         }
 
-        return new Column(FunctionWrappedCall("to_char", false, col, format));
+        return new Column(CreateExpression("to_char", false, col, format));
     }
 
     public static Column ToChar(string col, string? format = null)
@@ -2215,10 +2215,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, format))
         {
-            return new Column(FunctionWrappedCall("to_number", false, col));
+            return new Column(CreateExpression("to_number", false, col));
         }
 
-        return new Column(FunctionWrappedCall("to_number", false, col, format));
+        return new Column(CreateExpression("to_number", false, col, format));
     }
 
     public static Column ToNumber(string col, string? format = null)
@@ -2235,10 +2235,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("to_csv", false, col));
+            return new Column(CreateExpression("to_csv", false, col));
         }
 
-        return new Column(FunctionWrappedCall("to_csv", false, col, Lit(options)));
+        return new Column(CreateExpression("to_csv", false, col, Lit(options)));
     }
 
     public static Column ToCsv(string col, IDictionary<string, object>? options = null)
@@ -2251,10 +2251,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("to_json", false, col));
+            return new Column(CreateExpression("to_json", false, col));
         }
 
-        return new Column(FunctionWrappedCall("to_json", false, col, Lit(options)));
+        return new Column(CreateExpression("to_json", false, col, Lit(options)));
     }
 
     public static Column ToJson(string col, IDictionary<string, object>? options = null)
@@ -2266,10 +2266,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, format))
         {
-            return new Column(FunctionWrappedCall("to_timestamp_ltz", false, timestamp));
+            return new Column(CreateExpression("to_timestamp_ltz", false, timestamp));
         }
 
-        return new Column(FunctionWrappedCall("to_timestamp_ltz", false, timestamp, format));
+        return new Column(CreateExpression("to_timestamp_ltz", false, timestamp, format));
     }
 
     public static Column ToTimestampLtz(string timestamp, string? format = null)
@@ -2281,10 +2281,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, format))
         {
-            return new Column(FunctionWrappedCall("to_timestamp_ntz", false, timestamp));
+            return new Column(CreateExpression("to_timestamp_ntz", false, timestamp));
         }
 
-        return new Column(FunctionWrappedCall("to_timestamp_ntz", false, timestamp, format));
+        return new Column(CreateExpression("to_timestamp_ntz", false, timestamp, format));
     }
 
     public static Column ToTimestampNtz(string timestamp, string? format = null)
@@ -2296,10 +2296,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Equals(null, format))
         {
-            return new Column(FunctionWrappedCall("to_unix_timestamp", false, timestamp));
+            return new Column(CreateExpression("to_unix_timestamp", false, timestamp));
         }
 
-        return new Column(FunctionWrappedCall("to_unix_timestamp", false, timestamp, format));
+        return new Column(CreateExpression("to_unix_timestamp", false, timestamp, format));
     }
 
     public static Column ToUnixTimestamp(string timestamp, string? format = null)
@@ -2309,7 +2309,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column ToUtcTimestamp(Column timestamp, Column tz)
     {
-        return new Column(FunctionWrappedCall("to_utc_timestamp", false, timestamp, tz));
+        return new Column(CreateExpression("to_utc_timestamp", false, timestamp, tz));
     }
 
     public static Column ToUtcTimestamp(string timestamp, string tz)
@@ -2319,7 +2319,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Translate(Column source, string matching, string replace)
     {
-        return new Column(FunctionWrappedCall("translate", false, source, Lit(matching), Lit(replace)));
+        return new Column(CreateExpression("translate", false, source, Lit(matching), Lit(replace)));
     }
 
     public static Column Translate(string source, string matching, string replace)
@@ -2329,7 +2329,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column WidthBucket(Column vstr, Column minstr, Column maxstr, Column numBuckets)
     {
-        return new Column(FunctionWrappedCall("width_bucket", false, vstr, minstr, maxstr, numBuckets));
+        return new Column(CreateExpression("width_bucket", false, vstr, minstr, maxstr, numBuckets));
     }
 
     public static Column WidthBucket(Column vstr, Column minstr, Column maxstr, int numBuckets)
@@ -2349,12 +2349,12 @@ public partial class Functions : FunctionsWrapper
 
     public static Column WindowTime(Column windowColumn)
     {
-        return new Column(FunctionWrappedCall("window_time", false, windowColumn));
+        return new Column(CreateExpression("window_time", false, windowColumn));
     }
 
     public static Column CountMinSketch(Column col, Column eps, Column confidence, Column seed)
     {
-        return new Column(FunctionWrappedCall("count_min_sketch", false, col, eps, confidence, seed));
+        return new Column(CreateExpression("count_min_sketch", false, col, eps, confidence, seed));
     }
 
     public static Column CountMinSketch(string col, string eps, string confidence, string seed)
@@ -2371,15 +2371,15 @@ public partial class Functions : FunctionsWrapper
     {
         if (lgConfigKint.HasValue)
         {
-            return new Column(FunctionWrappedCall("hll_sketch_agg", false, col, Lit(lgConfigKint.Value)));
+            return new Column(CreateExpression("hll_sketch_agg", false, col, Lit(lgConfigKint.Value)));
         }
 
-        return new Column(FunctionWrappedCall("hll_sketch_agg", false, col));
+        return new Column(CreateExpression("hll_sketch_agg", false, col));
     }
 
     public static Column HllSketchEstimate(Column col)
     {
-        return new Column(FunctionWrappedCall("hll_sketch_estimate", false, col));
+        return new Column(CreateExpression("hll_sketch_estimate", false, col));
     }
 
     public static Column HllSketchEstimate(string col)
@@ -2391,11 +2391,11 @@ public partial class Functions : FunctionsWrapper
     {
         if (allowDifferentLgConfigKbool.HasValue)
         {
-            return new Column(FunctionWrappedCall("hll_union", false, col1, col2,
+            return new Column(CreateExpression("hll_union", false, col1, col2,
                 Lit(allowDifferentLgConfigKbool.Value)));
         }
 
-        return new Column(FunctionWrappedCall("hll_union", false, col1, col2));
+        return new Column(CreateExpression("hll_union", false, col1, col2));
     }
 
     public static Column HllUnion(string col1, string col2, bool? allowDifferentLgConfigKbool = null)
@@ -2448,7 +2448,7 @@ public partial class Functions : FunctionsWrapper
             aad = Lit("");
         }
 
-        return new Column(FunctionWrappedCall("aes_decrypt", false, input, key, mode, padding, aad));
+        return new Column(CreateExpression("aes_decrypt", false, input, key, mode, padding, aad));
     }
 
     public static Column TryAesDecrypt(string input, string key, string? mode = null, string? padding = null,
@@ -2496,7 +2496,7 @@ public partial class Functions : FunctionsWrapper
             aad = Lit("");
         }
 
-        return new Column(FunctionWrappedCall("try_aes_decrypt", false, input, key, mode, padding, aad));
+        return new Column(CreateExpression("try_aes_decrypt", false, input, key, mode, padding, aad));
     }
 
     public static Column AesEncrypt(Column input, Column key, Column? mode = null, Column? padding = null,
@@ -2522,7 +2522,7 @@ public partial class Functions : FunctionsWrapper
             aad = Lit("");
         }
 
-        return new Column(FunctionWrappedCall("aes_encrypt", false, input, key, mode, padding, iv, aad));
+        return new Column(CreateExpression("aes_encrypt", false, input, key, mode, padding, iv, aad));
     }
 
 
@@ -2597,17 +2597,17 @@ public partial class Functions : FunctionsWrapper
             secs = Lit(0.0d);
         }
 
-        return new Column(FunctionWrappedCall("make_interval", false, years, months, weeks, days, hours, mins, secs));
+        return new Column(CreateExpression("make_interval", false, years, months, weeks, days, hours, mins, secs));
     }
 
     public static Column MakeYmInterval(Column years, Column months)
     {
-        return new Column(FunctionWrappedCall("make_ym_interval", false, years, months));
+        return new Column(CreateExpression("make_ym_interval", false, years, months));
     }
 
     public static Column MakeYmInterval(string years, string months)
     {
-        return new Column(FunctionWrappedCall("make_ym_interval", false, Col(years), Col(months)));
+        return new Column(CreateExpression("make_ym_interval", false, Col(years), Col(months)));
     }
 
     // Callable Functions...
@@ -2615,7 +2615,7 @@ public partial class Functions : FunctionsWrapper
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(comparator);
-        return new Column(FunctionWrappedCall("array_sort", false, col, expression));
+        return new Column(CreateExpression("array_sort", false, col, expression));
     }
 
     public static Column ArraySort(string col, BinaryFunction comparator)
@@ -2627,7 +2627,7 @@ public partial class Functions : FunctionsWrapper
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        return new Column(FunctionWrappedCall("forall", false, col, expression));
+        return new Column(CreateExpression("forall", false, col, expression));
     }
 
     public static Column ForAll(string col, UnaryFunction function)
@@ -2639,14 +2639,14 @@ public partial class Functions : FunctionsWrapper
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        return new Column(FunctionWrappedCall("transform", false, col, expression));
+        return new Column(CreateExpression("transform", false, col, expression));
     }
 
     public static Column Transform(Column col, BinaryFunction function)
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        return new Column(FunctionWrappedCall("transform", false, col, expression));
+        return new Column(CreateExpression("transform", false, col, expression));
     }
 
     public static Column Transform(string col, UnaryFunction function)
@@ -2663,7 +2663,7 @@ public partial class Functions : FunctionsWrapper
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        return new Column(FunctionWrappedCall("exists", false, col, expression));
+        return new Column(CreateExpression("exists", false, col, expression));
     }
 
     public static Column Exists(string col, UnaryFunction function)
@@ -2675,7 +2675,7 @@ public partial class Functions : FunctionsWrapper
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        return new Column(FunctionWrappedCall("filter", false, col, expression));
+        return new Column(CreateExpression("filter", false, col, expression));
     }
 
     public static Column Filter(string col, UnaryFunction function)
@@ -2687,7 +2687,7 @@ public partial class Functions : FunctionsWrapper
     {
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
-        return new Column(FunctionWrappedCall("filter", false, col, expression));
+        return new Column(CreateExpression("filter", false, col, expression));
     }
 
     public static Column Filter(string col, BinaryFunction function)
@@ -2701,7 +2701,7 @@ public partial class Functions : FunctionsWrapper
         var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
         var finishExpression = sparkLambdaFunction.GetLambdaExpression(finish);
 
-        return new Column(FunctionWrappedCall("aggregate", false, col, initialValue.Expression, mergeExpression,
+        return new Column(CreateExpression("aggregate", false, col, initialValue.Expression, mergeExpression,
             finishExpression));
     }
 
@@ -2715,7 +2715,7 @@ public partial class Functions : FunctionsWrapper
         var sparkLambdaFunction = new CallableHelper();
         var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
 
-        return new Column(FunctionWrappedCall("aggregate", false, col, initialValue.Expression, mergeExpression));
+        return new Column(CreateExpression("aggregate", false, col, initialValue.Expression, mergeExpression));
     }
 
     public static Column Aggregate(string col, Column initialValue, BinaryFunction merge)
@@ -2730,7 +2730,7 @@ public partial class Functions : FunctionsWrapper
         var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
         var finishExpression = sparkLambdaFunction.GetLambdaExpression(finish);
 
-        return new Column(FunctionWrappedCall("reduce", false, col, initialValue.Expression, mergeExpression,
+        return new Column(CreateExpression("reduce", false, col, initialValue.Expression, mergeExpression,
             finishExpression));
     }
 
@@ -2744,7 +2744,7 @@ public partial class Functions : FunctionsWrapper
         var sparkLambdaFunction = new CallableHelper();
         var mergeExpression = sparkLambdaFunction.GetLambdaExpression(merge);
 
-        return new Column(FunctionWrappedCall("reduce", false, col, initialValue.Expression, mergeExpression));
+        return new Column(CreateExpression("reduce", false, col, initialValue.Expression, mergeExpression));
     }
 
     public static Column Reduce(string col, Column initialValue, BinaryFunction merge)
@@ -2758,7 +2758,7 @@ public partial class Functions : FunctionsWrapper
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
 
-        return new Column(FunctionWrappedCall("zip_with", false, left.Expression, right.Expression, expression));
+        return new Column(CreateExpression("zip_with", false, left.Expression, right.Expression, expression));
     }
 
     public static Column ZipWith(string left, string right, BinaryFunction function)
@@ -2771,7 +2771,7 @@ public partial class Functions : FunctionsWrapper
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
 
-        return new Column(FunctionWrappedCall("transform_keys", false, col.Expression, expression));
+        return new Column(CreateExpression("transform_keys", false, col.Expression, expression));
     }
 
     public static Column TransformKeys(string col, BinaryFunction function)
@@ -2785,7 +2785,7 @@ public partial class Functions : FunctionsWrapper
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
 
-        return new Column(FunctionWrappedCall("transform_values", false, col.Expression, expression));
+        return new Column(CreateExpression("transform_values", false, col.Expression, expression));
     }
 
     public static Column TransformValues(string col, BinaryFunction function)
@@ -2798,7 +2798,7 @@ public partial class Functions : FunctionsWrapper
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
 
-        return new Column(FunctionWrappedCall("map_filter", false, col.Expression, expression));
+        return new Column(CreateExpression("map_filter", false, col.Expression, expression));
     }
 
     public static Column MapFilter(string col, BinaryFunction function)
@@ -2811,7 +2811,7 @@ public partial class Functions : FunctionsWrapper
         var sparkLambdaFunction = new CallableHelper();
         var expression = sparkLambdaFunction.GetLambdaExpression(function);
 
-        return new Column(FunctionWrappedCall("map_zip_with", false, col1.Expression, col2.Expression, expression));
+        return new Column(CreateExpression("map_zip_with", false, col1.Expression, col2.Expression, expression));
     }
 
     public static Column MapZipWith(string col1, string col2, TernaryFunction function)
@@ -2822,13 +2822,13 @@ public partial class Functions : FunctionsWrapper
     /// <Summary>ToTimestamp</Summary>
     public static Column TryToTimestamp(string col)
     {
-        return new Column(FunctionWrappedCall("try_to_timestamp", false, col));
+        return new Column(CreateExpression("try_to_timestamp", false, col));
     }
 
     /// <Summary>ToTimestamp</Summary>
     public static Column TryToTimestamp(Column col)
     {
-        return new Column(FunctionWrappedCall("try_to_timestamp", false, col));
+        return new Column(CreateExpression("try_to_timestamp", false, col));
     }
 
     /// <Summary>
@@ -2836,7 +2836,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column TryToTimestamp(string col, string format)
     {
-        return new Column(FunctionWrappedCall("try_to_timestamp", false, Col(col), Lit(format)));
+        return new Column(CreateExpression("try_to_timestamp", false, Col(col), Lit(format)));
     }
 
     /// <Summary>
@@ -2844,7 +2844,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column TryToTimestamp(Column col, string format)
     {
-        return new Column(FunctionWrappedCall("try_to_timestamp", false, col, Lit(format)));
+        return new Column(CreateExpression("try_to_timestamp", false, col, Lit(format)));
     }
 
     /// <Summary>
@@ -2852,7 +2852,7 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column TryToTimestamp(Column col, Column format)
     {
-        return new Column(FunctionWrappedCall("try_to_timestamp", false, col, format));
+        return new Column(CreateExpression("try_to_timestamp", false, col, format));
     }
 
     /// <Summary>
@@ -2860,17 +2860,17 @@ public partial class Functions : FunctionsWrapper
     /// </Summary>
     public static Column TryToTimestamp(string col, Column format)
     {
-        return new Column(FunctionWrappedCall("try_to_timestamp", false, Col(col), format));
+        return new Column(CreateExpression("try_to_timestamp", false, Col(col), format));
     }
     
     public static Column ParseJson(Column col)
     {
-        return new Column(FunctionWrappedCall("parse_json", false, col));
+        return new Column(CreateExpression("parse_json", false, col));
     }
     
     public static Column TryParseJson(Column col)
     {
-        return new Column(FunctionWrappedCall("try_parse_json", false, col));
+        return new Column(CreateExpression("try_parse_json", false, col));
     }
 
     public static Column VariantGet(string col, string path, string? targetType = null) => VariantGet(Col(col), Lit(path), targetType == null ? null : Lit(targetType));
@@ -2880,10 +2880,10 @@ public partial class Functions : FunctionsWrapper
     {
         if (Object.Equals(null, targetType))
         {
-            return new Column(FunctionWrappedCall("variant_get", false, col, path));
+            return new Column(CreateExpression("variant_get", false, col, path));
         }
         
-        return new Column(FunctionWrappedCall("variant_get", false, col, path, targetType));
+        return new Column(CreateExpression("variant_get", false, col, path, targetType));
     }
     
     public static Column TryVariantGet(string col, string path, string? targetType = null) => TryVariantGet(Col(col), Lit(path), targetType == null ? null : Lit(targetType));
@@ -2893,30 +2893,30 @@ public partial class Functions : FunctionsWrapper
     {
         if (Object.Equals(null, targetType))
         {
-            return new Column(FunctionWrappedCall("try_variant_get", false, col, path));
+            return new Column(CreateExpression("try_variant_get", false, col, path));
         }
         
-        return new Column(FunctionWrappedCall("try_variant_get", false, col, path, targetType));
+        return new Column(CreateExpression("try_variant_get", false, col, path, targetType));
     }
 
     public static Column IsVariantNull(string v) => IsVariantNull(Col(v)); 
     public static Column IsVariantNull(Column v)
     {
-        return new Column(FunctionWrappedCall("is_variant_null", false, v));
+        return new Column(CreateExpression("is_variant_null", false, v));
     }
     
     public static Column SchemaOfVariant(string v) => SchemaOfVariant(Col(v));
     
     public static Column SchemaOfVariant(Column v)
     {
-        return new Column(FunctionWrappedCall("schema_of_variant", false, v));
+        return new Column(CreateExpression("schema_of_variant", false, v));
     }  
     
     public static Column SchemaOfVariantAgg(string v) => SchemaOfVariantAgg(Col(v));
     
     public static Column SchemaOfVariantAgg(Column v)
     {
-        return new Column(FunctionWrappedCall("schema_of_variant_agg", false, v));
+        return new Column(CreateExpression("schema_of_variant_agg", false, v));
     }
 
     public static Column FromXml(Column col, StructType schema, Dictionary<string, string> options)
@@ -2926,7 +2926,7 @@ public partial class Functions : FunctionsWrapper
     
     public static Column FromXml(Column col, Column schema, Dictionary<string, string> options)
     {
-        return new Column(FunctionWrappedCall("from_xml", false, col, schema, Lit(options)));
+        return new Column(CreateExpression("from_xml", false, col, schema, Lit(options)));
     }
 
     public static Column SchemaOfXml(string xml, IDictionary<string, string>? options = null) => SchemaOfXml(Lit(xml), options);
@@ -2935,87 +2935,87 @@ public partial class Functions : FunctionsWrapper
     {
         if (options == null)
         {
-            return new Column(FunctionWrappedCall("schema_of_xml", false, xml));
+            return new Column(CreateExpression("schema_of_xml", false, xml));
         }
         
-        return new Column(FunctionWrappedCall("schema_of_xml", false, xml, CreateMap(options)));
+        return new Column(CreateExpression("schema_of_xml", false, xml, CreateMap(options)));
         
     }
     
     public static Column TryRemainder(string dividend, string divisor) => TryRemainder(Col(dividend), Col(divisor));
     
-    public static Column TryRemainder(Column dividend, Column divisor) => new (FunctionWrappedCall("try_remainder", false, dividend, divisor));
+    public static Column TryRemainder(Column dividend, Column divisor) => new (CreateExpression("try_remainder", false, dividend, divisor));
     
     /// <Summary>Ceil</Summary>
     public static Column Ceil(string col, int scale)
     {
-        return new Column(FunctionWrappedCall("ceil", false, Col(col), Lit(scale)));
+        return new Column(CreateExpression("ceil", false, Col(col), Lit(scale)));
     }
 
     /// <Summary>Ceil</Summary>
     public static Column Ceil(Column col, Column scale)
     {
-        return new Column(FunctionWrappedCall("ceil", false, col, scale));
+        return new Column(CreateExpression("ceil", false, col, scale));
     }
     
     /// <Summary>Ceiling</Summary>
     public static Column Ceiling(string col, int scale)
     {
-        return new Column(FunctionWrappedCall("ceiling", false, Col(col), Lit(scale)));
+        return new Column(CreateExpression("ceiling", false, Col(col), Lit(scale)));
     }
 
     /// <Summary>Ceiling</Summary>
     public static Column Ceiling(Column col, Column scale)
     {
-        return new Column(FunctionWrappedCall("ceiling", false, col, scale));
+        return new Column(CreateExpression("ceiling", false, col, scale));
     }
     
     /// <Summary>Floor</Summary>
     public static Column Floor(string col, int scale)
     {
-        return new Column(FunctionWrappedCall("floor", false, Col(col), Lit(scale)));
+        return new Column(CreateExpression("floor", false, Col(col), Lit(scale)));
     }
 
     /// <Summary>Floor</Summary>
     public static Column Floor(Column col, Column scale)
     {
-        return new Column(FunctionWrappedCall("floor", false, col, scale));
+        return new Column(CreateExpression("floor", false, col, scale));
     }
 
 
     public static Column Monthname(string col) => Monthname(Col(col));
 
-    public static Column Monthname(Column col) => new(FunctionWrappedCall("monthname", false, col));
+    public static Column Monthname(Column col) => new(CreateExpression("monthname", false, col));
     
     
     public static Column Dayname(string col) => Dayname(Col(col));
 
-    public static Column Dayname(Column col) => new(FunctionWrappedCall("dayname", false, col));
+    public static Column Dayname(Column col) => new(CreateExpression("dayname", false, col));
 
     public static Column TimestampDiff(string unit, string start, string end) => TimestampDiff(unit, Col(start), Col(end));
     public static Column TimestampDiff(string unit, Column start, Column end)
     {
-        return new Column(FunctionWrappedCall("timestampdiff", false, Lit(unit), start, end));
+        return new Column(CreateExpression("timestampdiff", false, Lit(unit), start, end));
     }
     
     public static Column TimestampAdd(string unit, int quantity, string ts) => TimestampAdd(unit, Lit(quantity), Col(ts));
     public static Column TimestampAdd(string unit, Column quantity, Column ts)
     {
-        return new Column(FunctionWrappedCall("timestampadd", false, Lit(unit), quantity, ts));
+        return new Column(CreateExpression("timestampadd", false, Lit(unit), quantity, ts));
     }
 
-    public static Column SessionUser() => new Column(FunctionWrappedCall("session_user", false));
+    public static Column SessionUser() => new Column(CreateExpression("session_user", false));
 
     
     public static Column Collate(string col, string collation) => Collate(Col(col), Lit(collation));
     public static Column Collate(Column col, Column collation)
     {
-        return new Column(FunctionWrappedCall("collate", false, col, collation));
+        return new Column(CreateExpression("collate", false, col, collation));
     }
 
     public static Column Collation(string col) => Collation(Col(col));
     public static Column Collation(Column col)
     {
-        return new Column(FunctionWrappedCall("collation", false, col));
+        return new Column(CreateExpression("collation", false, col));
     }
 }

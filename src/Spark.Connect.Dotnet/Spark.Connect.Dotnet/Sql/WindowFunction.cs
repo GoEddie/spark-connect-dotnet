@@ -36,22 +36,22 @@ public class WindowFunction : Functions
     {
         if (!string.IsNullOrEmpty(slideDuration) && !string.IsNullOrEmpty(startTime))
         {
-            return new Column(FunctionWrappedCall("window", false, timeColumn, Lit(windowDuration), Lit(slideDuration),
+            return new Column(CreateExpression("window", false, timeColumn, Lit(windowDuration), Lit(slideDuration),
                 Lit(startTime)));
         }
 
         if (!string.IsNullOrEmpty(slideDuration))
         {
-            return new Column(FunctionWrappedCall("window", false, timeColumn, Lit(windowDuration),
+            return new Column(CreateExpression("window", false, timeColumn, Lit(windowDuration),
                 Lit(slideDuration)));
         }
 
         if (!string.IsNullOrEmpty(startTime))
         {
-            return new Column(FunctionWrappedCall("window", false, timeColumn, Lit(windowDuration), Lit(startTime)));
+            return new Column(CreateExpression("window", false, timeColumn, Lit(windowDuration), Lit(startTime)));
         }
 
-        return new Column(FunctionWrappedCall("window", false, timeColumn, Lit(windowDuration)));
+        return new Column(CreateExpression("window", false, timeColumn, Lit(windowDuration)));
     }
 
     public static Column Window(string timeColumn, string windowDuration, string? slideDuration = null,

@@ -1711,4 +1711,5 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         Spark.Sql("SELECT 'abc' as c").Select(Collation("c")).Show();
         Spark.Conf.Set("spark.sql.collation.enabled", "false");  //is hidden behind feature flag
     }
+    
 }

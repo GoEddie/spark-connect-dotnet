@@ -5,7 +5,7 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class FunctionsWrapper : FunctionsInternal
 {
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct)
+    protected internal static Expression CreateExpression(string function, bool isDistinct)
     {
         return new Expression
         {
@@ -16,7 +16,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params Expression[] parameters)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, params Expression[] parameters)
     {
         return new Expression
         {
@@ -30,7 +30,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
     
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params Column[] parameters)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, params Column[] parameters)
     {
         return new Expression
         {
@@ -44,7 +44,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, params Expression[] parameters)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, Column col, params Expression[] parameters)
     {
         var args = new RepeatedField<Expression>();
         args.Add(col.Expression);
@@ -62,7 +62,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params string[] parameters)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, params string[] parameters)
     {
         return new Expression
         {
@@ -77,7 +77,7 @@ public class FunctionsWrapper : FunctionsInternal
     }
 
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column parameter1,
+    protected internal static Expression CreateExpression(string function, bool isDistinct, Column parameter1,
         Expression parameter2)
     {
         return new Expression
@@ -92,7 +92,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression parameter1, Column parameter2)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, Expression parameter1, Column parameter2)
     {
         return new Expression
         {
@@ -106,7 +106,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
     
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, Column col)
     {
         return new Expression
         {
@@ -120,7 +120,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, string col)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, string col)
     {
         return new Expression
         {
@@ -134,7 +134,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression col)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, Expression col)
     {
         return new Expression
         {
@@ -148,7 +148,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, string value)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, Column col, string value)
     {
         return new Expression
         {
@@ -168,7 +168,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, string col, Column value)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, string col, Column value)
     {
         return new Expression
         {
@@ -189,7 +189,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, int value)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, Column col, int value)
     {
         return new Expression
         {
@@ -209,7 +209,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, double value)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, Column col, double value)
     {
         return new Expression
         {
@@ -229,7 +229,7 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col, float value)
+    protected internal static Expression CreateExpression(string function, bool isDistinct, Column col, float value)
     {
         return new Expression
         {
