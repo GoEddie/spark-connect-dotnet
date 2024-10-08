@@ -1686,6 +1686,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
     
     [Fact]
+    [Trait("SparkMinVersion", "4")]
     public void SessionUser_Test()
     {
        Spark.Range(20).Select(SessionUser()).Show();
