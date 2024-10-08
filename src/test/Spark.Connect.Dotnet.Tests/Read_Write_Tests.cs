@@ -5,12 +5,10 @@ namespace Spark.Connect.Dotnet.Tests;
 
 public class ReadWriteTests : E2ETestBase
 {
-    
     public ReadWriteTests(ITestOutputHelper logger) : base(logger)
     {
-        
     }
-    
+
     [Fact]
     public async Task Read_And_Write_Json()
     {
@@ -155,5 +153,4 @@ public class ReadWriteTests : E2ETestBase
         Assert.Equal(false, result[0][2]);
         Assert.Equal("hello friend", result[0][3]);
     }
-    
 }

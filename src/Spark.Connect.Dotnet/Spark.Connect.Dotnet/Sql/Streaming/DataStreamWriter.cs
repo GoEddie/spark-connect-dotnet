@@ -9,20 +9,20 @@ public class DataStreamWriter
     private readonly Relation _input;
 
     private readonly MapField<string, string> _options = new();
+    private readonly List<string> _paritionBy = new();
     private readonly SparkSession _session;
+    private readonly string _udf_base64_function = string.Empty;
+
+    private readonly string _udf_pythonVersion = string.Empty;
     private bool? _availableNow;
-    private string _continuous = string.Empty;
+    private string? _continuous = string.Empty;
 
     private string _format = string.Empty;
     private bool? _once;
     private string _outputMode = string.Empty;
-    private readonly List<string> _paritionBy = new();
     private string _path = string.Empty;
-    private string _processingTime = string.Empty;
+    private string? _processingTime = string.Empty;
     private string _queryName = string.Empty;
-    private readonly string _udf_base64_function = string.Empty;
-
-    private readonly string _udf_pythonVersion = string.Empty;
 
     public DataStreamWriter(SparkSession session, Relation input)
     {
@@ -89,8 +89,7 @@ public class DataStreamWriter
             {
                 PythonFunction = new PythonUDF
                 {
-                    Command = ByteString.FromBase64(_udf_base64_function),
-                    PythonVer = _udf_pythonVersion
+                    Command = ByteString.FromBase64(_udf_base64_function), PythonVer = _udf_pythonVersion
                 }
             };
         }
@@ -156,8 +155,7 @@ public class DataStreamWriter
         return this;
     }
 
-    public DataStreamWriter Trigger(string? processingTime = null, bool? once = null, string? continuous = null,
-        bool? availableNow = null)
+    public DataStreamWriter Trigger(string? processingTime = null, bool? once = null, string? continuous = null, bool? availableNow = null)
     {
         _processingTime = processingTime;
         _once = once;
@@ -178,10 +176,10 @@ public class DataStreamWriter
                 WriteStreamOperationStart = writeStreamOperationStart
             }
         };
-
-        var task = GrpcInternal.ExecStreamingResponse(_session, plan);
-        task.Wait();
-        return new StreamingQuery(_session, task.Result.Item1, task.Result.Item2);
+        
+        var executor = new RequestExecutor(_session, plan);
+        executor.Exec();
+        return new StreamingQuery(_session, executor.GetStreamingQueryId(), executor.GetStreamingQueryName());
     }
 
     public StreamingQuery Start(string? path = null, string? tableName = null, string? format = null,
@@ -239,12 +237,13 @@ public class DataStreamWriter
             }
         };
 
-        var task = GrpcInternal.ExecStreamingResponse(_session, plan);
-        task.Wait();
+        var executor = new RequestExecutor(_session, plan);
+        executor.Exec();
+        
+        var streamingQuery = new StreamingQuery(_session, executor.GetStreamingQueryId(), executor.GetStreamingQueryName());
+        _session.Streams.Add(streamingQuery);
 
-        var sq = new StreamingQuery(_session, task.Result.Item1, task.Result.Item2);
-        _session.Streams.Add(sq);
-        return sq;
+        return streamingQuery;
     }
 
     // public DataStreamWriter ForEach()

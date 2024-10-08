@@ -2,27 +2,24 @@ using Apache.Arrow.Types;
 
 namespace Spark.Connect.Dotnet.Sql.Types;
 
-public class VoidType : SparkDataType
+public class NullType : SparkDataType
 {
-    public VoidType() : base("Void")
+    public NullType() : base("NULL")
     {
     }
 
     public override DataType ToDataType()
     {
-        return new DataType
+        return new DataType()
         {
             Null = new DataType.Types.NULL()
+            {
+            }
         };
     }
 
     public override IArrowType ToArrowType()
     {
         return new Apache.Arrow.Types.NullType();
-    }
-
-    public override string SimpleString()
-    {
-        return "void";
     }
 }

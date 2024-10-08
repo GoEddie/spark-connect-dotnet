@@ -3,7 +3,7 @@ using Xunit.Abstractions;
 namespace Spark.Connect.Dotnet.Tests;
 
 /// <summary>
-/// This is so we get the output in the test ui rather than having to go and view the diagnostics log each time
+///     This is so we get the output in the test ui rather than having to go and view the diagnostics log each time
 /// </summary>
 public class TestOutputConsole : LocalConsole
 {

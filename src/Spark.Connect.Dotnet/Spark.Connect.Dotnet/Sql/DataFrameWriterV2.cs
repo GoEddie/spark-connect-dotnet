@@ -4,11 +4,10 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class DataFrameWriterV2
 {
+    private readonly List<Expression> _partitionedBy = new();
     private readonly SparkSession _session;
     private readonly string _tableName;
     private readonly DataFrame _what;
-
-    private readonly List<Expression> _partitionedBy = new();
 
     public DataFrameWriterV2(string tableName, SparkSession session, DataFrame what)
     {
@@ -36,15 +35,12 @@ public class DataFrameWriterV2
             {
                 WriteOperationV2 = new WriteOperationV2
                 {
-                    Input = _what.Relation,
-                    TableName = _tableName,
-                    Mode = WriteOperationV2.Types.Mode.Create,
-                    PartitioningColumns = { _partitionedBy }
+                    Input = _what.Relation, TableName = _tableName, Mode = WriteOperationV2.Types.Mode.Create, PartitioningColumns = { _partitionedBy }
                 }
             }
         };
-
-        await GrpcInternal.Exec(_session.GrpcClient, _session.Host, _session.SessionId, plan, _session.Headers,
-            _session.UserContext, _session.ClientType);
+        
+        var executor = new RequestExecutor(_session, plan);
+        await executor.ExecAsync();
     }
 }

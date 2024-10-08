@@ -5,28 +5,27 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public class CallableHelper
 {
-    private static int parameterNumber = 0; //session scopped??? does it matter??
-    
+    private static int parameterNumber; //session scopped??? does it matter??
+
     public Expression GetLambdaExpression(Expression<Func<Column, Column>> lambda)
     {
-        var x = new Expression.Types.UnresolvedNamedLambdaVariable()
+        var x = new Expression.Types.UnresolvedNamedLambdaVariable
         {
             NameParts =
             {
                 FreshLambdaName(lambda.Parameters[0].Name)
             }
         };
-        
-        var method = lambda.Compile();
-        var result = method(new Column(new Expression{ UnresolvedNamedLambdaVariable = x}));
 
-        var lambdaExpression = new Expression.Types.LambdaFunction()
+        var method = lambda.Compile();
+        var result = method(new Column(new Expression { UnresolvedNamedLambdaVariable = x }));
+
+        var lambdaExpression = new Expression.Types.LambdaFunction
         {
-            Function = result.Expression,
-            Arguments = { x }
+            Function = result.Expression, Arguments = { x }
         };
 
-        return new Expression()
+        return new Expression
         {
             LambdaFunction = lambdaExpression
         };
@@ -34,7 +33,7 @@ public class CallableHelper
 
     public Expression GetLambdaExpression(Expression<Func<Column, Column, Column>> lambda)
     {
-        var x = new Expression.Types.UnresolvedNamedLambdaVariable()
+        var x = new Expression.Types.UnresolvedNamedLambdaVariable
         {
             NameParts =
             {
@@ -42,7 +41,7 @@ public class CallableHelper
             }
         };
 
-        var y = new Expression.Types.UnresolvedNamedLambdaVariable()
+        var y = new Expression.Types.UnresolvedNamedLambdaVariable
         {
             NameParts =
             {
@@ -51,23 +50,23 @@ public class CallableHelper
         };
 
         var method = lambda.Compile();
-        var result = method(new Column(new Expression{ UnresolvedNamedLambdaVariable = x}), new Column(new Expression{ UnresolvedNamedLambdaVariable = y}));
+        var result = method(new Column(new Expression { UnresolvedNamedLambdaVariable = x }),
+            new Column(new Expression { UnresolvedNamedLambdaVariable = y }));
 
-        var lambdaExpression = new Expression.Types.LambdaFunction()
+        var lambdaExpression = new Expression.Types.LambdaFunction
         {
-            Function = result.Expression,
-            Arguments = { x, y }
+            Function = result.Expression, Arguments = { x, y }
         };
 
-        return new Expression()
+        return new Expression
         {
             LambdaFunction = lambdaExpression
         };
     }
-    
+
     public Expression GetLambdaExpression(Expression<Func<Column, Column, Column, Column>> lambda)
     {
-        var k = new Expression.Types.UnresolvedNamedLambdaVariable()
+        var k = new Expression.Types.UnresolvedNamedLambdaVariable
         {
             NameParts =
             {
@@ -75,15 +74,15 @@ public class CallableHelper
             }
         };
 
-        var v1 = new Expression.Types.UnresolvedNamedLambdaVariable()
+        var v1 = new Expression.Types.UnresolvedNamedLambdaVariable
         {
             NameParts =
             {
                 FreshLambdaName(lambda.Parameters[1].Name)
             }
         };
-        
-        var v2 = new Expression.Types.UnresolvedNamedLambdaVariable()
+
+        var v2 = new Expression.Types.UnresolvedNamedLambdaVariable
         {
             NameParts =
             {
@@ -92,20 +91,21 @@ public class CallableHelper
         };
 
         var method = lambda.Compile();
-        var result = method(new Column(new Expression{ UnresolvedNamedLambdaVariable = k}), new Column(new Expression{ UnresolvedNamedLambdaVariable = v1}), new Column(new Expression{ UnresolvedNamedLambdaVariable = v2}));
+        var result = method(new Column(new Expression { UnresolvedNamedLambdaVariable = k }),
+            new Column(new Expression { UnresolvedNamedLambdaVariable = v1 }),
+            new Column(new Expression { UnresolvedNamedLambdaVariable = v2 }));
 
-        var lambdaExpression = new Expression.Types.LambdaFunction()
+        var lambdaExpression = new Expression.Types.LambdaFunction
         {
-            Function = result.Expression,
-            Arguments = { k, v1, v2}
+            Function = result.Expression, Arguments = { k, v1, v2 }
         };
 
-        return new Expression()
+        return new Expression
         {
             LambdaFunction = lambdaExpression
         };
     }
-    
+
     private string FreshLambdaName(string? name)
     {
         return $"{name}_{parameterNumber++}";
@@ -121,13 +121,12 @@ public class CallableHelper
         var method = lambda.Compile();
         var result = Lit(method());
 
-        var lambdaExpression = new Expression.Types.LambdaFunction()
+        var lambdaExpression = new Expression.Types.LambdaFunction
         {
-            Function = result.Expression,
-            Arguments = {  }
+            Function = result.Expression
         };
 
-        return new Expression()
+        return new Expression
         {
             LambdaFunction = lambdaExpression
         };

@@ -8,17 +8,14 @@ public static class SparkExceptionFactory
     {
         return exceptionCode switch
         {
-            "MISSING_GROUP_BY" => new MissingGroupByException(detail, exception),
-            "DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE" => new DataTypeMismatchUnexpectedInputTypeException(detail,
-                exception),
-            "UNRESOLVED_ROUTINE" => new UnresolvedRoutineException(detail, exception),
-            "DATATYPE_MISMATCH.NON_FOLDABLE_INPUT" => new DataTypeMismatchNonFoldableInputException(detail, exception),
-            "GROUP_BY_AGGREGATE" => new GroupByAggregateException(detail, exception),
-            "UNRESOLVED_COLUMN.WITH_SUGGESTION" => new UnresolvedColumnWithSuggestionException(detail, exception),
-            "WINDOW_FUNCTION_WITHOUT_OVER_CLAUSE" => new WindowFunctionWithoutOverException(detail, exception),
-            "Internal" => new InternalSparkException(detail, exception),
-            "Unavailable" => new UnavailableException(detail, exception),
-            _ => new SparkException(exception)
+            "MISSING_GROUP_BY" => new MissingGroupByException(detail, exception), "DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE" => new DataTypeMismatchUnexpectedInputTypeException(detail,
+                exception)
+            , "UNRESOLVED_ROUTINE" => new UnresolvedRoutineException(detail, exception)
+            , "DATATYPE_MISMATCH.NON_FOLDABLE_INPUT" => new DataTypeMismatchNonFoldableInputException(detail, exception)
+            , "GROUP_BY_AGGREGATE" => new GroupByAggregateException(detail, exception)
+            , "UNRESOLVED_COLUMN.WITH_SUGGESTION" => new UnresolvedColumnWithSuggestionException(detail, exception)
+            , "WINDOW_FUNCTION_WITHOUT_OVER_CLAUSE" => new WindowFunctionWithoutOverException(detail, exception), "Internal" => new InternalSparkException(detail, exception)
+            , "Unavailable" => new UnavailableException(detail, exception), _ => new SparkException(exception)
         };
     }
 

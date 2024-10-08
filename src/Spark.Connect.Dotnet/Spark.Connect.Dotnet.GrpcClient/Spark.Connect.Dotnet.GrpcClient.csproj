@@ -8,11 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Apache.Arrow" Version="13.0.0"/>
-        <PackageReference Include="Google.Protobuf" Version="3.24.4"/>
-        <PackageReference Include="Grpc.Core.Api" Version="2.57.0"/>
-        <PackageReference Include="Grpc.Net.Client" Version="2.57.0"/>
-        <PackageReference Include="Grpc.Tools" Version="2.40.0">
+        <PackageReference Include="Apache.Arrow" Version="16.1.0"/>
+        <PackageReference Include="Google.Protobuf" Version="3.27.2"/>
+        <PackageReference Include="Grpc.Core.Api" Version="2.63.0"/>
+        <PackageReference Include="Grpc.Net.Client" Version="2.63.0"/>
+        <PackageReference Include="Grpc.Tools" Version="2.64.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
@@ -67,7 +67,7 @@
         <Protobuf Include="spark\connect\types.proto"/>
     </ItemGroup>
 
-<PropertyGroup>
+    <PropertyGroup>
         <PackageId>GOEddie.Spark.Dotnet.GrpcClient</PackageId>
         <Version>3.5.1-build.5</Version>
         <Authors>GOEddie (Ed Elliott)</Authors>
@@ -82,8 +82,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-     <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
-     <None Include="README.md" Pack="true" PackagePath=""/>
-     <None Include="logo.png" Pack="true" PackagePath="" />
-    </ItemGroup>    
+        <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
+        <None Include="README.md" Pack="true" PackagePath=""/>
+        <None Include="logo.png" Pack="true" PackagePath=""/>
+    </ItemGroup>
 </Project>

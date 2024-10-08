@@ -6,7 +6,7 @@ public class LocalConsole
     {
         Console.Write(what);
     }
-    
+
     public virtual void WriteLine(string what)
     {
         Console.WriteLine(what);

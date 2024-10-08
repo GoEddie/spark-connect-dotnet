@@ -11,7 +11,7 @@ public class DataFrame_SchemaTests : E2ETestBase
     public DataFrame_SchemaTests(ITestOutputHelper logger) : base(logger)
     {
     }
-    
+
     [Fact]
     public void Schema_SimpleString_Test()
     {

@@ -11,26 +11,34 @@ public class FunctionsWrapper : FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false
             }
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct,
-        params Expression[] parameters)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params Expression[] parameters)
     {
         return new Expression
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     parameters.ToList()
+                }
+            }
+        };
+    }
+    
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params Column[] parameters)
+    {
+        return new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
+                {
+                    parameters.Select(p => p.Expression).ToList()
                 }
             }
         };
@@ -46,10 +54,7 @@ public class FunctionsWrapper : FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     args
                 }
@@ -57,17 +62,13 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct,
-        params string[] parameters)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params string[] parameters)
     {
         return new Expression
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     parameters.Select(p => new Column(p).Expression).ToList()
                 }
@@ -75,41 +76,6 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, string parameter1,
-        Expression parameter2)
-    {
-        return new Expression
-        {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction
-            {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
-                {
-                    new Column(parameter1).Expression, parameter2
-                }
-            }
-        };
-    }
-
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression parameter1,
-        string parameter2)
-    {
-        return new Expression
-        {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction
-            {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
-                {
-                    parameter1, new Column(parameter2).Expression
-                }
-            }
-        };
-    }
 
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column parameter1,
         Expression parameter2)
@@ -118,10 +84,7 @@ public class FunctionsWrapper : FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     parameter1.Expression, parameter2
                 }
@@ -129,52 +92,27 @@ public class FunctionsWrapper : FunctionsInternal
         };
     }
 
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression parameter1,
-        Column parameter2)
+    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Expression parameter1, Column parameter2)
     {
         return new Expression
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     parameter1, parameter2.Expression
                 }
             }
         };
     }
-
-    protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, params Column[] parameters)
-    {
-        return new Expression
-        {
-            UnresolvedFunction = new Expression.Types.UnresolvedFunction
-            {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
-                {
-                    parameters.Select(p => p.Expression).ToList()
-                }
-            }
-        };
-    }
     
-
     protected internal static Expression FunctionWrappedCall(string function, bool isDistinct, Column col)
     {
         return new Expression
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     col.Expression
                 }
@@ -188,10 +126,7 @@ public class FunctionsWrapper : FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     new Column(col).Expression
                 }
@@ -205,10 +140,7 @@ public class FunctionsWrapper : FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     col
                 }
@@ -222,10 +154,7 @@ public class FunctionsWrapper : FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     col.Expression, new Expression
                     {
@@ -245,10 +174,7 @@ public class FunctionsWrapper : FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     new Expression
                     {
@@ -256,8 +182,8 @@ public class FunctionsWrapper : FunctionsInternal
                         {
                             String = col
                         }
-                    },
-                    value.Expression
+                    }
+                    , value.Expression
                 }
             }
         };
@@ -269,10 +195,7 @@ public class FunctionsWrapper : FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     col.Expression, new Expression
                     {
@@ -292,10 +215,7 @@ public class FunctionsWrapper : FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     col.Expression, new Expression
                     {
@@ -315,10 +235,7 @@ public class FunctionsWrapper : FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     col.Expression, new Expression
                     {
@@ -340,7 +257,9 @@ public class FunctionsWrapper : FunctionsInternal
         {
             csName.Append(part[0].ToString().ToUpperInvariant());
             if (part.Length > 1)
+            {
                 csName.Append(part.Substring(1));
+            }
         }
 
         return csName.ToString();

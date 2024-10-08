@@ -1,6 +1,5 @@
 using Grpc.Core;
 using Spark.Connect.Dotnet.Grpc;
-using Spark.Connect.Dotnet.Sql;
 using Spark.Connect.Dotnet.Sql.Types;
 using Xunit.Abstractions;
 using static Spark.Connect.Dotnet.Sql.Functions;
@@ -13,7 +12,7 @@ public class DataFrame_Tests : E2ETestBase
     public DataFrame_Tests(ITestOutputHelper logger) : base(logger)
     {
     }
-    
+
     [Fact]
     public void AliasTest()
     {
@@ -105,9 +104,9 @@ public class DataFrame_Tests : E2ETestBase
         df.Show();
         df = df.Drop(Col("A"));
         df.Show();
-        Assert.DoesNotContain(df.Columns, s => s == "A" );
+        Assert.DoesNotContain(df.Columns, s => s == "A");
     }
-    
+
     [Fact]
     public void DropDuplicatesTest()
     {
@@ -120,7 +119,7 @@ public class DataFrame_Tests : E2ETestBase
         df = df.DropDuplicates();
         df.Show();
     }
-    
+
     [Fact]
     public void DropNaTest()
     {
@@ -129,7 +128,7 @@ public class DataFrame_Tests : E2ETestBase
         var na = df.DropNa("any", null, "what", "something");
         na.Show();
     }
-    
+
     [Fact]
     public void DtypesTest()
     {
@@ -137,34 +136,37 @@ public class DataFrame_Tests : E2ETestBase
         var types = df.Dtypes;
         Assert.Equal(2, types.Count());
     }
-    
+
     [Fact]
     public void ExceptAllTest()
     {
-        var data = new List<IList<object>>() { new List<object>() { "a", 1 }, new List<object> { "a", 1 }, new List<object> { "a", 1 }, new List<object> { "a", 2 }, new List<object> { "b", 3 }, new List<object> { "c", 4 } };
+        var data = new List<IList<object>>
+        {
+            new List<object> { "a", 1 }, new List<object> { "a", 1 }, new List<object> { "a", 1 }, new List<object> { "a", 2 }, new List<object> { "b", 3 }, new List<object> { "c", 4 }
+        };
         var schema = new StructType(new StructField("C1", StringType(), true), new StructField("C2", IntType(), true));
         var df1 = Spark.CreateDataFrame(data, schema);
         df1.Show();
-        
-        data = new List<IList<object>>() { new List<object>() { "a", 1 }, new List<object> { "b", 3 } };
+
+        data = new List<IList<object>> { new List<object> { "a", 1 }, new List<object> { "b", 3 } };
         var df2 = Spark.CreateDataFrame(data, schema);
         df1.ExceptAll(df2).Show();
     }
-    
+
     [Fact]
     public void FillNaTest()
     {
         var df = Spark.Sql("SELECT  cast(null as string) as null_string, cast(null as int) as null_int from range(10)");
         df.FillNa(Lit(100L)).Show();
         df.FillNa(Lit("not empty")).Show();
-        
+
         df.FillNa(Lit(100L), "null_int").Show();
         df.FillNa(Lit(100L), "null_string").Show();
-        
+
         df.FillNa(Lit("not empty"), "null_int").Show();
         df.FillNa(Lit("not empty"), "null_string").Show();
     }
-    
+
     [Fact]
     public void FilterTest()
     {
@@ -172,16 +174,16 @@ public class DataFrame_Tests : E2ETestBase
         df.Filter(Col("id") == 4).Show();
         df.Filter("id == 4").Show();
     }
-    
+
     [Fact]
     public void TakeTest()
     {
         var df = Spark.Sql("SELECT  id from range(10)");
         var rows = df.Take(3);
-        
+
         Assert.Equal(3, rows.Count());
     }
-    
+
     [Fact]
     public void FirstTest()
     {
@@ -189,7 +191,7 @@ public class DataFrame_Tests : E2ETestBase
         var row = df.First();
         Assert.Equal(0L, row[0]);
     }
-    
+
     [Fact]
     public void FreqItemsTest()
     {
@@ -204,7 +206,7 @@ public class DataFrame_Tests : E2ETestBase
         var df = Spark.Sql("SELECT  id from range(10) union SELECT id from range(12) union SELECT id from range(8)");
         var explained = df.Hint("bradcast").Explain();
     }
-    
+
     [Fact]
     public void InputFilesTest()
     {
@@ -216,7 +218,7 @@ public class DataFrame_Tests : E2ETestBase
             Console.WriteLine($"File: {file}");
         }
     }
-    
+
     [Fact]
     public void IntersectTest()
     {
@@ -224,7 +226,7 @@ public class DataFrame_Tests : E2ETestBase
         var df2 = Spark.Range(122);
         df1.Intersect(df2).Show();
     }
-    
+
     [Fact]
     public void IntersectAllTest()
     {
@@ -233,7 +235,7 @@ public class DataFrame_Tests : E2ETestBase
         df1.IntersectAll(df2).Show();
     }
 
-    
+
     [Fact]
     public void IsLocalTest()
     {
@@ -243,25 +245,26 @@ public class DataFrame_Tests : E2ETestBase
         var df2 = Spark.Sql("SHOW TABLES");
         Assert.True(df2.IsLocal());
     }
-    
+
     [Fact]
     public void IsStreamingTest()
     {
         var df1 = Spark.Range(10);
         Assert.False(df1.IsStreaming());
     }
-    
+
     [Fact]
     public void LimitTest()
     {
         var df1 = Spark.Range(10).Limit(4);
         Assert.Equal(4, df1.Count());
     }
-    
+
     [Fact]
     public void GroupByTest()
     {
-        var df1 = Spark.Range(5).WithColumn("name", Lit("ed")).Union(Spark.Range(3).WithColumn("name", Lit("bert"))).WithColumn("earnings", Lit(1234));
+        var df1 = Spark.Range(5).WithColumn("name", Lit("ed")).Union(Spark.Range(3).WithColumn("name", Lit("bert")))
+            .WithColumn("earnings", Lit(1234));
         df1.Show();
         var group = df1.GroupBy(Col("id"));
         group.Sum("earnings").Show();
@@ -271,11 +274,12 @@ public class DataFrame_Tests : E2ETestBase
         group.Mean("earnings").Show();
         group.Avg("earnings").Show();
     }
-    
+
     [Fact]
     public void PivotTest()
     {
-        var df1 = Spark.Range(5).WithColumn("name", Lit("ed")).Union(Spark.Range(3).WithColumn("name", Lit("bert"))).WithColumn("earnings", Lit(1234));
+        var df1 = Spark.Range(5).WithColumn("name", Lit("ed")).Union(Spark.Range(3).WithColumn("name", Lit("bert")))
+            .WithColumn("earnings", Lit(1234));
         df1.Show();
         var group = df1.GroupBy(Col("id")).Pivot("name", Lit("ed"), Lit("bert"), Lit("unknown"));
         group.Sum("earnings").Show();
@@ -285,76 +289,75 @@ public class DataFrame_Tests : E2ETestBase
         group.Mean("earnings").Show();
         group.Avg("earnings").Show();
     }
-    
+
     [Fact]
     public void UnpivotTest()
     {
-        var df1 = Spark.Range(5).WithColumn("name", Lit("ed")).Union(Spark.Range(3).WithColumn("name", Lit("bert"))).WithColumn("earnings", Lit(1234));
+        var df1 = Spark.Range(5).WithColumn("name", Lit("ed")).Union(Spark.Range(3).WithColumn("name", Lit("bert")))
+            .WithColumn("earnings", Lit(1234));
         df1.Show();
         var group = df1.GroupBy(Col("id")).Pivot("name", Lit("ed"), Lit("bert"), Lit("unknown"));
-        group.Sum("earnings").Unpivot(new []{Col("id")}, new Column[]{Lit("ed"), Lit("bert")}).Show();
-        group.Sum("earnings").Unpivot(new []{Col("id")}, new Column[]{Lit("ed"), Lit("bert")}, "variableColumn").Show();
-        group.Sum("earnings").Unpivot(new []{Col("id")}, new Column[]{Lit("ed"), Lit("bert")}, "variableColumn", "valueColumn").Show();
+        group.Sum("earnings").Unpivot(new[] { Col("id") }, new[] { Lit("ed"), Lit("bert") }).Show();
+        group.Sum("earnings").Unpivot(new[] { Col("id") }, new[] { Lit("ed"), Lit("bert") }, "variableColumn").Show();
+        group.Sum("earnings")
+            .Unpivot(new[] { Col("id") }, new[] { Lit("ed"), Lit("bert") }, "variableColumn", "valueColumn").Show();
     }
-    
+
     [Fact]
     public void MeltTest()
     {
-        var df1 = Spark.Range(5).WithColumn("name", Lit("ed")).Union(Spark.Range(3).WithColumn("name", Lit("bert"))).WithColumn("earnings", Lit(1234));
+        var df1 = Spark.Range(5).WithColumn("name", Lit("ed")).Union(Spark.Range(3).WithColumn("name", Lit("bert")))
+            .WithColumn("earnings", Lit(1234));
         var group = df1.GroupBy(Col("id")).Pivot("name", Lit("ed"), Lit("bert"), Lit("unknown"));
-        group.Sum("earnings").Melt(new []{Col("id")}, new Column[]{Lit("ed"), Lit("bert")}).Show();
-        group.Sum("earnings").Melt(new []{Col("id")}, new Column[]{Lit("ed"), Lit("bert")}, "variableColumn").Show();
-        group.Sum("earnings").Melt(new []{Col("id")}, new Column[]{Lit("ed"), Lit("bert")}, "variableColumn", "valueColumn").Show();
+        group.Sum("earnings").Melt(new[] { Col("id") }, new[] { Lit("ed"), Lit("bert") }).Show();
+        group.Sum("earnings").Melt(new[] { Col("id") }, new[] { Lit("ed"), Lit("bert") }, "variableColumn").Show();
+        group.Sum("earnings")
+            .Melt(new[] { Col("id") }, new[] { Lit("ed"), Lit("bert") }, "variableColumn", "valueColumn").Show();
     }
-    
+
     [Fact]
     public void PrintSchemaTest()
     {
         Spark.Range(100).PrintSchema();
     }
-    
+
     [Fact]
     public void RepartitionByRangeTest()
     {
-        var df = Spark.CreateDataFrame(new List<IList<object>>()
+        var df = Spark.CreateDataFrame(new List<IList<object>>
         {
-            new List<object>() { 56, "Tom" },
-            new List<object>() { 123, "Bob" },
-            new List<object>() { 23, "Alice" }
+            new List<object> { 56, "Tom" }, new List<object> { 123, "Bob" }, new List<object> { 23, "Alice" }
         }, new StructType(new StructField("age", new IntegerType(), true), new StructField("name", StringType(), true)));
-        
+
         df.RepartitionByRange(2, Col("age")).Show();
     }
-    
+
     [Fact]
     public void ReplaceTest()
     {
-        var df = Spark.CreateDataFrame(new List<IList<object>>()
+        var df = Spark.CreateDataFrame(new List<IList<object>>
         {
-            new List<object>() { 56, "Tom" },
-            new List<object>() { 123, "Bob" },
-            new List<object>() { 23, "Alice" }
+            new List<object> { 56, "Tom" }, new List<object> { 123, "Bob" }, new List<object> { 23, "Alice" }
         }, new StructType(new StructField("age", new IntegerType(), true), new StructField("name", StringType(), true)));
-        
+
         df.Replace(Lit("Bob"), Lit("Rob")).Show();
         df.Replace(Lit("Bob"), Lit("Rob"), "name").Show();
         df.Replace(Lit(123L), Lit(999L), "age").Show();
     }
-    
+
     [Fact]
     public void RollupTest()
     {
-        var df = Spark.CreateDataFrame(new List<IList<object>>()
+        var df = Spark.CreateDataFrame(new List<IList<object>>
         {
-            new List<object>() { 5, "Bob" },
-            new List<object>() { 2, "Alice" }
+            new List<object> { 5, "Bob" }, new List<object> { 2, "Alice" }
         }, new StructType(new StructField("age", new IntegerType(), true), new StructField("name", StringType(), true)));
 
         df.Rollup("name", "age").Count().OrderBy("name", "age").Show();
         df.Rollup("name", "age").Count().OrderBy(Desc("count(1)")).Show();
         df.Rollup("name", "age").Count().Show();
     }
-    
+
     [Fact]
     public void SampleTest()
     {
@@ -363,45 +366,49 @@ public class DataFrame_Tests : E2ETestBase
         Assert.NotEqual(10000, sampled.Count());
         sampled.Show();
     }
-    
+
     [Fact]
     public void SampleByTest()
     {
         var df = Spark.Range(0, 100).Select((Col("id") % 3).Alias("key"));
-        df = df.SampleBy(Col("key"), new Dictionary<int, double>() { { 0, 0.1 }, { 1, 0.2 } }, seed: 0);
-        
+        df = df.SampleBy(Col("key"), new Dictionary<int, double> { { 0, 0.1 }, { 1, 0.2 } }, 0);
+
         df.Show();
         Assert.Equal(11, df.Count());
-        
     }
 
-    [Fact] public void SelectExprTest()
+    [Fact]
+    public void SelectExprTest()
     {
         var df = Spark.Range(0, 100);
         df.SelectExpr("id * 2", "abs(id)").Show();
     }
-    
-    [Fact] public void SortWithinPartitionsTest()
+
+    [Fact]
+    public void SortWithinPartitionsTest()
     {
         var df = Spark.Range(0, 100);
         df.SortWithinPartitions("id").Show();
     }
-    
-    [Fact] public void StorageLevelTest()
+
+    [Fact]
+    public void StorageLevelTest()
     {
         var df = Spark.Range(0, 100);
         var level = df.StorageLevel();
         Console.WriteLine(level);
     }
-    
-    [Fact] public void ToTest()
+
+    [Fact]
+    public void ToTest()
     {
         var df = Spark.Range(0, 100);
         var toSchema = new StructType(new StructField("id", ShortType(), false));
         df.To(toSchema).Show();
     }
-    
-    [Fact] public void WithColumnRenamedTest()
+
+    [Fact]
+    public void WithColumnRenamedTest()
     {
         var df = Spark.Range(0, 100);
         df.WithColumnRenamed("id", "no longer id").Show();
@@ -411,18 +418,18 @@ public class DataFrame_Tests : E2ETestBase
     public void IndexerAndSelectTest()
     {
         var df = Spark.Range(10);
-        
+
         //no validation
         var col = df["DoesNotExist"];
-        
+
         //session df validation
         Spark.Conf.Set("spark.connect.dotnet.validatethiscallcolumnname", "true");
         Assert.Throws<SparkException>(() => col = df["DoesNotExist"]);
-        
+
         //remove session df validation
         Spark.Conf.Set("spark.connect.dotnet.validatethiscallcolumnname", "false");
         col = df["DoesNotExist"];
-        
+
         //df level validation
         df.ValidateThisCallColumnName = true;
         Assert.Throws<SparkException>(() => col = df["DoesNotExist"]);
@@ -430,22 +437,25 @@ public class DataFrame_Tests : E2ETestBase
         //disable df level validation
         df.ValidateThisCallColumnName = false;
         col = df["DoesNotExist"];
-        
+
         //with no validation spark should fail on plan execute
         var exception = Assert.Throws<RpcException>(() => df.Select(col));
-        Assert.Contains("or function parameter with name `DoesNotExist` cannot be resolved. Did you mean one of the following? [`id`].", exception.Message);
+        Assert.Contains(
+            "or function parameter with name `DoesNotExist` cannot be resolved. Did you mean one of the following? [`id`].",
+            exception.Message);
     }
 
     [Fact]
     public void Collect_Tests()
     {
-        var source = Spark.Sql("SELECT array(id, id + 1, id + 2, null, 88) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(cast(id as string) as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr, 'year' as year_string, struct('a', 1) as struct_  FROM range(100)");
+        var source = Spark.Sql(
+            "SELECT array(id, id + 1, id + 2, null, 88) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(cast(id as string) as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr, 'year' as year_string, struct('a', 1) as struct_  FROM range(100)");
         source.Show();
         var rows = source.Collect();
         Assert.Equal(100, rows.Count);
         Assert.Equal(20, rows[0].Data.Count);
     }
-    
+
     [Fact]
     public void Agg_Tests()
     {
@@ -455,5 +465,36 @@ public class DataFrame_Tests : E2ETestBase
         Assert.Equal(rows[0][0], 5);
         Assert.Equal(rows[0][1], 2);
         Assert.Equal(rows[0][2], 2L);
+    }
+
+    private Dotnet.Sql.DataFrame TransformNoArgs(Dotnet.Sql.DataFrame what)
+    {
+        return what.WithColumn("B", Lit("B"));
+    }
+
+    private Dotnet.Sql.DataFrame TransformWithArgs(Dotnet.Sql.DataFrame what, string columnName, string value)
+    {
+        return what.WithColumn(columnName, Lit(value));
+    }
+
+    [Fact]
+    public void Transform_NoArgs()
+    {
+        var df = Spark.Range(100);
+        var a = df.Transform(p => p.WithColumn("A", Lit("A")));
+        a.Show();
+        var b = a.Transform(p => TransformNoArgs(p));
+        b.Show();
+        var c = b.Transform(p => TransformWithArgs(p, "C", "C"));
+        c.Show();
+    }
+
+    [Fact]
+    public void Tail()
+    {
+        var df = Spark.Range(10);
+        var rows = df.Tail(5);
+        Assert.Equal(5, (long)rows.First()[0]);
+        Assert.Equal(9, (long)rows.Last()[0]);
     }
 }

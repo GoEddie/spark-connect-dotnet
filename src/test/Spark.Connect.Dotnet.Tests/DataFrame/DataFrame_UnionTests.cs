@@ -8,7 +8,7 @@ public class DataFrameUnionTests : E2ETestBase
     public DataFrameUnionTests(ITestOutputHelper logger) : base(logger)
     {
     }
-    
+
     [Fact]
     public void UnionTest()
     {

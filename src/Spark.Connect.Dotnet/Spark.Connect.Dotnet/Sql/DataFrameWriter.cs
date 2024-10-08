@@ -8,13 +8,13 @@ public class DataFrameWriter
     private readonly MapField<string, string> _options = new();
     private readonly SparkSession _session;
     private readonly DataFrame _what;
-    private string _format = string.Empty;
-    private List<string> _partitionColumnNames = new();
-    
+
     private List<string> _bucketColumnNames = new();
+    private string _format = string.Empty;
+    private int _numBuckets;
+    private List<string> _partitionColumnNames = new();
 
     private WriteOperation.Types.SaveMode _saveMode;
-    private int _numBuckets;
 
     protected internal DataFrameWriter(SparkSession session, DataFrame what)
     {
@@ -44,11 +44,8 @@ public class DataFrameWriter
     {
         return saveMode.ToLower() switch
         {
-            "overwrite" => WriteOperation.Types.SaveMode.Overwrite,
-            "append" => WriteOperation.Types.SaveMode.Append,
-            "ignore" => WriteOperation.Types.SaveMode.Ignore,
-            "error" or "errorifexists" => WriteOperation.Types.SaveMode.ErrorIfExists,
-            _ => throw new ArgumentException(
+            "overwrite" => WriteOperation.Types.SaveMode.Overwrite, "append" => WriteOperation.Types.SaveMode.Append, "ignore" => WriteOperation.Types.SaveMode.Ignore
+            , "error" or "errorifexists" => WriteOperation.Types.SaveMode.ErrorIfExists, _ => throw new ArgumentException(
                 $"'{saveMode}' is not a valid save mode ('Overwrite', 'Append', 'Ignore', 'Error', or 'ErrorIfExists'")
         };
     }
@@ -64,7 +61,7 @@ public class DataFrameWriter
         _partitionColumnNames = columnNames.ToList();
         return this;
     }
-    
+
     public DataFrameWriter BucketBy(int numBuckets, params string[] columnNames)
     {
         _numBuckets = numBuckets;
@@ -107,7 +104,7 @@ public class DataFrameWriter
     {
         Task.Run(() => WriteAsync(_format, path, _options)).Wait();
     }
-    
+
     public void Save(string format, string path)
     {
         Task.Run(() => WriteAsync(format, path, _options)).Wait();
@@ -126,25 +123,21 @@ public class DataFrameWriter
             {
                 WriteOperation = new WriteOperation
                 {
-                    Mode = WriteOperation.Types.SaveMode.Overwrite,
-                    Source = format,
-                    Options = { options },
-                    Input = _what.Relation,
-                    PartitioningColumns = { _partitionColumnNames },
-                    Path = path
+                    Mode = WriteOperation.Types.SaveMode.Overwrite, Source = format, Options = { options }, Input = _what.Relation, PartitioningColumns = { _partitionColumnNames }
+                    , Path = path
                 }
             }
         };
 
         if (_bucketColumnNames.Any())
         {
-            plan.Command.WriteOperation.BucketBy = new WriteOperation.Types.BucketBy()
+            plan.Command.WriteOperation.BucketBy = new WriteOperation.Types.BucketBy
             {
-                NumBuckets = _numBuckets,
-                BucketColumnNames = { _bucketColumnNames }
+                NumBuckets = _numBuckets, BucketColumnNames = { _bucketColumnNames }
             };
         }
-        
-        await GrpcInternal.Exec(_session.GrpcClient, _session.Host, _session.SessionId, plan, _session.Headers, _session.UserContext, _session.ClientType);
+
+        var executor = new RequestExecutor(_session, plan);
+        await executor.ExecAsync();
     }
 }

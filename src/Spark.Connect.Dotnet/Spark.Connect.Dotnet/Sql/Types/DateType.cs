@@ -4,7 +4,7 @@ namespace Spark.Connect.Dotnet.Sql.Types;
 
 public class DateType : SparkDataType
 {
-    public DateType() : base($"Date")
+    public DateType() : base("Date")
     {
     }
 
@@ -13,8 +13,6 @@ public class DateType : SparkDataType
         return new DataType
         {
             Date = new DataType.Types.Date()
-            {
-            }
         };
     }
 
@@ -25,6 +23,6 @@ public class DateType : SparkDataType
 
     public override string SimpleString()
     {
-        return $"date";
+        return "date";
     }
 }

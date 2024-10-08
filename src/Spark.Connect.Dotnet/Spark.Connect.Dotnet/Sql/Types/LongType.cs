@@ -7,7 +7,7 @@ public class LongType : SparkDataType
     public LongType() : base("Long")
     {
     }
-    
+
     public override DataType ToDataType()
     {
         return new DataType
