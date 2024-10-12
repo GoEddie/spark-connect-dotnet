@@ -85,7 +85,6 @@ jobs:
     
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
     
-    
     - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.0-preview2
 
     - name: Execute unit tests Spark 4.0
@@ -98,13 +97,4 @@ jobs:
         name: Test Results
         path: ./test_results4.xml
 
-    - name: Pack
-      working-directory: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/
-      run: dotnet pack --no-build --configuration Release --output nupkgs /p:PackageVersion=4.0.0preview-beta-${{ github.run_number }}
-    
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      with:
-        name: NuGet-4.0.0preview-beta-${{ github.run_number }}
-        path: ./src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/nupkgs/*.nupkg
 
