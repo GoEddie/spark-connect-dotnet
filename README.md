@@ -170,12 +170,16 @@ Probably the easiest thing is to allow both options (remember you don't need thi
 
 To see how many functions are/are not implemented see [Function Status](docs/function-status.md)
 
-### Optional Features to be implemented
+### Supported Versions
 
-1. TPC Benchmark
+The version of this library isn't tied to a specific version of Apache Spark, generally the releases are backwards compatible but we make no checks as to whether a function you want to call is available in the version of spark you are using, for example spark 4.0.0 introduced `try_mod` and if you use the library to connect to spark 3.5.1 then everything will work but you will get an error calling that function.
+
+The general idea is that you always use the highest version of this library as possible and it will be backwards compatible with older versions of Spark. The builds are tested against Spark 3.5.3 and 4.0.0 at the moment but can be adapted to test earlier versions if required.
 
 ### Questions
 
 1. Are Databricks/Apache Spark communities invested in the future of gRPC / Spark Connect or could it be dropped in future?
 1. Can the gRPC calls be used in production?
 1. What is the notebook experience expected to be in Databricks - will Databricks ever deploy other kernels or will it only ever be python,scala,sql,r?
+
+
