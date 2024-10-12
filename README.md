@@ -174,7 +174,7 @@ To see how many functions are/are not implemented see [Function Status](docs/fun
 
 The version of this library isn't tied to a specific version of Apache Spark, generally the releases are backwards compatible but we make no checks as to whether a function you want to call is available in the version of spark you are using, for example spark 4.0.0 introduced `try_mod` and if you use the library to connect to spark 3.5.1 then everything will work but you will get an error calling that function.
 
-The general idea is that you always use the highest version of this library as possible and it will be backwards compatible with older versions of Spark. The builds are tested against Spark 3.5.3 and 4.0.0 at the moment but can be adapted to test earlier versions if required.
+The general idea is that you always use the highest version of this library as possible and it will be backwards compatible with older versions of Spark. The builds are tested against Spark 3.5.3 and 4.0.0 at the moment but can be adapted to test earlier versions if required. See [Versioning](docs/versioning.md) for more details.
 
 ### Questions
 
