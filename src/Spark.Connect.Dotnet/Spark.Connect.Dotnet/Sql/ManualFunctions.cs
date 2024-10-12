@@ -2942,9 +2942,9 @@ public partial class Functions : FunctionsWrapper
         
     }
     
-    public static Column TryRemainder(string dividend, string divisor) => TryRemainder(Col(dividend), Col(divisor));
+    public static Column TryMod(string dividend, string divisor) => TryMod(Col(dividend), Col(divisor));
     
-    public static Column TryRemainder(Column dividend, Column divisor) => new (CreateExpression("try_remainder", false, dividend, divisor));
+    public static Column TryMod(Column dividend, Column divisor) => new (CreateExpression("try_mod", false, dividend, divisor));
     
     /// <Summary>Ceil</Summary>
     public static Column Ceil(string col, int scale)

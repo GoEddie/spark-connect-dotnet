@@ -1624,11 +1624,11 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
 
     [Fact]
     [Trait("SparkMinVersion", "4")]
-    public void TryRemainder_Test()
+    public void TryMod_Test()
     {
         var df = Spark.Range(10).WithColumnRenamed("id", "a").WithColumn("b", Lit(0));
-        df.WithColumn("abc", TryRemainder(df["a"], df["b"])).Show();
-        df.WithColumn("abc", TryRemainder("a", "b")).Show();
+        df.WithColumn("abc", TryMod(df["a"], df["b"])).Show();
+        df.WithColumn("abc", TryMod("a", "b")).Show();
     }
 
     [Fact]
