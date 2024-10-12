@@ -302,6 +302,11 @@ public class StructField
             return new TimestampType();
         }
 
+        if (type.Variant != null)
+        {
+            return new VariantType();
+        }
+
         return new VoidType();
     }
 }
