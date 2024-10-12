@@ -7,15 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Apache.Arrow" Version="16.0.0" />
-        <PackageReference Include="Google.Protobuf" Version="3.24.4" />
-        <PackageReference Include="Grpc.Core.Api" Version="2.62.0" />
-        <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
-        <PackageReference Include="Grpc.Tools" Version="2.62.0">
+        <PackageReference Include="Apache.Arrow" Version="16.1.0"/>
+        <PackageReference Include="Google.Protobuf" Version="3.27.2"/>
+        <PackageReference Include="Grpc.Core.Api" Version="2.63.0"/>
+        <PackageReference Include="Grpc.Net.Client" Version="2.63.0"/>
+        <PackageReference Include="Grpc.Tools" Version="2.64.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -43,18 +43,18 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="spark\connect\catalog.proto" />
-        <None Remove="spark\connect\commands.proto" />
-        <None Remove="spark\connect\common.proto" />
-        <None Remove="spark\connect\example_plugins.proto" />
-        <None Remove="spark\connect\expressions.proto" />
-        <None Remove="spark\connect\relations.proto" />
-        <None Remove="spark\connect\types.proto" />
+        <None Remove="spark\connect\catalog.proto"/>
+        <None Remove="spark\connect\commands.proto"/>
+        <None Remove="spark\connect\common.proto"/>
+        <None Remove="spark\connect\example_plugins.proto"/>
+        <None Remove="spark\connect\expressions.proto"/>
+        <None Remove="spark\connect\relations.proto"/>
+        <None Remove="spark\connect\types.proto"/>
         <None Update="LICENSE.txt">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
         <None Update="README.md">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
@@ -73,14 +73,26 @@
         <PackageIcon>logo.png</PackageIcon>
     </PropertyGroup>
 
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <NoWarn>1701;1702;CS0612;CS8602;CS8603;CS8600;CS8604</NoWarn>
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <NoWarn>1701;1702;CS0612;CS8602;CS8603;CS8600;CS8604</NoWarn>
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
     <ItemGroup>
-     <None Include="LICENSE.txt" Pack="true" PackagePath="" />
-     <None Include="README.md" Pack="true" PackagePath="" />
-     <None Include="logo.png" Pack="true" PackagePath="" />
+        <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
+        <None Include="README.md" Pack="true" PackagePath=""/>
+        <None Include="logo.png" Pack="true" PackagePath=""/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Spark.Connect.Dotnet.GrpcClient\Spark.Connect.Dotnet.GrpcClient.csproj" />
+        <ProjectReference Include="..\Spark.Connect.Dotnet.GrpcClient\Spark.Connect.Dotnet.GrpcClient.csproj"/>
     </ItemGroup>
 
 </Project>

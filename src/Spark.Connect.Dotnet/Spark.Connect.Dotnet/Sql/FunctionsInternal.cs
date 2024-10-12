@@ -8,10 +8,7 @@ public class FunctionsInternal
         {
             UnresolvedFunction = new Expression.Types.UnresolvedFunction
             {
-                FunctionName = function,
-                IsDistinct = isDistinct,
-                IsUserDefinedFunction = false,
-                Arguments =
+                FunctionName = function, IsDistinct = isDistinct, IsUserDefinedFunction = false, Arguments =
                 {
                     new List<Expression> { param1.Expression }
                 }

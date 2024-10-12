@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Grpc;
@@ -135,6 +136,21 @@ public abstract class SparkDataType
         return new MapType(keyType, valueType, nullableValue);
     }
 
+    public static VariantType VariantType()
+    {
+        return new VariantType();
+    }
+
+    public static NullType NullType()
+    {
+        return new NullType();
+    }
+
+    public static DecimalType DecimalType()
+    {
+        return new DecimalType();
+    }
+
     public static SparkDataType FromString(string type)
     {
         var lower = type.ToLowerInvariant();
@@ -157,6 +173,9 @@ public abstract class SparkDataType
             case "int":
             case "int32":
                 return new IntegerType();
+            
+            case "decimal":
+                return new DecimalType();
 
             case "byte":
                 return new ByteType();
@@ -175,6 +194,7 @@ public abstract class SparkDataType
                 return new BooleanType();
 
             case "null":
+                return new NullType();
             case "void":
                 return new VoidType();
 
@@ -186,6 +206,9 @@ public abstract class SparkDataType
 
             case "date":
                 return new DateType();
+            
+            case "variant":
+                return new VariantType();
         }
 
         if (lower.StartsWith("array"))
@@ -217,7 +240,6 @@ public abstract class SparkDataType
         throw new NotImplementedException($"Missing DataType From String: '{type}'");
     }
 
-
     public static SparkDataType FromDotNetType(object o) => o switch
     {
         int => IntType(),
@@ -243,7 +265,7 @@ public abstract class SparkDataType
     {
         if (type.Array != null)
         {
-            bool nullableValues = type.Array.ContainsNull;
+            var nullableValues = type.Array.ContainsNull;
             return ArrayType(FromSparkConnectType(type.Array.ElementType), nullableValues);
         }
 
@@ -313,7 +335,26 @@ public abstract class SparkDataType
             return new YearMonthIntervalType(type.YearMonthInterval.StartField, type.YearMonthInterval.EndField);
         }
 
-        throw new NotImplementedException();
-    }
+        if (type.Variant != null)
+        {
+            return new VariantType();
+        }
 
+        if (type.Float != null)
+        {
+            return new FloatType();
+        }
+
+        if (type.Null != null)
+        {
+            return new NullType();
+        }
+
+        if (type.Decimal != null)
+        {
+            return new DecimalType();
+        }
+        
+        throw new NotImplementedException($"Need Type For '{type.KindCase}'");
+    }
 }

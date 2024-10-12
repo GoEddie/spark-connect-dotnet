@@ -45,6 +45,9 @@ message Command {
     StreamingQueryListenerBusCommand streaming_query_listener_bus_command = 11;
     CommonInlineUserDefinedDataSource register_data_source = 12;
     CreateResourceProfileCommand create_resource_profile_command = 13;
+    CheckpointCommand checkpoint_command = 14;
+    RemoveCachedRemoteRelationCommand remove_cached_remote_relation_command = 15;
+    MergeIntoTableCommand merge_into_table_command = 16;
 
     // This field is used to mark extensions to the protocol. When plugins generate arbitrary
     // Commands they can add them here. During the planning the correct resolution is done.
@@ -237,6 +240,9 @@ message WriteStreamOperationStart {
 
   StreamingForeachFunction foreach_writer = 13;
   StreamingForeachFunction foreach_batch = 14;
+
+  // (Optional) Columns used for clustering the table.
+  repeated string clustering_column_names = 15;
 }
 
 message StreamingForeachFunction {
@@ -483,4 +489,45 @@ message CreateResourceProfileCommand {
 message CreateResourceProfileCommandResult {
   // (Required) Server-side generated resource profile id.
   int32 profile_id = 1;
+}
+
+// Command to remove `CashedRemoteRelation`
+message RemoveCachedRemoteRelationCommand {
+  // (Required) The remote to be related
+  CachedRemoteRelation relation = 1;
+}
+
+message CheckpointCommand {
+  // (Required) The logical plan to checkpoint.
+  Relation relation = 1;
+
+  // (Required) Locally checkpoint using a local temporary
+  // directory in Spark Connect server (Spark Driver)
+  bool local = 2;
+
+  // (Required) Whether to checkpoint this dataframe immediately.
+  bool eager = 3;
+}
+
+message MergeIntoTableCommand {
+  // (Required) The name of the target table.
+  string target_table_name = 1;
+
+  // (Required) The relation of the source table.
+  Relation source_table_plan = 2;
+
+  // (Required) The condition to match the source and target.
+  Expression merge_condition = 3;
+
+  // (Optional) The actions to be taken when the condition is matched.
+  repeated Expression match_actions = 4;
+
+  // (Optional) The actions to be taken when the condition is not matched.
+  repeated Expression not_matched_actions = 5;
+
+  // (Optional) The actions to be taken when the condition is not matched by source.
+  repeated Expression not_matched_by_source_actions = 6;
+
+  // (Required) Whether to enable schema evolution.
+  bool with_schema_evolution = 7;
 }

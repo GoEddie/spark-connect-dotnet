@@ -40,7 +40,6 @@ public class StructType : SparkDataType
 
     public StructType(Schema readerSchema) : base("StructType")
     {
-
         Fields = new List<StructField>();
 
         foreach (var field in readerSchema.FieldsList)
@@ -125,9 +124,7 @@ public class StructType : SparkDataType
     {
         var fields = Fields.Select(field => new DataType.Types.StructField
         {
-            DataType = field.DataType.ToDataType(),
-            Name = field.Name,
-            Nullable = field.Nullable
+            DataType = field.DataType.ToDataType(), Name = field.Name, Nullable = field.Nullable
         });
 
         return new DataType
@@ -155,7 +152,7 @@ public class StructField
 {
     public StructField()
     {
-        Name = String.Empty;
+        Name = string.Empty;
         DataType = new StringType();
         Metadata = new Dictionary<string, object>();
     }
@@ -190,16 +187,6 @@ public class StructField
 
     public string Ddl()
     {
-        //var ddl = new System.Text.StringBuilder();
-        //ddl.Append(name);
-        //ddl.Append(":");
-        //ddl.Append(this.TypeName);
-        //if (!nullable)
-        //{
-        //    ddl.Append(" NOT NULL");
-        //}
-        //return ddl.ToString();
-
         if (DataType is ArrayType arrayDataType)
         {
             return arrayDataType.ToDdl(Name, Nullable);
@@ -226,12 +213,13 @@ public class StructField
         ArrowTypeId.Binary => BinaryType(),
         ArrowTypeId.Date32 => DateType(),
         ArrowTypeId.Date64 => DateType(),
+        ArrowTypeId.Decimal128 => DecimalType(),
         ArrowTypeId.Timestamp => TimestampType(),
         ArrowTypeId.Struct => StructType(),
         ArrowTypeId.List => ArrayType(FromArrowType((type as ListType).ValueDataType), (type as ListType).ValueField.IsNullable),
         ArrowTypeId.Map => MapType(FromArrowType((type as Apache.Arrow.Types.MapType).KeyField.DataType), FromArrowType((type as Apache.Arrow.Types.MapType).ValueField.DataType), (type as Apache.Arrow.Types.MapType).ValueField.IsNullable),
         ArrowTypeId.Interval => IntervalToType(type as IntervalType),
-
+        
         _ => throw new ArgumentOutOfRangeException($"Cannot convert Arrow Type '{type}'")
     };
 
@@ -300,7 +288,8 @@ public class StructField
 
         if (type.Map != null)
         {
-            return new MapType(FromConnectDataType(type.Map.KeyType), FromConnectDataType(type.Map.ValueType), type.Map.ValueContainsNull);
+            return new MapType(FromConnectDataType(type.Map.KeyType), FromConnectDataType(type.Map.ValueType),
+                type.Map.ValueContainsNull);
         }
 
         if (type.Date != null)
@@ -319,8 +308,37 @@ public class StructField
 
 public static class DataTypeJsonSerializer
 {
+    private const string TextStart = @"{""fields"":[";
+    private const string TextEnd = @"],""type"":""struct""}";
+
+    private const string MetadataStart = @"{""metadata"":{";
+    private const string MetadataEnd = @"},";
+    private const string MetadataItemFormat = @"""{0}"":{1}";
+
+    private const string NameStart = @"""name"":""";
+    private const string NameEnd = @""",";
+
+    private const string NullableStart = @"""nullable"":";
+    private const string NullableEnd = @",";
+
+    private const string ContainsNullStart = @"""containsNull"":";
+    private const string ContainsNullEnd = ",";
+
+    private const string ElementTypeStart = @"""elementType"":""";
+    private const string ElementTypeEnd = @""",";
+
+    private const string ArrayType = @"""type"":""array""";
+
+    private const string TypeStart = @"""type"":""";
+    private const string TypeEnd = @"""";
+
+    private const string TypeStructStart = @"""type"":";
+    private const string TypeStructEnd = @"";
+
+    private const string FieldEnd = "}";
+
     /// <summary>
-    /// Converts a struct type which is a list of fields and some optional metadata into a string
+    ///     Converts a struct type which is a list of fields and some optional metadata into a string
     /// </summary>
     /// <param name="structType"></param>
     /// <returns></returns>
@@ -364,37 +382,6 @@ public static class DataTypeJsonSerializer
         return json.ToString();
     }
 
-
-
-    private const string TextStart = @"{""fields"":[";
-    private const string TextEnd = @"],""type"":""struct""}";
-
-    private const string MetadataStart = @"{""metadata"":{";
-    private const string MetadataEnd = @"},";
-    private const string MetadataItemFormat = @"""{0}"":{1}";
-
-    private const string NameStart = @"""name"":""";
-    private const string NameEnd = @""",";
-
-    private const string NullableStart = @"""nullable"":";
-    private const string NullableEnd = @",";
-
-    private const string ContainsNullStart = @"""containsNull"":";
-    private const string ContainsNullEnd = ",";
-
-    private const string ElementTypeStart = @"""elementType"":""";
-    private const string ElementTypeEnd = @""",";
-
-    private const string ArrayType = @"""type"":""array""";
-
-    private const string TypeStart = @"""type"":""";
-    private const string TypeEnd = @"""";
-
-    private const string TypeStructStart = @"""type"":";
-    private const string TypeStructEnd = @"";
-
-    private const string FieldEnd = "}";
-
     private static string StructTypeToJson(StructField field, StructType structType)
     {
         var json = new StringBuilder();
@@ -433,7 +420,7 @@ public static class DataTypeJsonSerializer
     {
         if (array.ElementType is ArrayType)
         {
-            return String.Empty;
+            return string.Empty;
         }
 
         if (array.ElementType is MapType)
@@ -459,7 +446,7 @@ public static class DataTypeJsonSerializer
     }
 
     /// <summary>
-    /// is the value bare or wrapped in quotes
+    ///     is the value bare or wrapped in quotes
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
@@ -469,9 +456,10 @@ public static class DataTypeJsonSerializer
         {
             return $@"""{value}""";
         }
-
-        return value == null ? "None" : value.ToString();
+        
+        return ReferenceEquals(null, value) ? "None" : value.ToString();
     }
+
     private static string MetadataToString(StructField field)
     {
         var metadata = new StringBuilder();

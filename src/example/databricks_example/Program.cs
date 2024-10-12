@@ -19,17 +19,18 @@ var dataFrame3 = dataFrame.Union(dataFrame2);
 dataFrame3.Show(1000);
 
 //Mix gRPC calls with DataFrame API calls - the gRPC  client is available on the SparkSession:
-var plan = new Plan()
+var plan = new Plan
 {
-    Root = new Relation()
+    Root = new Relation
     {
-        Sql = new SQL()
+        Sql = new SQL
         {
             Query = "SELECT * FROM Range(100)"
         }
     }
 };
 
-var (relation, _, _) = await GrpcInternal.Exec(spark.GrpcClient, spark.Host, spark.SessionId, plan, spark.Headers, spark.UserContext, spark.ClientType);
-var dataFrameFromRelation = new DataFrame(spark, relation);
+var executor = new RequestExecutor(spark, plan);
+await executor.ExecAsync();
+var dataFrameFromRelation = new DataFrame(spark, executor.GetRelation());
 dataFrameFromRelation.Show();

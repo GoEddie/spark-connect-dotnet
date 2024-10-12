@@ -8,7 +8,7 @@ public class DataFrameExplainTests : E2ETestBase
     public DataFrameExplainTests(ITestOutputHelper logger) : base(logger)
     {
     }
-    
+
     [Fact]
     public void DefaultExplain()
     {

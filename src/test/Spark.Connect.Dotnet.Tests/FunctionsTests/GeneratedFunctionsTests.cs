@@ -6,18 +6,17 @@ namespace Spark.Connect.Dotnet.Tests.FunctionsTests;
 
 public class GeneratedFunctionsTests : E2ETestBase
 {
-    
+    private static readonly WindowSpec Window = Dotnet.Sql.Window.OrderBy("id").PartitionBy("id");
+    private static WindowSpec OtherWindow = new WindowSpec().OrderBy("id").PartitionBy("id");
+
+    private readonly Dotnet.Sql.DataFrame Source;
+
     public GeneratedFunctionsTests(ITestOutputHelper logger) : base(logger)
     {
         Source = Spark.Sql(
             "SELECT array(id, id + 1, id + 2) as idarray, array(array(id, id + 1, id + 2), array(id, id + 1, id + 2)) as idarrayarray, cast(cast(id as string) as binary) as idbinary, cast(id as boolean) as idboolean, cast(id as int) as idint, id, id as id0, id as id1, id as id2, id as id3, id as id4, current_date() as dt, current_timestamp() as ts, 'hello' as str, 'SGVsbG8gRnJpZW5kcw==' as b64, map('k', id) as m, array(struct(1, 'a'), struct(2, 'b')) as data, '[]' as jstr FROM range(100)");
     }
 
-    private readonly Dotnet.Sql.DataFrame Source;
-
-    private static WindowSpec Window =   Dotnet.Sql.Window.OrderBy("id").PartitionBy("id");
-    private static WindowSpec OtherWindow = new WindowSpec().OrderBy("id").PartitionBy("id");
-    
     /** GeneratedBy::SingleArgColumnOrNameFunction::Sort **/
     [Fact]
     public void Asc_Test()
@@ -851,7 +850,6 @@ public class GeneratedFunctionsTests : E2ETestBase
         Source.Select(Pmod(Lit(1), Lit(2))).Show();
         Source.Select(Pmod(Col("id"), Col("id"))).Show();
         Spark.Conf.Set("spark.sql.ansi.enabled", "true");
-        
     }
 
     /** GeneratedBy::NoArgsFunction **/

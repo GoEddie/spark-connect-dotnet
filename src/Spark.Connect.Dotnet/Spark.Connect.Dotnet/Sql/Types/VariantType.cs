@@ -2,9 +2,9 @@ using Apache.Arrow.Types;
 
 namespace Spark.Connect.Dotnet.Sql.Types;
 
-public class ByteType : SparkDataType
+public class VariantType : SparkDataType
 {
-    public ByteType() : base("Byte")
+    public VariantType() : base("Variant")
     {
     }
 
@@ -12,12 +12,12 @@ public class ByteType : SparkDataType
     {
         return new DataType
         {
-            Byte = new DataType.Types.Byte()
+            Variant = new()
         };
     }
 
     public override IArrowType ToArrowType()
     {
-        return new Int8Type();
+        return new Apache.Arrow.Types.StringType();
     }
 }

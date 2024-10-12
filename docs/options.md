@@ -15,7 +15,6 @@ spark.Conf.Set("spark.connect.dotnet.validatethiscallcolumnname", "true");
 
 or you can set it when building the session:
 
-
 ```csharp
 SparkSession
     .Builder
@@ -38,4 +37,32 @@ var df = spark.Range(100);
 var col = df["NotID"];    //This will NOT throw an exception, when Select or another action are called it will fail then
 df.ValidateThisCallColumnName = true;
 var col = df["NotID"];    //This will throw an exception
+```
+
+
+## Don't decode Apache Arrow
+
+If you get issues when running a command and you do not need the actual response to be decoded from Apache Arrow then you can disable it. This is only really used where the decoding has either not been implemented or there is an issue that needs to be fixed:
+
+```csharp
+spark.Conf.Set("spark.connect.dotnet.dontdecodearrow", "true");
+```
+
+It is envisioned that you should only use this for specific queries and not as a general option.
+
+
+## Detailed gRPC logging 
+
+To enable detailed gRPC logging you can set the following option:
+
+```csharp
+spark.Conf.Set("spark.connect.dotnet.grpclogging", "console");
+```
+
+## Show metrics
+
+To output metrics as responses are reveived enable:
+
+```csharp
+spark.Conf.Set("spark.connect.dotnet.showmetrics", "true");
 ```
