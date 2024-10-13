@@ -99,14 +99,14 @@ public class RequestExecutor : IDisposable
     private async Task<bool> ProcessRequest()
     {
         _logger.Log(GrpcLoggingLevel.Verbose, $" Processing Request");
-        
+
         try
         {
             _retryableState = RetryableState.Network;
             var response = GetResponse();
             await response.ResponseStream.MoveNext();
             _retryableState = RetryableState.Processing;
-            
+
             while (response.ResponseStream.Current != null)
             {
                 var current = response.ResponseStream.Current;
@@ -146,7 +146,7 @@ public class RequestExecutor : IDisposable
                     {
                         if (!_session.Conf.IsTrue(SparkDotnetKnownConfigKeys.DontDecodeArrow))
                         {
-                            _rows.AddRange(await wrapper.ArrowBatchToRows(current.ArrowBatch, _schema));    
+                            _rows.AddRange(await wrapper.ArrowBatchToRows(current.ArrowBatch, _schema));
                         }
                         else
                         {
@@ -166,34 +166,34 @@ public class RequestExecutor : IDisposable
                     _logger.Log(GrpcLoggingLevel.Verbose, "Have observed metrics");
                     PrintObservedMetrics(current.ObservedMetrics);
                 }
-                
+
                 if (current.StreamingQueryCommandResult != null)
                 {
                     _streamingQueryId = current.StreamingQueryCommandResult.QueryId;
                     _streamingResultStatus = current.StreamingQueryCommandResult.Status;
                 }
-                
+
                 if (current.WriteStreamOperationStartResult != null)
                 {
                     _streamingQueryId = current.WriteStreamOperationStartResult.QueryId;
                     _streamingQueryName = current.WriteStreamOperationStartResult.Name;
                 }
-                
+
                 if (current.StreamingQueryCommandResult is { AwaitTermination: not null })
                 {
                     _streamingQueryIsTerminated = current.StreamingQueryCommandResult.AwaitTermination.Terminated;
                 }
-                
+
                 if (current.StreamingQueryCommandResult is { Exception: not null })
                 {
                     _streamingQueryException = current.StreamingQueryCommandResult.Exception;
                 }
-            
-                if (current.StreamingQueryCommandResult is {RecentProgress: not null})
+
+                if (current.StreamingQueryCommandResult is { RecentProgress: not null })
                 {
                     _streamingProgress = current.StreamingQueryCommandResult.RecentProgress;
                 }
-                
+
                 //ResponseId always has to come last because it is the marker to tell the server
                 // where we are if we get disconnected, if we haven't finished reading the response 
                 // then we can ask for it again (_lastResponseId)
@@ -208,12 +208,12 @@ public class RequestExecutor : IDisposable
         }
         catch (RpcException r)
         {
-            if (r.Status.StatusCode == StatusCode.Cancelled)    //This is a client side cancelled
+            if (r.Status.StatusCode == StatusCode.Cancelled) //This is a client side cancelled
             {
                 _logger.Log(GrpcLoggingLevel.Warn, "Request was cancelled aka timed out - retrying: {0}", r.Message);
                 return true;
             }
-            
+
             if (r.Status.Detail.Contains("SPARK_JOB_CANCELLED")) //Server side "kill"
             {
                 _logger.Log(GrpcLoggingLevel.Warn, "Request was killed from the server {0}", r.Status.Detail);
@@ -221,6 +221,15 @@ public class RequestExecutor : IDisposable
             }
 
             throw;
+        }
+        catch (HttpRequestException httpException)
+        {
+            _logger.Log(GrpcLoggingLevel.Warn, "HttpException in ExecRequest: {0}", httpException.Message);
+            if (httpException.Message.Contains("The request was aborted"))
+            {
+                _logger.Log(GrpcLoggingLevel.Warn, "Request was aborted from the server {0}, will retry", httpException.Message);
+                return true;
+            }
         }
         catch (Exception ex)
         {
