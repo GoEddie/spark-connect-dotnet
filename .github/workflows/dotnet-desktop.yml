@@ -18,16 +18,17 @@ jobs:
         configuration: [Release]
 
     runs-on: ubuntu-latest
-
+    
+    environment: databricks
+    
     env:
+    
       Solution_Name: Spark.Connect.Dotnet                
       Test_Project_Path: src/test                
       DATABRICKS_URL: ${{ secrets.DATABRICKS_URL }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       DATABRICKS_CLUSTERID: ${{ secrets.DATABRICKS_CLUSTERID }}
-      # env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
     steps:
     
     - name: Checkout code
