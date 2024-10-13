@@ -1,6 +1,7 @@
 ﻿using Spark.Connect;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Sql;
+using static Spark.Connect.Dotnet.Sql.Functions;
 
 //You will need to configure your databricks tokens and give it a profile name that we can use
 // create a ~/.databrickscfg (you don't need any tools to create one: https://docs.databricks.com/en/dev-tools/cli/profiles.html)
@@ -11,7 +12,7 @@ using Spark.Connect.Dotnet.Sql;
 //                 .ClusterId("ClusterId")
 //                 .Remote("https://databricksurl.com"));
 
-var spark = SparkSession.Builder.Profile("M1").DatabricksWaitForClusterMaxTime(2).GetOrCreate();
+var spark = SparkSession.Builder.Profile("M1").DatabricksWaitForClusterMaxTime(5).GetOrCreate();
 var dataFrame = spark.Sql("SELECT id, id as two, id * 188 as three FROM Range(10)");
 var dataFrame2 = spark.Sql("SELECT id, id as two, id * 188 as three FROM Range(20)");
 
@@ -34,3 +35,8 @@ var executor = new RequestExecutor(spark, plan);
 await executor.ExecAsync();
 var dataFrameFromRelation = new DataFrame(spark, executor.GetRelation());
 dataFrameFromRelation.Show();
+
+
+spark.Conf.Set("spark.connect.dotnet.grpclogging", "console");
+
+dataFrame.Select(Reflect(Lit("java.lang.Thread"), Lit("sleep"), Lit((long)160000))).Show();
