@@ -20,8 +20,13 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      Solution_Name: Spark.Connect.Dotnet                        # Replace with your solution name, i.e. MyWpfApp.sln.
-      Test_Project_Path: src/test                # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
+      Solution_Name: Spark.Connect.Dotnet                
+      Test_Project_Path: src/test                
+      DATABRICKS_URL: ${{ secrets.DATABRICKS_URL }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      DATABRICKS_CLUSTERID: ${{ secrets.DATABRICKS_CLUSTERID }}
+      # env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
     steps:
     
@@ -38,8 +43,6 @@ jobs:
     - name: Print current directory listing
       run: ls -a ./src
 
-    
-    
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
@@ -96,5 +99,9 @@ jobs:
       with:
         name: Test Results
         path: ./test_results4.xml
+    
+    - name: Test on Databricks
+      working-directory: ./src/example/databricks_example
+      run: dotnet run
 
-
+    

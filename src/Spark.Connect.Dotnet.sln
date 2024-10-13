@@ -18,8 +18,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "basic_example", "example\ba
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "basic_example_fsharp", "example\basic_example_fsharp\basic_example_fsharp.fsproj", "{3A290A3D-12E5-4737-8AFC-D6B29176CEE6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VariantExample", "example\VariantExample\VariantExample.csproj", "{0C1D8E0E-FCFF-44EC-BC1B-B3138FB1F7D7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

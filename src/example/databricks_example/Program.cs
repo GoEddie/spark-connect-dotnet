@@ -12,7 +12,9 @@ using static Spark.Connect.Dotnet.Sql.Functions;
 //                 .ClusterId("ClusterId")
 //                 .Remote("https://databricksurl.com"));
 
-var spark = SparkSession.Builder.Profile("M1").DatabricksWaitForClusterMaxTime(5).GetOrCreate();
+// var spark = SparkSession.Builder.Profile("M1").DatabricksWaitForClusterMaxTime(5).GetOrCreate();
+
+var spark = SparkSession.Builder.Remote(Environment.GetEnvironmentVariable("DATABRICKS_URL")).Token(Environment.GetEnvironmentVariable("DATABRICKS_TOKEN")).ClusterId(Environment.GetEnvironmentVariable("DATABRICKS_CLUSTERID")).DatabricksWaitForClusterMaxTime(10).GetOrCreate();
 var dataFrame = spark.Sql("SELECT id, id as two, id * 188 as three FROM Range(10)");
 var dataFrame2 = spark.Sql("SELECT id, id as two, id * 188 as three FROM Range(20)");
 
