@@ -1,4 +1,4 @@
-name: Spark Dotnet
+name: Spark Dotnet Databricks
 
 on:
   pull_request:
