@@ -19,16 +19,11 @@ jobs:
 
     runs-on: ubuntu-latest
     
-    environment: databricks
-    
     env:
     
       Solution_Name: Spark.Connect.Dotnet                
       Test_Project_Path: src/test                
-      DATABRICKS_URL: ${{ secrets.DATABRICKS_URL }}
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-      DATABRICKS_CLUSTERID: ${{ secrets.DATABRICKS_CLUSTERID }}
-
+      
     steps:
     
     - name: Checkout code
@@ -100,9 +95,6 @@ jobs:
       with:
         name: Test Results
         path: ./test_results4.xml
-    
-    - name: Test on Databricks
-      working-directory: ./src/example/databricks_example
-      run: dotnet run
+
 
     
