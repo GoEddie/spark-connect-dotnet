@@ -256,10 +256,20 @@ public class Column
     {
         return src.EqualTo(value);
     }
+    
+    public static Column operator ==(Column src, string value)
+    {
+        return src.EqualTo(value);
+    }
 
     public static Column operator ==(Column src, Column value)
     {
         return src.EqualTo(value);
+    }
+
+    public Column EqualTo(string value)
+    {
+        return BinaryOperation(value, "==");
     }
 
     public Column EqualTo(int value)
@@ -296,6 +306,11 @@ public class Column
     {
         return src.NotEqualTo(value);
     }
+    
+    public static Column operator !=(Column src, string value)
+    {
+        return src.NotEqualTo(value);
+    }
 
     public static Column operator !=(Column src, long value)
     {
@@ -323,6 +338,12 @@ public class Column
     }
 
     public Column NotEqualTo(int value)
+    {
+        var equals = BinaryOperation(value, "==");
+        return NotOperation(equals);
+    }
+    
+    public Column NotEqualTo(string value)
     {
         var equals = BinaryOperation(value, "==");
         return NotOperation(equals);
@@ -1223,6 +1244,7 @@ public class Column
 
         return new Column(expression);
     }
+    
 
     private Column BinaryOperation(bool value, string functionName, bool reverse = false)
     {
@@ -1239,6 +1261,38 @@ public class Column
             Literal = new Expression.Types.Literal
             {
                 Boolean = value
+            }
+        };
+
+        if (reverse)
+        {
+            expression.UnresolvedFunction.Arguments.Add(literal);
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+        }
+        else
+        {
+            expression.UnresolvedFunction.Arguments.Add(Expression);
+            expression.UnresolvedFunction.Arguments.Add(literal);
+        }
+
+        return new Column(expression);
+    }
+    
+    private Column BinaryOperation(string value, string functionName, bool reverse = false)
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = functionName, IsUserDefinedFunction = false, IsDistinct = false
+            }
+        };
+
+        var literal = new Expression
+        {
+            Literal = new Expression.Types.Literal
+            {
+                String = value
             }
         };
 
