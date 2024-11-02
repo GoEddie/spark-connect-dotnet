@@ -133,4 +133,11 @@ public class ColumnTests : E2ETestBase
         var df = Spark.CreateDataFrame(new List<(object, object)> { (2, "Alice"), (5, "Bob") }, "age", "name");
         df.Select(Col("name"), df["name"].IsIn("Bob", "Mike")).Show();
     }
+    
+    [Fact]
+    public void CanFilter_AgainstStringNativeTypes()
+    {
+        var df = Spark.Range(10).WithColumn("S", Lit("a string"));
+        df.Filter(Col("s") == "a string").Show();
+    }
 }
