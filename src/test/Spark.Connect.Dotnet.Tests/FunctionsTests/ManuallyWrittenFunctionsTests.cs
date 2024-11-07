@@ -1712,4 +1712,36 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         Spark.Conf.Set("spark.sql.collation.enabled", "false");  //is hidden behind feature flag
     }
     
+    [Fact]
+    public void NullLit_Test()
+    {
+        var df = Spark.Range(100).WithColumn("a", Lit());
+        df.Show();
+        df.PrintSchema();
+        
+        df = Spark.Range(100).WithColumn("a", Lit(null as object));
+        df.Show();
+        df.PrintSchema();
+        
+        df = Spark.Range(100).WithColumn("a", Lit(null as int?));
+        df.Show();
+        df.PrintSchema();
+        
+        df = Spark.Range(100).WithColumn("a", Lit(null as long?));
+        df.Show();
+        df.PrintSchema();
+        
+        df = Spark.Range(100).WithColumn("a", Lit(null as float?));
+        df.Show();
+        df.PrintSchema();
+        
+        df = Spark.Range(100).WithColumn("a", Lit(null as double?));
+        df.Show();
+        df.PrintSchema();
+        
+        df = Spark.Range(100).WithColumn("a", Lit(null as DateTime?));
+        df.Show();
+        df.PrintSchema();
+    }
+    
 }

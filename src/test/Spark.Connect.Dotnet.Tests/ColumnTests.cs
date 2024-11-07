@@ -32,7 +32,15 @@ public class ColumnTests : E2ETestBase
     {
         var df = Spark.Sql(
             "SELECT cast(null as string) as a, id from range(4) union SELECT 'aa' as a, id from range(100, 10)");
-        df.Filter(Col("a").IsNull()).Show();
+        df.Select(Col("a"), Col("a").IsNull()).Show();
+    }
+    
+    [Fact]
+    public void IsNotNullTest()
+    {
+        var df = Spark.Sql(
+            "SELECT cast(null as string) as a, id from range(4) union SELECT 'aa' as a, id from range(100, 10)");
+        df.Select(Col("a"), Col("a").IsNotNull()).Show();
     }
 
 
@@ -132,5 +140,9 @@ public class ColumnTests : E2ETestBase
     {
         var df = Spark.CreateDataFrame(new List<(object, object)> { (2, "Alice"), (5, "Bob") }, "age", "name");
         df.Select(Col("name"), df["name"].IsIn("Bob", "Mike")).Show();
+        foreach (var row in df.Collect())
+        {
+            Console.WriteLine(row[0]);
+        }
     }
 }

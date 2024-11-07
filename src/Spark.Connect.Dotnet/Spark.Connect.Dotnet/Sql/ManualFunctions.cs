@@ -212,6 +212,9 @@ public partial class Functions : FunctionsWrapper
                 Literal = new Expression.Types.Literal
                 {
                     Null = new DataType()
+                    {
+                        Null = new DataType.Types.NULL()
+                    }
                 }
             });
         }
@@ -285,6 +288,59 @@ public partial class Functions : FunctionsWrapper
         });
     }
 
+    public static Column Lit(DateTime? value)
+    {
+        return new Column(new Expression
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                Null = new DataType()
+                {
+                    Timestamp = new DataType.Types.Timestamp()
+                }
+            }
+        });
+    }
+    public static Column Lit(float? value)
+    {
+        return new Column(new Expression
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                Null = new DataType()
+                {
+                    Float = new DataType.Types.Float()
+                }
+            }
+        });
+    }
+    public static Column Lit(long? value)
+    {
+        return new Column(new Expression
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                Null = new DataType()
+                {
+                    Long = new DataType.Types.Long()
+                }
+            }
+        });
+    }
+    public static Column Lit(double? value)
+    {
+        return new Column(new Expression
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                Null = new DataType()
+                {
+                    Double = new DataType.Types.Double()
+                }
+            }
+        });
+    }
+    
     public static Column Lit(double value)
     {
         return new Column(new Expression
@@ -432,6 +488,31 @@ public partial class Functions : FunctionsWrapper
         return new Column(name);
     }
 
+    /// <summary>
+    /// If you want to pass `Lit(null)` then you can use this or do `Lit(null as type)`
+    /// </summary>
+    /// <returns>Lit</returns>
+    public static Column LitNull() => Lit();
+
+    /// <summary>
+    /// If you want to pass `Lit(null)` then you can use this or do `Lit(null as type)`
+    /// </summary>
+    /// <returns>Lit</returns>
+    public static Column Lit()
+    {
+        var expr = new Expression()
+        {
+           Literal = new Expression.Types.Literal()
+           {
+               Null = new DataType()
+               {
+                   Null = new DataType.Types.NULL()
+               }
+           }
+        };
+        
+        return new Column(expr);
+    }
 
     /// <param name="cols">List&lt;String&gt;</param>
     /// <Summary>Returns a new :class:`Column` for distinct count of ``col`` or ``cols``.</Summary>

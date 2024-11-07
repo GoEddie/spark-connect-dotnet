@@ -1291,6 +1291,21 @@ public class Column
 
         return new Column(expression);
     }
+    
+    public Column IsNotNull()
+    {
+        var expression = new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "isnotnull", IsUserDefinedFunction = false, IsDistinct = false
+            }
+        };
+
+        expression.UnresolvedFunction.Arguments.Add(Expression);
+
+        return new Column(expression);
+    }
 
     public Column EndsWith(string other)
     {
