@@ -38,7 +38,12 @@ public class DatabricksCfgReader
                 }
 
                 var parts = line.Split('=');
-                values.Add(parts[0].Trim(), parts[1].Trim());
+
+                if (parts.Length >= 2)
+                {
+                    values.Add(parts[0].Trim(), parts[1].Trim());    
+                }
+                
             }
         }
 
