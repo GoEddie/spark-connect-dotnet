@@ -35,7 +35,7 @@ public class DataFrameWriterV2
             {
                 WriteOperationV2 = new WriteOperationV2
                 {
-                    Input = _what.Relation, TableName = _tableName, Mode = WriteOperationV2.Types.Mode.Create, PartitioningColumns = { _partitionedBy }
+                    Input = _what.Relation, TableName = _tableName, Mode = WriteOperationV2.Types.Mode.CreateOrReplace, PartitioningColumns = { _partitionedBy }
                 }
             }
         };
