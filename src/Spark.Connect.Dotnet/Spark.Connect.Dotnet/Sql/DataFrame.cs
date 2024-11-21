@@ -1589,6 +1589,11 @@ public class DataFrame
         return new DataFrame(SparkSession, plan.Root);
     }
 
+    public DataFrame Except(DataFrame other)
+    {
+        return Subtract(other);
+    }
+
     public DataFrame Summary(params string[] statistics)
     {
         var plan = new Plan
