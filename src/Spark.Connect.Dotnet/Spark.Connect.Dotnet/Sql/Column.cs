@@ -1586,8 +1586,13 @@ public class Column
 
         return new Column(expression);
     }
-
+  
     public Column IsIn(params object[] cols)
+    {
+        return IsIn(cols.ToList());
+    }
+
+    public Column IsIn(List<object> cols)
     {
         var expression = new Expression
         {
