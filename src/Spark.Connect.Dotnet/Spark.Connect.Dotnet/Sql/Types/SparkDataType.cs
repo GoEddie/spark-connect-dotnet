@@ -90,7 +90,7 @@ public abstract class SparkDataType
     {
         return new DoubleType();
     }
-
+   
     public static IntegerType IntType()
     {
         return new IntegerType();
@@ -149,6 +149,11 @@ public abstract class SparkDataType
     public static DecimalType DecimalType()
     {
         return new DecimalType();
+    }
+
+    public static DecimalType DecimalType(int precision, int scale)
+    {
+        return new DecimalType(precision, scale);
     }
 
     public static SparkDataType FromString(string type)
