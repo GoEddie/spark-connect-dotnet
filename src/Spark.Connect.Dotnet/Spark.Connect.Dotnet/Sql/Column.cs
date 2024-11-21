@@ -7,6 +7,11 @@ public class Column
     private readonly string _name = string.Empty;
     public readonly Expression Expression;
 
+    public static Column Col(string name)
+    {
+        return new Column(name);
+    }
+
     public Column(Expression expression)
     {
         Expression = expression;
