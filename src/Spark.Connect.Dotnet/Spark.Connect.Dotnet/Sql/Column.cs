@@ -105,6 +105,11 @@ public class Column
         return new Column(expression);
     }
 
+    public Column As(string name)
+    {
+        return Alias(name);
+    }
+
     public Column Asc()
     {
         return new Column(new Expression
