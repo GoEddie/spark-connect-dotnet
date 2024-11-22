@@ -385,6 +385,11 @@ public class DataFrame
             }));
     }
 
+    public DataFrame Persist()
+    {
+        return Persist(SparkStorageLevel.MEMORY_AND_DISK);
+    }
+
     public DataFrame Persist(SparkStorageLevel storageLevel)
     {
         return new DataFrame(SparkSession, GrpcInternal.Persist(SparkSession, Relation, _storageLevels[storageLevel]));
@@ -1582,6 +1587,11 @@ public class DataFrame
         };
 
         return new DataFrame(SparkSession, plan.Root);
+    }
+
+    public DataFrame Except(DataFrame other)
+    {
+        return Subtract(other);
     }
 
     public DataFrame Summary(params string[] statistics)
