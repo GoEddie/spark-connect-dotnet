@@ -7,6 +7,11 @@ public class Column
     private readonly string _name = string.Empty;
     public readonly Expression Expression;
 
+    public static Column Col(string name)
+    {
+        return new Column(name);
+    }
+
     public Column(Expression expression)
     {
         Expression = expression;
@@ -98,6 +103,11 @@ public class Column
         };
 
         return new Column(expression);
+    }
+
+    public Column As(string name)
+    {
+        return Alias(name);
     }
 
     public Column Asc()
@@ -1576,8 +1586,13 @@ public class Column
 
         return new Column(expression);
     }
-
+  
     public Column IsIn(params object[] cols)
+    {
+        return IsIn(cols.ToList());
+    }
+
+    public Column IsIn(List<object> cols)
     {
         var expression = new Expression
         {
