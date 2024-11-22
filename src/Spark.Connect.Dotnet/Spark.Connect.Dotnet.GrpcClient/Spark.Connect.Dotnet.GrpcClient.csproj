@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <NoWarn>8981</NoWarn>
@@ -48,7 +48,7 @@
             <Access>Public</Access>
             <ProtoCompile>True</ProtoCompile>
             <CompileOutputs>True</CompileOutputs>
-            <OutputDir>obj\Debug/net7.0/</OutputDir>
+            <OutputDir>obj\Debug/net8.0/</OutputDir>
             <Link>connect\base.proto</Link>
         </Protobuf>
         <None Remove="spark\connect\catalog.proto"/>
