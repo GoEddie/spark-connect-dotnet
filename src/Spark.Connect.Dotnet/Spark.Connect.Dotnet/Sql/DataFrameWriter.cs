@@ -123,7 +123,7 @@ public class DataFrameWriter
             {
                 WriteOperation = new WriteOperation
                 {
-                    Mode = WriteOperation.Types.SaveMode.Overwrite, Source = format, Options = { options }, Input = _what.Relation, PartitioningColumns = { _partitionColumnNames }
+                    Mode = _saveMode, Source = format, Options = { options }, Input = _what.Relation, PartitioningColumns = { _partitionColumnNames }
                     , Path = path
                 }
             }
