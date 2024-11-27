@@ -24,7 +24,7 @@ public class RequestExecutor : IDisposable
     private readonly SparkSession _session;
     private readonly Plan _plan;
     private readonly GrpcLogger _logger;
-    
+
     private string _operationId = string.Empty;
     private string _lastResponseId = string.Empty;
     private bool _isComplete = false;
@@ -84,21 +84,22 @@ public class RequestExecutor : IDisposable
         while (shouldContinue && !_isComplete)
         {
             shouldContinue = await ProcessRequest();
-            _logger.Log(GrpcLoggingLevel.Verbose, $" Processed Request, continue?: {shouldContinue}");
+            _logger.Log(GrpcLoggingLevel.Verbose, "Processed Request, continue?: {0} {1} {2} {3}", shouldContinue, _session.SessionId, _operationId, _lastResponseId);
         }
     }
     
     private CancellationToken GetScheduledCancellationToken()
     {
+        var cancelTime = int.Parse(_session.Conf.GetOrDefault(SparkDotnetKnownConfigKeys.RequestExecutorCancelTimeout, "45"));
         _currentCancellationSource = new CancellationTokenSource();
-        _currentCancellationSource.CancelAfter(TimeSpan.FromMinutes(1));
+        _currentCancellationSource.CancelAfter(TimeSpan.FromSeconds(cancelTime));
         var token = _currentCancellationSource.Token;
         return token;
     }
     
     private async Task<bool> ProcessRequest()
     {
-        _logger.Log(GrpcLoggingLevel.Verbose, $" Processing Request");
+        _logger.Log(GrpcLoggingLevel.Verbose, "Processing Request {0} {1} {2}", _session.SessionId, _operationId, _lastResponseId);
 
         try
         {
@@ -254,35 +255,63 @@ public class RequestExecutor : IDisposable
         if (_operationId == string.Empty)
         { 
             var request = CreateRequest();
-            _logger.Log(GrpcLoggingLevel.Verbose, "Calling Execute Plan on session {0}", _session.SessionId);
+            _logger.Log(GrpcLoggingLevel.Verbose, "Calling Execute Plan on session {0} with operation id {1}", _session.SessionId, _operationId);
             return _session.GrpcClient.ExecutePlan(request, _session.Headers, null, GetScheduledCancellationToken());
         }
         else
         {
             var request = CreateReattachRequest();
-            _logger.Log(GrpcLoggingLevel.Verbose, "Calling ReattachExecute Plan on session {0}", _session.SessionId);
+            _logger.Log(GrpcLoggingLevel.Verbose, "Calling ReattachExecute Plan on session {0} with operation id {1}", _session.SessionId, _operationId);
             return _session.GrpcClient.ReattachExecute(request, _session.Headers, null, GetScheduledCancellationToken());
         }
     }
-    
-    private ExecutePlanRequest CreateRequest() => new()
+
+    private ExecutePlanRequest CreateRequest()
     {
-        Plan = _plan, ClientType = _session.ClientType, SessionId = _session.SessionId, UserContext = _session.UserContext, RequestOptions =
+        _operationId = Guid.NewGuid().ToString();
+        
+        return new()
         {
-            new ExecutePlanRequest.Types.RequestOption()
+            OperationId = _operationId,
+            Plan = _plan, 
+            ClientType = _session.ClientType, 
+            SessionId = _session.SessionId, 
+            UserContext = _session.UserContext, 
+            RequestOptions =
             {
-                ReattachOptions = new ReattachOptions()
+                new ExecutePlanRequest.Types.RequestOption()
                 {
-                    Reattachable = true
+                    ReattachOptions = new ReattachOptions()
+                    {
+                        Reattachable = true
+                    }
                 }
             }
-        }
-    };
+        };
+    }
 
-    private ReattachExecuteRequest CreateReattachRequest() => new()
+    private ReattachExecuteRequest CreateReattachRequest()
     {
-        ClientType = _session.ClientType, SessionId = _session.SessionId, UserContext = _session.UserContext, OperationId = _operationId, LastResponseId = _lastResponseId
-    };
+        if (_lastResponseId == string.Empty)
+        {
+            return new()
+            { 
+                ClientType = _session.ClientType, 
+                SessionId = _session.SessionId, 
+                UserContext = _session.UserContext, 
+                OperationId = _operationId
+            };
+        }
+        
+        return new()
+        { 
+            ClientType = _session.ClientType, 
+            SessionId = _session.SessionId, 
+            UserContext = _session.UserContext, 
+            OperationId = _operationId, 
+            LastResponseId = _lastResponseId
+        };
+    }
 
     private ReleaseExecuteRequest CreateReleaseRequest() => new()
     {

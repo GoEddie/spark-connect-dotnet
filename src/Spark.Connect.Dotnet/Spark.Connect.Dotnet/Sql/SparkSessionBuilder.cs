@@ -185,6 +185,7 @@ public static class SparkDotnetKnownConfigKeys
     public const string GrpcLogging = RuntimeConf.SparkDotnetConfigKey + "grpclogging";
     public const string PrintMetrics = RuntimeConf.SparkDotnetConfigKey + "showmetrics";
     public const string DontDecodeArrow = RuntimeConf.SparkDotnetConfigKey + "dontdecodearrow";
+    public const string RequestExecutorCancelTimeout = RuntimeConf.SparkDotnetConfigKey + "requestretrytimelimit";
 }
 
 public class RuntimeConf
@@ -240,6 +241,16 @@ public class RuntimeConf
         task.Wait();
     }
 
+    public string GetOrDefault(string key, string defaultValue)
+    {
+        var value = Get(key);
+        if (string.IsNullOrEmpty(value))
+        {
+            return defaultValue;
+        }
+
+        return value;
+    }
     public string Get(string key)
     {
         if (key.ToLowerInvariant().StartsWith(SparkDotnetConfigKey))
