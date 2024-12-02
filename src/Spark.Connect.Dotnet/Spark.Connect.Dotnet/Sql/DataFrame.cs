@@ -1720,6 +1720,9 @@ public class DataFrame
         return response;
     }
 
+    /// <summary>
+    /// Prints out the Relation representation, if you don't want it printed to console then you can get it by doing `DataFrame.Relation.ToString()`
+    /// </summary>
     public void ShowRelation()
     {
         try
@@ -1738,6 +1741,7 @@ public class DataFrame
             var json = this.Relation.ToString();
             SparkSession.Console.WriteLine(this.Relation.ToString());    
         }
+        
     }
 }
 
