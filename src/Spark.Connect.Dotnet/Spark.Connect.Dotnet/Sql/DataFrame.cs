@@ -5,6 +5,7 @@ using Spark.Connect.Dotnet.Sql.Streaming;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using static Spark.Connect.Dotnet.Sql.Functions;
 using TransformFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.DataFrame, Spark.Connect.Dotnet.Sql.DataFrame>>;
+using Newtonsoft.Json;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -1717,6 +1718,30 @@ public class DataFrame
         var response = callable(this);
 
         return response;
+    }
+
+    /// <summary>
+    /// Prints out the Relation representation, if you don't want it printed to console then you can get it by doing `DataFrame.Relation.ToString()`
+    /// </summary>
+    public void ShowRelation()
+    {
+        try
+        {
+            using (var stringReader = new StringReader(this.Relation.ToString()))
+            using (var stringWriter = new StringWriter())
+            {
+                var jsonReader = new JsonTextReader(stringReader);
+                var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
+                jsonWriter.WriteToken(jsonReader);
+                SparkSession.Console.WriteLine(stringWriter.ToString());
+            }
+        }
+        catch (Exception)
+        {
+            var json = this.Relation.ToString();
+            SparkSession.Console.WriteLine(this.Relation.ToString());    
+        }
+        
     }
 }
 
