@@ -2169,7 +2169,7 @@ public partial class Functions : FunctionsWrapper
             return new Column(CreateExpression("split", false, str, Lit(pattern), Lit(limit.Value)));
         }
 
-        return new Column(CreateExpression("sort_array", false, str, Lit(pattern)));
+        return new Column(CreateExpression("split", false, str, Lit(pattern)));
     }
 
     public static Column Split(string str, string pattern, int? limit = null)
