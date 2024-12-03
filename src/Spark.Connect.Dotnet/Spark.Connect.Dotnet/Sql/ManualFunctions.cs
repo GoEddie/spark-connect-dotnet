@@ -1257,24 +1257,24 @@ public partial class Functions : FunctionsWrapper
         return new Column(CreateExpression("date_trunc", false, Lit(format), Col(timestamp)));
     }
 
-    public static Column First(string col)
+    public static Column First(string col, bool ignoreNulls = false)
     {
-        return new Column(CreateExpression("first", false, Col(col)));
+        return new Column(CreateExpression("first", false, Col(col), Lit(ignoreNulls)));
     }
 
-    public static Column First(Column col)
+    public static Column First(Column col, bool ignoreNulls = false)
     {
-        return new Column(CreateExpression("first", false, col));
+        return new Column(CreateExpression("first", false, col, Lit(ignoreNulls)));
     }
 
-    public static Column Last(Column col)
+    public static Column Last(Column col, bool ignoreNulls = false)
     {
-        return new Column(CreateExpression("last", false, col));
+        return new Column(CreateExpression("last", false, col, Lit(ignoreNulls)));
     }
 
-    public static Column Last(string col)
+    public static Column Last(string col, bool ignoreNulls = false)
     {
-        return new Column(CreateExpression("last", false, Col(col)));
+        return new Column(CreateExpression("last", false, Col(col), Lit(ignoreNulls)));
     }
 
     public static Column FormatString(string format, params Column[] cols)
