@@ -2024,7 +2024,7 @@ public partial class Functions : FunctionsWrapper
     /// <Summary>
     ///     Round
     ///     Round the given value to `scale` decimal places using HALF_UP rounding mode if `scale` >= 0 or at integral part
-    ///     when `scale` < 0.
+    ///     when `scale` &lt; 0.
     /// </Summary>
     public static Column Round(Column col, int scale)
     {

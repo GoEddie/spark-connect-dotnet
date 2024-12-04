@@ -2,6 +2,9 @@ using Grpc.Core;
 
 namespace Spark.Connect.Dotnet.Grpc.SparkExceptions;
 
+/// <summary>
+/// Used to help map and create exceptions
+/// </summary>
 public static class SparkExceptionFactory
 {
     private static SparkException DetailStringToException(string exceptionCode, string detail, Exception exception)
@@ -32,6 +35,11 @@ public static class SparkExceptionFactory
         return exceptionCode;
     }
 
+    /// <summary>
+    /// Create the appropriate exception
+    /// </summary>
+    /// <param name="exception"></param>
+    /// <returns></returns>
     public static SparkException GetExceptionFromRpcException(RpcException exception)
     {
         var exceptionCode =
@@ -39,6 +47,11 @@ public static class SparkExceptionFactory
         return DetailStringToException(exceptionCode, exception.Status.Detail, exception);
     }
 
+    /// <summary>
+    /// Create the appropriate exception
+    /// </summary>
+    /// <param name="aggException"></param>
+    /// <returns></returns>
     public static SparkException GetExceptionFromRpcException(AggregateException aggException)
     {
         if (aggException.InnerException is RpcException exception)

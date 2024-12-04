@@ -4,21 +4,24 @@ using Spark.Connect.Dotnet.Sql;
 
 namespace Spark.Connect.Dotnet.Grpc;
 
-/*
- * When we connect to remote spark clusters, including Databricks we can find our tcp connections are closed
- *  Azure has a 5 minute idle time where connections are killed and Databricks has a hard 1 hour timeout so we
- *  need to create the initial request with the Reattach option Reattachable set to true and then we can re-connect
- *  a failed connection using ReattachExecute so we don't have to re-run the query from the beginning.
- *
- *  The .NET gRPC request will sit forever and not respond if the connection is killed so we use a scheduled cancellation
- *  to cancel the request if we haven't had a response in 1 minute.
- *
- *  When we get the first response it includes an operation id and a request id - we use the operation id to identify the query run
- *   and the response id to track the responses we have received. the response id is like a pointer to tell the server where we have
- *   received the response up to.
- *
- *  When we finish and have everything we need we should tell the server to release the responses so the memory is freed on the server.
- */
+
+
+
+/// <summary>
+/// When we connect to remote spark clusters, including Databricks we can find our tcp connections are closed
+/// Azure has a 5 minute idle time where connections are killed and Databricks has a hard 1 hour timeout so we
+/// need to create the initial request with the Reattach option Reattachable set to true and then we can re-connect
+/// a failed connection using ReattachExecute so we don't have to re-run the query from the beginning.
+///
+/// The .NET gRPC request will sit forever and not respond if the connection is killed so we use a scheduled cancellation
+/// to cancel the request if we haven't had a response in 1 minute.
+///
+/// When we get the first response it includes an operation id and a request id - we use the operation id to identify the query run
+/// and the response id to track the responses we have received. the response id is like a pointer to tell the server where we have
+/// received the response up to.
+///
+/// When we finish and have everything we need we should tell the server to release the responses so the memory is freed on the server.
+/// </summary>
 public class RequestExecutor : IDisposable
 {
     private readonly SparkSession _session;
@@ -49,6 +52,11 @@ public class RequestExecutor : IDisposable
 
     private RetryableState _retryableState = RetryableState.Processing;
     
+    /// <summary>
+    /// Create the Executor
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="plan"></param>
     public RequestExecutor(SparkSession session, Plan plan)
     {
         _logger = GetLogger(session);
@@ -71,12 +79,18 @@ public class RequestExecutor : IDisposable
         return new GrpcNullLogger(GrpcLoggingLevel.None, null);
     }
 
+    /// <summary>
+    /// Excecute the plan passed in the constructor
+    /// </summary>
     public void Exec()
     {
         var task = Task.Run(ExecAsync);
         task.Wait();
     }
     
+    /// <summary>
+    /// Execute the plan already passed into the constructor
+    /// </summary>
     public async Task ExecAsync()
     {
         var shouldContinue = true;
@@ -353,6 +367,9 @@ public class RequestExecutor : IDisposable
         
     }
     
+    /// <summary>
+    /// Dispose releasing any outstanding requests
+    /// </summary>
     public void Dispose()
     {
         if (_operationId != string.Empty && _lastResponseId != String.Empty)
@@ -367,22 +384,58 @@ public class RequestExecutor : IDisposable
         }
     }
 
+    /// <summary>
+    /// Get any data returned by the last request
+    /// </summary>
+    /// <returns></returns>
     public IList<Row> GetData() => _rows;
 
+    /// <summary>
+    /// The schema of the last request (if available)
+    /// </summary>
+    /// <returns></returns>
     public DataType GetSchema() => _schema!;
 
+    /// <summary>
+    /// If there was a relation returned
+    /// </summary>
+    /// <returns></returns>
     public Relation GetRelation() => _relation!;
 
+    /// <summary>
+    /// Get the streaming query id
+    /// </summary>
+    /// <returns></returns>
     public StreamingQueryInstanceId GetStreamingQueryId() => _streamingQueryId!;
 
+    /// <summary>
+    /// Streaming command result
+    /// </summary>
+    /// <returns></returns>
     public StreamingQueryCommandResult.Types.StatusResult GetStreamingQueryCommandResult() => _streamingResultStatus!;
 
+    /// <summary>
+    /// Streaming query name
+    /// </summary>
+    /// <returns></returns>
     public string GetStreamingQueryName() => _streamingQueryName!;
 
+    /// <summary>
+    /// Is the streaming query terminated?
+    /// </summary>
+    /// <returns></returns>
     public bool GetStreamingQueryIsTerminated() => _streamingQueryIsTerminated!.Value;
 
+    /// <summary>
+    /// Any streaming exceptions
+    /// </summary>
+    /// <returns></returns>
     public StreamingQueryCommandResult.Types.ExceptionResult? GetStreamingException() => _streamingQueryException;
 
+    /// <summary>
+    /// Any streaming progress info
+    /// </summary>
+    /// <returns></returns>
     public StreamingQueryCommandResult.Types.RecentProgressResult? GetStreamingRecentProgress() => _streamingProgress;
 }
 
