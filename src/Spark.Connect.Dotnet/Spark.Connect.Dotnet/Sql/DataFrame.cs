@@ -9,13 +9,20 @@ using Newtonsoft.Json;
 
 namespace Spark.Connect.Dotnet.Sql;
 
+/// <summary>
+/// A distributed collection of data grouped into named columns.
+///
+/// A DataFrame in this project is a wrapper around a `Relation`.
+/// </summary>
 public class DataFrame
 {
     private readonly DataType? _schema;
+    /// <summary>
+    /// Access to the underlying `Relation` which is the expressions that make up the plan.
+    /// </summary>
     public readonly Relation Relation;
 
-    private readonly Dictionary<SparkStorageLevel, StorageLevel> _storageLevels =
-        new()
+    private readonly Dictionary<SparkStorageLevel, StorageLevel> _storageLevels = new()
         {
             {
                 SparkStorageLevel.None, new StorageLevel
@@ -88,6 +95,12 @@ public class DataFrame
             }
         };
 
+    /// <summary>
+    /// Create a `DataFrame` from a `Relation`.
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="relation"></param>
+    /// <param name="schema"></param>
     public DataFrame(SparkSession session, Relation relation, DataType? schema)
     {
         SparkSession = session;
@@ -104,6 +117,11 @@ public class DataFrame
         _schema = schema;
     }
 
+    /// <summary>
+    /// Create a `DataFrame` from a `Relation`.
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="relation"></param>
     public DataFrame(SparkSession session, Relation relation)
     {
         SparkSession = session;
@@ -143,8 +161,14 @@ public class DataFrame
         }
     }
 
+    /// <summary>
+    /// See https://github.com/GoEddie/spark-connect-dotnet/blob/main/docs/options.md#validate-column-name-on-dataframe-indexer
+    /// </summary>
     public bool ValidateThisCallColumnName { get; set; }
 
+    /// <summary>
+    /// Return the schema of the `DataFrame`.
+    /// </summary>
     public StructType Schema
     {
         get
@@ -170,13 +194,25 @@ public class DataFrame
         }
     }
 
+    /// <summary>
+    /// A list of the columns that make up the `DataFrame`.
+    /// </summary>
     public IEnumerable<string> Columns => Schema.FieldNames();
 
+    /// <summary>
+    /// A list of the data types that make up the `DataFrame`.
+    /// </summary>
     public IEnumerable<(string Name, string Type)> Dtypes =>
         Schema.Fields.Select(p => (p.Name, p.DataType.SimpleString()));
 
+    /// <summary>
+    /// Functionality for working with missing data in `DataFrame`.
+    /// </summary>
     public DataFrameNaFunctions Na => new(this);
 
+    /// <summary>
+    /// Return the `SparkSession` the `DataFrame` was created on
+    /// </summary>
     public SparkSession SparkSession { get; }
 
     /// <summary>
@@ -252,6 +288,10 @@ public class DataFrame
         session.Console.WriteLine(rows[0].Data[0] as string ?? "No data in row");
     }
 
+    /// <summary>
+    /// Prints out the schema in the tree format. Optionally allows to specify how many levels to print if schema is nested.
+    /// </summary>
+    /// <param name="level">How many levels to print for nested schemas.</param>
     public void PrintSchema(int? level = null)
     {
         SparkSession.Console.WriteLine(GrpcInternal.TreeString(SparkSession, Relation));
@@ -301,6 +341,11 @@ public class DataFrame
         GrpcInternal.Schema(SparkSession.GrpcClient, SparkSession.SessionId, plan, SparkSession.Headers, SparkSession.UserContext, SparkSession.ClientType, false, "");
     }
 
+    /// <summary>
+    /// Create a new `DataFrame` based on the expressions that are passed in.
+    /// </summary>
+    /// <param name="columns"></param>
+    /// <returns></returns>
     public DataFrame Select(params Expression[] columns)
     {
         var relation = new Relation
@@ -364,6 +409,11 @@ public class DataFrame
         return new DataFrame(SparkSession, relation, _schema);
     }
 
+    /// <summary>
+    /// Alias the `DataFrame`.
+    /// </summary>
+    /// <param name="alias"></param>
+    /// <returns></returns>
     public DataFrame Alias(string alias)
     {
         var newRelation = new Relation
@@ -377,6 +427,10 @@ public class DataFrame
         return new DataFrame(SparkSession, newRelation);
     }
 
+    /// <summary>
+    /// Cache the `DataFrame`
+    /// </summary>
+    /// <returns></returns>
     public DataFrame Cache()
     {
         return new DataFrame(SparkSession,
@@ -386,21 +440,40 @@ public class DataFrame
             }));
     }
 
+    /// <summary>
+    /// Cache the `DataFrame` using `MEMORY_AND_DISK`
+    /// </summary>
+    /// <returns></returns>
     public DataFrame Persist()
     {
         return Persist(SparkStorageLevel.MEMORY_AND_DISK);
     }
 
+    /// <summary>
+    /// Cache the `DataFrame` at the specified `SparkStorageLevel`
+    /// </summary>
+    /// <param name="storageLevel"></param>
+    /// <returns></returns>
     public DataFrame Persist(SparkStorageLevel storageLevel)
     {
         return new DataFrame(SparkSession, GrpcInternal.Persist(SparkSession, Relation, _storageLevels[storageLevel]));
     }
 
+    /// <summary>
+    /// Not implemented yet in Spark Connect so cannot be implemented here.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
     public DataFrame Checkpoint()
     {
         throw new NotImplementedException("Not yet implemented in Apache Spark Connect");
     }
 
+    /// <summary>
+    /// Computes basic statistics for numeric and string columns. This includes count, mean, stddev, min, and max. If no columns are given, this function computes statistics for all numerical or string columns.
+    /// </summary>
+    /// <param name="cols"></param>
+    /// <returns></returns>
     public DataFrame Describe(params string[] cols)
     {
         var relation = new Relation
@@ -414,6 +487,11 @@ public class DataFrame
         return new DataFrame(SparkSession, relation);
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` containing the distinct rows in this `DataFrame`.
+    /// </summary>
+    /// <param name="withinWatermark"></param>
+    /// <returns></returns>
     public DataFrame Distinct(bool withinWatermark = false)
     {
         var relation = new Relation
@@ -427,6 +505,13 @@ public class DataFrame
         return new DataFrame(SparkSession, relation);
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` without specified columns. This is a no-op if the schema doesn’t contain the given column name(s).
+    ///
+    /// When an input is a column name, it is treated literally without further interpretation. Otherwise, will try to match the equivalent expression. So that dropping column by its name `Drop(colName)` has different semantic with directly dropping the column `Drop(Col(colName))`.
+    /// </summary>
+    /// <param name="cols"></param>
+    /// <returns></returns>
     public DataFrame Drop(params string[] cols)
     {
        var relation = new Relation
@@ -440,6 +525,15 @@ public class DataFrame
         return new DataFrame(SparkSession, relation);
     }
 
+    /// <summary>
+    /// Return a new `DataFrame` with duplicate rows removed, optionally only considering certain columns.
+    /// For a static batch DataFrame, it just drops duplicate rows. For a streaming DataFrame, it will keep
+    /// all data across triggers as intermediate state to drop duplicates rows. You can use `WithWatermark()`
+    /// to limit how late the duplicate data can be and the system will accordingly limit the state.
+    /// In addition, data older than watermark will be dropped to avoid any possibility of duplicates.
+    /// </summary>
+    /// <param name="subset"></param>
+    /// <returns></returns>
     public DataFrame DropDuplicates(params string[] subset)
     {
         if (subset.Length == 0)
@@ -459,6 +553,15 @@ public class DataFrame
         return new DataFrame(SparkSession, relation);
     }
 
+    /// <summary>
+    /// For a streaming DataFrame, this will keep all data across triggers as intermediate state to drop duplicated rows. 
+    /// The state will be kept to guarantee the semantic, “Events are deduplicated as long as the time distance of earliest and
+    /// latest events are smaller than the delay threshold of watermark.”
+    /// Users are encouraged to set the delay threshold of watermark longer than max timestamp differences among duplicated events.
+    /// Note: too late data older than watermark will be dropped.
+    /// </summary>
+    /// <param name="subset"></param>
+    /// <returns></returns>
     public DataFrame DropDuplicatesWithinWatermark(params string[] subset)
     {
         if (subset.Length == 0)
@@ -477,6 +580,14 @@ public class DataFrame
         return new DataFrame(SparkSession, relation);
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` without specified columns. This is a no-op if the schema doesn’t contain the given column name(s).
+    ///
+    /// When an input is a column name, it is treated literally without further interpretation. Otherwise, will try to match the equivalent expression.
+    /// So that dropping column by its name `Drop(colName)` has different semantic with directly dropping the column `Drop(Col(colName))`.
+    /// </summary>
+    /// <param name="cols"></param>
+    /// <returns></returns>
     public DataFrame Drop(params Column[] cols)
     {
         var plan = new Plan
@@ -518,11 +629,32 @@ public class DataFrame
         return new DataFrame(SparkSession, relation);
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` that has exactly numPartitions partitions.
+    /// Similar to `Coalesce` defined on an RDD (in spark), this operation results in a narrow dependency, e.g. if you go from 1000 partitions to 100 partitions,
+    /// there will not be a shuffle, instead each of the 100 new partitions will claim 10 of the current partitions.
+    /// If a larger number of partitions is requested, it will stay at the current number of partitions.However, if you’re doing a drastic coalesce,
+    /// e.g. to numPartitions = 1, this may result in your computation taking place on fewer nodes than you
+    /// like (e.g. one node in the case of numPartitions = 1). To avoid this, you can call repartition().
+    /// This will add a shuffle step, but means the current upstream partitions will be executed in parallel (per whatever the current partitioning is).
+    /// </summary>
+    /// <returns></returns>
     public DataFrame Coalesce()
     {
         return Coalesce(1);
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` that has exactly numPartitions partitions.
+    /// Similar to `Coalesce` defined on an RDD (in spark), this operation results in a narrow dependency, e.g. if you go from 1000 partitions to 100 partitions,
+    /// there will not be a shuffle, instead each of the 100 new partitions will claim 10 of the current partitions.
+    /// If a larger number of partitions is requested, it will stay at the current number of partitions.However, if you're doing a drastic coalesce,
+    /// e.g. to numPartitions = 1, this may result in your computation taking place on fewer nodes than you
+    /// like (e.g. one node in the case of numPartitions = 1). To avoid this, you can call repartition().
+    /// This will add a shuffle step, but means the current upstream partitions will be executed in parallel (per whatever the current partitioning is).
+    /// </summary>
+    /// <param name="numPartitions">specify the target number of partitions</param>
+    /// <returns></returns>
     public DataFrame Coalesce(int numPartitions)
     {
         var plan = new Plan
@@ -539,6 +671,12 @@ public class DataFrame
         return new DataFrame(SparkSession, plan.Root);
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` partitioned by the given partitioning expressions. The resulting DataFrame is hash partitioned.
+    /// </summary>
+    /// <param name="numPartitions">can be an int to specify the target number of partitions or a Column. If it is a Column, it will be used as the first partitioning column. If not specified, the default number of partitions is used.</param>
+    /// <param name="cols">partitioning columns.</param>
+    /// <returns>Repartitioned DataFrame.</returns>
     public DataFrame Repartition(int numPartitions, params Column[] cols)
     {
         var plan = new Plan
@@ -558,28 +696,28 @@ public class DataFrame
         return new DataFrame(SparkSession, plan.Root);
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` partitioned by default number of partitions.
+    /// </summary>
+    /// <param name="cols"></param>
+    /// <returns></returns>
     public DataFrame Repartition(params Column[] cols)
     {
         return Repartition(1, cols);
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` partitioned by the given partitioning expressions. The resulting `DataFrame` is range partitioned.
+    /// 
+    /// At least one partition-by expression must be specified. When no explicit sort order is specified, “ascending nulls first” is assumed. Due to
+    /// performance reasons this method uses sampling to estimate the ranges. Hence, the output may not be consistent, since sampling can return
+    /// different values. The sample size can be controlled by the config `spark.sql.execution.rangeExchange.sampleSizePerPartition`.
+    /// </summary>
+    /// <param name="numPartitions"></param>
+    /// <param name="cols"></param>
+    /// <returns>Repartitioned `DataFrame`</returns>
     public DataFrame RepartitionByRange(int numPartitions, params Column[] cols)
     {
-        Column WrapSortOrderCols(Column column)
-        {
-            // if (column.Expression.SortOrder == null)
-            // {
-            //     column.Expression.SortOrder = new Expression.Types.SortOrder
-            //     {
-            //         // Child = column.Expression, 
-            //         Direction = Expression.Types.SortOrder.Types.SortDirection.Unspecified, 
-            //         NullOrdering = Expression.Types.SortOrder.Types.NullOrdering.SortNullsUnspecified
-            //     };
-            // }
-            
-            return column;
-        }
-
         var sort = cols.Select(WrapSortOrderCols);
         var relation = new Relation
             {
@@ -590,8 +728,18 @@ public class DataFrame
         };
 
         return new DataFrame(SparkSession, relation);
+
+        Column WrapSortOrderCols(Column column)
+        {
+            return column;
+        }
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` with each partition sorted by the specified column(s).
+    /// </summary>
+    /// <param name="cols"></param>
+    /// <returns></returns>
     public DataFrame SortWithinPartitions(params string[] cols)
     {
         var relation = new Relation
@@ -605,6 +753,11 @@ public class DataFrame
         return new DataFrame(SparkSession, relation);
     }
 
+    /// <summary>
+    /// Selects column based on the column name specified as a regex and returns it as `Column`.
+    /// </summary>
+    /// <param name="regex"></param>
+    /// <returns>Column</returns>
     public Column ColRegex(string regex)
     {
         var expression = new Expression
@@ -645,6 +798,16 @@ public class DataFrame
         return new DataFrame(SparkSession, relation, _schema);
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` by adding a column or replacing the existing column that has the same name.
+    ///     The column expression must be an expression over this `DataFrame`; attempting to add a column from some other
+    ///     `DataFrame` will raise an error.
+    ///
+    ///  This takes an `Expression` rather than a `Column`
+    /// </summary>
+    /// <param name="columnName"></param>
+    /// <param name="column"></param>
+    /// <returns></returns>
     public DataFrame WithColumn(string columnName, Expression column)
     {
         var alias = new Expression.Types.Alias
@@ -663,6 +826,13 @@ public class DataFrame
         return new DataFrame(SparkSession, relation, _schema);
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` by adding multiple columns or replacing the existing columns that have the same names.
+    /// The colsMap is a map of column name and column, the column must only refer to attributes supplied by this Dataset.
+    /// It is an error to add columns that refer to some other Dataset.
+    /// </summary>
+    /// <param name="colsMap"></param>
+    /// <returns>`DataFrame`</returns>
     public DataFrame WithColumns(IDictionary<string, Column> colsMap)
     {
         var df = this;
@@ -674,6 +844,11 @@ public class DataFrame
         return df;
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` by renaming multiple columns. This is a no-op if the schema doesn’t contain the given column names.
+    /// </summary>
+    /// <param name="colsMap"></param>
+    /// <returns>`DataFrame`</returns>
     public DataFrame WithColumnsRenamed(IDictionary<string, string> colsMap)
     {
         var df = this;
@@ -685,6 +860,12 @@ public class DataFrame
         return df;
     }
 
+    /// <summary>
+    /// Returns a new `DataFrame` by renaming an existing column. This is a no-op if the schema doesn't contain the given column name.
+    /// </summary>
+    /// <param name="existing"></param>
+    /// <param name="newName"></param>
+    /// <returns>`DataFrame`</returns>
     public DataFrame WithColumnRenamed(string existing, string newName)
     {
         var  relation = new Relation
