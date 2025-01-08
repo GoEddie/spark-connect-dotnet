@@ -1,3 +1,5 @@
+using System.Text;
+using Apache.Arrow;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Sql.Types;
@@ -110,18 +112,34 @@ public class SparkCatalog
     {
         var plan = Plan();
         plan.Root.Catalog.CurrentCatalog = new CurrentCatalog();
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        return executor.GetData()[0][0].ToString();
+
+        var recordBatches = executor.GetArrowBatches();
+        var builder = new StringBuilder();
+        foreach (var recordBatch in recordBatches)
+        {
+            builder.Append((recordBatch.Column("value") as StringArray).GetString(0));
+        }
+        
+        return builder.ToString(); 
     }
 
     public string CurrentDatabase()
     {
         var plan = Plan();
         plan.Root.Catalog.CurrentDatabase = new CurrentDatabase();
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        return executor.GetData()[0][0].ToString();
+
+        var recordBatches = executor.GetArrowBatches();
+        var builder = new StringBuilder();
+        foreach (var recordBatch in recordBatches)
+        {
+            builder.Append((recordBatch.Column("value") as StringArray).GetString(0));
+        }
+        
+        return builder.ToString(); 
     }
 
     public bool DatabaseExists(string dbName)
@@ -132,9 +150,11 @@ public class SparkCatalog
             DbName = dbName
         };
         
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        return (bool)executor.GetData()[0][0];
+
+        var recordBatches = executor.GetArrowBatches();
+        return recordBatches.Any(p => (p.Column("value") as BooleanArray).GetValue(0)!.Value);
     }
 
     public bool DropGlobalTempView(string viewName)
@@ -145,9 +165,11 @@ public class SparkCatalog
             ViewName = viewName
         };
 
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        return (bool)executor.GetData()[0][0];
+
+        var recordBatches = executor.GetArrowBatches();
+        return recordBatches.Any(p => (p.Column("value") as BooleanArray).GetValue(0)!.Value);
     }
 
     public bool DropTempView(string viewName)
@@ -158,9 +180,11 @@ public class SparkCatalog
             ViewName = viewName
         };
 
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        return (bool)executor.GetData()[0][0];
+
+        var recordBatches = executor.GetArrowBatches();
+        return recordBatches.Any(p => (p.Column("value") as BooleanArray).GetValue(0)!.Value);
     }
 
     public bool FunctionExists(string functionName, string? dbName = null)
@@ -176,9 +200,11 @@ public class SparkCatalog
             plan.Root.Catalog.FunctionExists.DbName = dbName;
         }
 
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        return (bool)executor.GetData()[0][0];
+
+        var recordBatches = executor.GetArrowBatches();
+        return recordBatches.Any(p => (p.Column("value") as BooleanArray).GetValue(0)!.Value);
     }
 
     public Database GetDatabase(string dbName)
@@ -189,10 +215,17 @@ public class SparkCatalog
             DbName = dbName
         };
 
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan,  ArrowHandling.ArrowBuffers);
         executor.Exec();
-        var row = executor.GetData().First();
-        return new Database((string)row[0], (string)row[1], (string)row[2], (string)row[3]);
+        
+        var recordBatches = executor.GetArrowBatches();
+        var firstBatch = recordBatches.First();
+        var nameArray = firstBatch.Column("name") as StringArray;
+        var catalogArray = firstBatch.Column("catalog") as StringArray;
+        var descriptionArray = firstBatch.Column("description") as StringArray;
+        var locationArray = firstBatch.Column("locationUri") as StringArray;
+        
+        return new Database(nameArray.GetString(0), catalogArray.GetString(0), descriptionArray.GetString(0), locationArray.GetString(0));
     }
 
     public Function GetFunction(string functionName, string? dbName = null)
@@ -208,11 +241,35 @@ public class SparkCatalog
             plan.Root.Catalog.GetFunction.DbName = dbName;
         }
 
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        var row = executor.GetData().First();
-        return new Function((string)row[0], (string)row[1], (string[])row[2], (string)row[3], (string)row[4],
-            (bool)row[5]);
+
+        var recordBatches = executor.GetArrowBatches();
+        var firstBatch = recordBatches.First();
+        var nameArray = firstBatch.Column("name") as StringArray;
+        var catalogArray = firstBatch.Column("catalog") as StringArray;
+        var namespaceArray = firstBatch.Column("namespace") as ListArray;
+        var descriptionArray = firstBatch.Column("description") as StringArray;
+        var classNameArray = firstBatch.Column("className") as StringArray;
+        var isTemporaryArray = firstBatch.Column("isTemporary") as BooleanArray;
+        
+        var namespaces = new List<string>();
+        var namespaceValuesArray = namespaceArray.Values as StringArray;
+        if (namespaceArray != null)
+        {
+            for (var i = 0; i < namespaceValuesArray.Length; i++)
+            {
+                namespaces.Add(namespaceValuesArray.GetString(i));
+            }
+        }
+        
+        return new Function(
+            nameArray.GetString(0), 
+            catalogArray.GetString(0), 
+            namespaces.ToArray(), 
+            descriptionArray.GetString(0), 
+            classNameArray.GetString(0), 
+            isTemporaryArray.GetValue(0)!.Value);
     }
 
     public Table GetTable(string functionName, string? dbName = null)
@@ -228,10 +285,35 @@ public class SparkCatalog
             plan.Root.Catalog.GetTable.DbName = dbName;
         }
 
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        var row = executor.GetData().First();
-        return new Table((string)row[0], (string)row[1], (string)row[2], (string)row[3], (string)row[4], (bool)row[5]);
+        
+        
+        var recordBatches = executor.GetArrowBatches();
+        var firstBatch = recordBatches.First();
+        var nameArray = firstBatch.Column("name") as StringArray;
+        var catalogArray = firstBatch.Column("catalog") as StringArray;
+        var namespaceArray = firstBatch.Column("namespace") as ListArray;
+        var descriptionArray = firstBatch.Column("description") as StringArray;
+        var tableTypeArray = firstBatch.Column("tableType") as StringArray;
+        var isTemporaryArray = firstBatch.Column("isTemporary") as BooleanArray;
+
+        var namespaces = new List<string>();
+        if (namespaceArray.Values is StringArray namespaceValuesArray)
+        {
+            for (var i = 0; i < namespaceValuesArray.Length; i++)
+            {
+                namespaces.Add(namespaceValuesArray.GetString(i));
+            }
+        }
+        
+        return new Table(
+            nameArray.GetString(0), 
+            catalogArray.GetString(0), 
+            namespaces.ToArray(), 
+            descriptionArray.GetString(0), 
+            tableTypeArray.GetString(0), 
+            isTemporaryArray.GetValue(0)!.Value);
     }
 
     public bool IsCached(string tableName)
@@ -242,9 +324,13 @@ public class SparkCatalog
             TableName = tableName
         };
 
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        return (bool)executor.GetData()[0][0];
+        
+        var recordBatch = executor.GetArrowBatches();
+        var firstBatch = recordBatch.First();
+        var valuesArray = firstBatch.Column("value") as BooleanArray;
+        return valuesArray.GetValue(0)!.Value;
     }
 
     public List<CatalogMetadata> ListCatalogs(string? patternName = null)
@@ -255,18 +341,28 @@ public class SparkCatalog
         {
             plan.Root.Catalog.ListCatalogs.Pattern = patternName;
         }
+        
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
+        executor.Exec();
 
+        var result = executor.GetArrowBatches();
+        
         var catalogs = new List<CatalogMetadata>();
         
-        var executor = new RequestExecutor(_sparkSession, plan);
-        executor.Exec();
-        var result = executor.GetData();
-        
-        foreach (var catalog in result)
+        foreach (var batch in result)
         {
-            catalogs.Add(new CatalogMetadata((string)catalog[0], (string)catalog[1]));
+            for (var row = 0; row < batch.Length; row++)
+            {
+                var nameArray = batch.Column("name") as StringArray;
+                var descriptionArray = batch.Column("description") as StringArray;
+        
+                catalogs.Add(new CatalogMetadata(
+                    nameArray.GetString(row), 
+                    descriptionArray.GetString(row)
+                ));
+            }
         }
-
+        
         return catalogs;
     }
 
@@ -281,19 +377,36 @@ public class SparkCatalog
         {
             plan.Root.Catalog.ListColumns.DbName = dbName;
         }
+        
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
+        executor.Exec();
 
+        var result = executor.GetArrowBatches();
+        
         var columns = new List<Column>();
         
-        var executor = new RequestExecutor(_sparkSession, plan);
-        executor.Exec();
-        var result = executor.GetData();
-        
-        foreach (var column in result)
+        foreach (var batch in result)
         {
-            columns.Add(new Column((string)column[0], (string)column[1], (string)column[2], (bool)column[3],
-                (bool)column[4], (bool)column[5]));
+            for (var row = 0; row < batch.Length; row++)
+            {
+                var nameArray = batch.Column("name") as StringArray;
+                var descriptionArray = batch.Column("description") as StringArray;
+                var dataTypeArray = batch.Column("dataType") as StringArray;
+                var nullableArray = batch.Column("nullable") as BooleanArray;
+                var isPartitionArray = batch.Column("isPartition") as BooleanArray;
+                var isBucketArray = batch.Column("isBucket") as BooleanArray;
+        
+                columns.Add(new Column(
+                    nameArray.GetString(row), 
+                    descriptionArray.GetString(row),
+                    dataTypeArray.GetString(row),
+                    nullableArray.GetValue(row)!.Value,
+                    isPartitionArray.GetValue(row)!.Value,
+                    isBucketArray.GetValue(row)!.Value
+                ));
+            }
         }
-
+        
         return columns;
     }
 
@@ -305,19 +418,32 @@ public class SparkCatalog
         {
             plan.Root.Catalog.ListDatabases.Pattern = patternName;
         }
-
-        var databases = new List<Database>();
         
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        var result = executor.GetData();
-        
-        foreach (var database in result)
-        {
-            databases.Add(new Database((string)database[0], (string)database[1], (string)database[2],
-                (string)database[3]));
-        }
 
+        var result = executor.GetArrowBatches();
+        
+        var databases = new List<Database>();
+       
+        foreach (var batch in result)
+        {
+            for (var row = 0; row < batch.Length; row++)
+            {
+                var nameArray = batch.Column("name") as StringArray;
+                var catalogArray = batch.Column("catalog") as StringArray;
+                var descriptionArray = batch.Column("description") as StringArray;
+                var locationUriArray = batch.Column("locationUri") as StringArray;
+        
+                databases.Add(new Database(
+                    nameArray.GetString(row), 
+                    catalogArray.GetString(row),
+                    descriptionArray.GetString(row),
+                    locationUriArray.GetString(row)
+                  ));
+            }
+        }
+        
         return databases;
     }
 
@@ -334,19 +460,46 @@ public class SparkCatalog
         {
             plan.Root.Catalog.ListFunctions.DbName = dbName;
         }
+        
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
+        executor.Exec();
 
+        var result = executor.GetArrowBatches();
+        
         var functions = new List<Function>();
         
-        var executor = new RequestExecutor(_sparkSession, plan);
-        executor.Exec();
-        var result = executor.GetData();
-        
-        foreach (var function in result)
+        foreach (var batch in result)
         {
-            functions.Add(new Function((string)function[0], (string)function[1], (string[])function[2],
-                (string)function[3], (string)function[4], (bool)function[5]));
-        }
+            for (var row = 0; row < batch.Length; row++)
+            {
+                var nameArray = batch.Column("name") as StringArray;
+                var catalogArray = batch.Column("catalog") as StringArray;
+                var namespaceArray = batch.Column("namespace") as ListArray;
+                var descriptionArray = batch.Column("description") as StringArray;
+                var  classNameArray = batch.Column("className") as StringArray;
+                var isTemporaryArray = batch.Column("isTemporary") as BooleanArray;
 
+                var namespaces = new List<string>();
+                if (namespaceArray.Values is StringArray namespaceValuesArray)
+                {   //TODO - is this right? If one item has multiple namespaces then we will
+                    //  return the first namespace for one item then its next namespace will be for the next row?
+                    
+                    for (var i = 0; i < namespaceValuesArray.Length; i++)
+                    {
+                        namespaces.Add(namespaceValuesArray.GetString(i));
+                    }
+                }
+        
+                functions.Add(new Function(
+                    nameArray.GetString(row), 
+                    catalogArray.GetString(row), 
+                    namespaces.ToArray(), 
+                    descriptionArray.GetString(row), 
+                    classNameArray.GetString(row), 
+                    isTemporaryArray.GetValue(row)!.Value));
+            }
+        }
+        
         return functions;
     }
 
@@ -366,16 +519,42 @@ public class SparkCatalog
 
         var tables = new List<Table>();
         
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        var result = executor.GetData();
-        
-        foreach (var table in result)
-        {
-            tables.Add(new Table((string)table[0], (string)table[1], (string)table[2], (string)table[3],
-                (string)table[4], (bool)table[5]));
-        }
 
+        var result = executor.GetArrowBatches();
+        foreach (var batch in result)
+        {
+            for (var row = 0; row < batch.Length; row++)
+            {
+                var nameArray = batch.Column("name") as StringArray;
+                var catalogArray = batch.Column("catalog") as StringArray;
+                var namespaceArray = batch.Column("namespace") as ListArray;
+                var descriptionArray = batch.Column("description") as StringArray;
+                var tableTypeArray = batch.Column("tableType") as StringArray;
+                var isTemporaryArray = batch.Column("isTemporary") as BooleanArray;
+
+                var namespaces = new List<string>();
+                if (namespaceArray.Values is StringArray namespaceValuesArray)
+                {   //TODO - is this right? If one item has multiple namespaces then we will
+                    //  return the first namespace for one item then its next namespace will be for the next row?
+                    
+                    for (var i = 0; i < namespaceValuesArray.Length; i++)
+                    {
+                        namespaces.Add(namespaceValuesArray.GetString(i));
+                    }
+                }
+        
+                tables.Add(new Table(
+                    nameArray.GetString(row), 
+                    catalogArray.GetString(row), 
+                    namespaces.ToArray(), 
+                    descriptionArray.GetString(row), 
+                    tableTypeArray.GetString(row), 
+                    isTemporaryArray.GetValue(row)!.Value));
+            }
+        }
+        
         return tables;
     }
 
@@ -452,9 +631,13 @@ public class SparkCatalog
             plan.Root.Catalog.TableExists.DbName = dbName;
         }
 
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        return (bool)executor.GetData()[0][0];
+        
+        var recordBatch = executor.GetArrowBatches();
+        var items = recordBatch.First().Column("value") as BooleanArray;
+        
+        return items.GetValue(0)!.Value;
     }
 
     public void UncacheTable(string tableName)
@@ -496,7 +679,7 @@ public class SparkCatalog
     public record Table(
         string name
         , string catalog
-        , string nameSpace
+        , string[] nameSpace
         , string description
         , string tableType
         , bool isTemporary);

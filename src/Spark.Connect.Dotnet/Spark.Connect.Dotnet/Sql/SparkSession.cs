@@ -147,7 +147,7 @@ public class SparkSession
                 try
                 {   
                     Console.WriteLine(DateTime.Now + " :: Trying Connection");
-                    Sql("SELECT 'spark-connect-dotnet' as client").Collect();
+                    Sql("SELECT 'spark-connect-dotnet' as client").CollectAsArrowBatch();
                     return;
                 }
                 catch (Exception ex)
