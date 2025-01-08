@@ -1,3 +1,5 @@
+using Apache.Arrow;
+using Apache.Arrow.Ipc;
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using Spark.Connect.Dotnet.Sql;
@@ -5,7 +7,12 @@ using Spark.Connect.Dotnet.Sql;
 namespace Spark.Connect.Dotnet.Grpc;
 
 
-
+public enum ArrowHandling
+{
+    None = 0,
+    SlowConvertToDotNet = 1,
+    ArrowBuffers = 2
+}
 
 /// <summary>
 /// When we connect to remote spark clusters, including Databricks we can find our tcp connections are closed
@@ -26,6 +33,7 @@ public class RequestExecutor : IDisposable
 {
     private readonly SparkSession _session;
     private readonly Plan _plan;
+    private readonly ArrowHandling _arrowHandling;
     private readonly GrpcLogger _logger;
 
     private string _operationId = string.Empty;
@@ -37,6 +45,7 @@ public class RequestExecutor : IDisposable
     private Relation? _relation;
     private DataType? _schema;
     private readonly List<Row> _rows = new ();
+    private readonly List<RecordBatch> _recordBatches = new();
     private StreamingQueryInstanceId? _streamingQueryId;
     private StreamingQueryCommandResult.Types.StatusResult? _streamingResultStatus;
     private string? _streamingQueryName;
@@ -51,17 +60,23 @@ public class RequestExecutor : IDisposable
     }
 
     private RetryableState _retryableState = RetryableState.Processing;
-    
+
     /// <summary>
     /// Create the Executor
     /// </summary>
     /// <param name="session"></param>
     /// <param name="plan"></param>
-    public RequestExecutor(SparkSession session, Plan plan)
+    /// <param name="arrowHandling"></param>
+    public RequestExecutor(SparkSession session, Plan plan, ArrowHandling arrowHandling = ArrowHandling.SlowConvertToDotNet)
     {
         _logger = GetLogger(session);
         _session = session;
         _plan = plan;
+        _arrowHandling = arrowHandling;
+        if (_session.Conf.IsTrue(SparkDotnetKnownConfigKeys.DontDecodeArrow))
+        {
+            _arrowHandling = ArrowHandling.None;
+        }
 
         _relation = plan.Root;
     }
@@ -121,8 +136,8 @@ public class RequestExecutor : IDisposable
             var response = GetResponse();
             await response.ResponseStream.MoveNext();
             _retryableState = RetryableState.Processing;
-
-            while (response.ResponseStream.Current != null)
+            
+            while (response.ResponseStream is { Current: not null })
             {
                 var current = response.ResponseStream.Current;
 
@@ -151,7 +166,7 @@ public class RequestExecutor : IDisposable
                 if (current.ArrowBatch != null)
                 {
                     _logger.Log(GrpcLoggingLevel.Verbose, "Have Arrow Batch");
-                    var wrapper = new ArrowWrapper();
+                    
 
                     if (_schema == null)
                     {
@@ -159,14 +174,7 @@ public class RequestExecutor : IDisposable
                     }
                     else
                     {
-                        if (!_session.Conf.IsTrue(SparkDotnetKnownConfigKeys.DontDecodeArrow))
-                        {
-                            _rows.AddRange(await wrapper.ArrowBatchToRows(current.ArrowBatch, _schema));
-                        }
-                        else
-                        {
-                            _logger.Log(GrpcLoggingLevel.Verbose, "Not decoding Arrow as DontDecodeArrow is true");
-                        }
+                        await HandleArrowResponse(current.ArrowBatch);
                     }
                 }
 
@@ -263,7 +271,29 @@ public class RequestExecutor : IDisposable
 
         return true;
     }
-    
+
+    private async Task HandleArrowResponse(ExecutePlanResponse.Types.ArrowBatch arrowBatch)
+    {
+        if (_arrowHandling == ArrowHandling.None)
+        {
+            _logger.Log(GrpcLoggingLevel.Verbose, "Not decoding Arrow as ArrowHandling is None");
+        }
+
+        if (_arrowHandling == ArrowHandling.SlowConvertToDotNet)
+        {
+            var wrapper = new ArrowWrapper();
+            _rows.AddRange(await wrapper.ArrowBatchToRows(arrowBatch, _schema));
+        }
+
+        if (_arrowHandling == ArrowHandling.ArrowBuffers)
+        {
+            var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(arrowBatch.Data.ToByteArray()));
+            var recordBatch = await reader.ReadNextRecordBatchAsync();
+
+            _recordBatches.Add(recordBatch);
+        }
+    }
+
     private AsyncServerStreamingCall<ExecutePlanResponse> GetResponse()
     {
         if (_operationId == string.Empty)
@@ -389,6 +419,16 @@ public class RequestExecutor : IDisposable
     /// </summary>
     /// <returns></returns>
     public IList<Row> GetData() => _rows;
+
+    public IList<RecordBatch> GetArrowBatches()
+    {
+        if (_arrowHandling != ArrowHandling.ArrowBuffers)
+        {
+            throw new Exception($"Arrow Batches are not available as you need to set ArrowHandling.ArrowBuffers in the constructor to the RequestExecutor, current value set = '{_arrowHandling}'");
+        }
+
+        return _recordBatches;
+    }
 
     /// <summary>
     /// The schema of the last request (if available)

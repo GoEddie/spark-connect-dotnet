@@ -52,7 +52,22 @@ public class DataFrameWriter
 
     public DataFrameWriter Option(string key, string value)
     {
+        if (_options.ContainsKey(key))
+        {
+            _options.Remove(key);
+        }
+        
         _options.Add(key, value);
+        return this;
+    }
+
+    public DataFrameWriter Options(IDictionary<string, string> options)
+    {
+        foreach (var option in options)
+        {
+            Option(option.Key, option.Value);
+        }
+
         return this;
     }
 
@@ -123,8 +138,7 @@ public class DataFrameWriter
             {
                 WriteOperation = new WriteOperation
                 {
-                    Mode = _saveMode, Source = format, Options = { options }, Input = _what.Relation, PartitioningColumns = { _partitionColumnNames }
-                    , Path = path
+                    Mode = _saveMode, Source = format, Options = { options }, Input = _what.Relation, PartitioningColumns = { _partitionColumnNames } ,Path = path
                 }
             }
         };
@@ -139,5 +153,50 @@ public class DataFrameWriter
 
         var executor = new RequestExecutor(_session, plan);
         await executor.ExecAsync();
+    }
+
+    public async Task SaveAsTableAsync(string name, string? format, string? mode = null, List<string>? partitions = null, Dictionary<string, string>? options = null)
+    {
+        if (mode.IsNotNullAndIsNotEmpty())
+        {
+            Mode(mode);
+        }
+
+        if (options != null)
+        {
+            Options(options);    
+        }
+        
+        var plan = new Plan
+        {
+            Command = new Command
+            {
+                WriteOperation = new WriteOperation
+                {
+                    Mode = _saveMode, 
+                    Input = _what.Relation,
+                    PartitioningColumns = { _partitionColumnNames }, 
+                    Table = new WriteOperation.Types.SaveTable()
+                    {
+                        TableName = name, SaveMethod = WriteOperation.Types.SaveTable.Types.TableSaveMethod.SaveAsTable
+                    }
+                }
+            }
+        };
+        
+        if (_bucketColumnNames.Any())
+        {
+            plan.Command.WriteOperation.BucketBy = new WriteOperation.Types.BucketBy
+            {
+                NumBuckets = _numBuckets, BucketColumnNames = { _bucketColumnNames }
+            };
+        }
+        var executor = new RequestExecutor(_session, plan);
+        await executor.ExecAsync();
+    }
+    
+    public void SaveAsTable(string name, string? format, string? mode = null, List<string>? partitions = null, Dictionary<string, string>? options = null)
+    {
+        Task.Run(() => SaveAsTableAsync(name, format, mode, partitions, options)).Wait();
     }
 }

@@ -1,3 +1,4 @@
+using Apache.Arrow;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.Grpc.SparkExceptions;
@@ -281,11 +282,16 @@ public class DataFrame
             },
         };
         
-        var executor = new RequestExecutor(session, showStringPlan);
+        var executor = new RequestExecutor(session, showStringPlan, ArrowHandling.ArrowBuffers);
         await executor.ExecAsync();
-
-        var rows = executor.GetData();
-        session.Console.WriteLine(rows[0].Data[0] as string ?? "No data in row");
+        
+        var recordBatches = executor.GetArrowBatches();
+        
+        foreach (var recordBatch in recordBatches)
+        {
+            var stringArray = recordBatch.Column("show_string") as StringArray;
+            session.Console.WriteLine(stringArray.GetString(0));
+        }
     }
 
     /// <summary>
@@ -884,9 +890,10 @@ public class DataFrame
         return new DataFrameWriter(SparkSession, this);
     }
 
-    /// <summary>
-    ///     Collect the data back to .NET as .NET objects, doesn't currently support List[type] or Struct[type].
-    /// </summary>
+    ///<summary>
+    /// Collects the dataframe back to this process, note that this decodes the arrow data using the visitor pattern, which is a) slow and b) doesn't handle all types.
+    /// The preferred is to use CollectAsArrow and read the data yourself.
+    ///</summary>
     /// <returns></returns>
     public IList<Row> Collect()
     {
@@ -895,6 +902,41 @@ public class DataFrame
         return task.Result;
     }
 
+    /// <summary>
+    /// Collects the data back to this process, this returns a list of ArrowBatch which can be parsed using the ApacheArrow library.
+    ///
+    /// If you don't want to do the parsing yourself you can call `Collect` which provides a best effort approach to converting the arrow data into a .NET list of arrays
+    /// </summary>
+    /// <returns></returns>
+    public IList<RecordBatch> CollectAsArrowBatch()
+    {
+        var task = Task.Run(CollectAsArrowBatchAsync);
+        Wait(task);
+        return task.Result; 
+    }
+
+    /// <summary>
+    /// Collects the data back to this process, this returns a list of ArrowBatch which can be parsed using the ApacheArrow library.
+    ///
+    /// If you don't want to do the parsing yourself you can call `Collect` which provides a best effort approach to converting the arrow data into a .NET list of arrays
+    /// </summary>
+    /// <returns></returns>
+    public async Task<IList<RecordBatch>> CollectAsArrowBatchAsync()
+    {
+        var plan = new Plan
+        {
+            Root = Relation
+        };
+        
+        var executor = new RequestExecutor(SparkSession, plan, ArrowHandling.ArrowBuffers);
+        await executor.ExecAsync();
+        return executor.GetArrowBatches();
+    }
+    
+    /// <summary>
+    /// Collects the dataframe back to this process, note that this decodes the arrow data using the visitor pattern, which is a) slow and b) doesn't handle all types. The preferred is to use CollectAsArrow and read the data yourself.
+    /// </summary>
+    /// <returns></returns>
     public async Task<IList<Row>> CollectAsync()
     {
         var plan = new Plan
@@ -1797,6 +1839,12 @@ public class DataFrame
         return new DataFrame(SparkSession, plan.Root);
     }
 
+    /// <summary>
+    /// Returns ths last X rows - Note this causes a deserialization of the Arrow recordset which a) can be slow and b) doesn't handle every type
+    ///  it is preferred to call TailAsArrow and read the buffers yourself
+    /// </summary>
+    /// <param name="num"></param>
+    /// <returns></returns>
     public IEnumerable<Row> Tail(int num)
     {
         var plan = new Plan
@@ -1816,6 +1864,27 @@ public class DataFrame
         task.Wait();
 
         return executor.GetData();
+    }
+    
+    public IEnumerable<RecordBatch> TailAsArrow(int num)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                Tail = new Tail
+                {
+                    Input = Relation, Limit = num
+                }
+            }
+        };
+        
+        var executor = new RequestExecutor(SparkSession, plan, ArrowHandling.ArrowBuffers);
+        
+        var task = Task.Run(() => executor.ExecAsync());
+        task.Wait();
+
+        return executor.GetArrowBatches();
     }
 
     public DataFrame To(StructType schema)
