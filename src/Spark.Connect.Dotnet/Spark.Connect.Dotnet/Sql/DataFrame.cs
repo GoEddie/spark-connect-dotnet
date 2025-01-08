@@ -1057,8 +1057,11 @@ public class DataFrame
 
     public long Count()
     {
-        var result = Select(FunctionsInternal.FunctionCall("count", Lit(1))).Collect();
-        return (long)result[0][0];
+        var result = Select(FunctionsInternal.FunctionCall("count", Lit(1))).CollectAsArrowBatch();
+        var batch = result.First();
+        var countColumn = batch.Column("count(1)") as Int64Array;
+        return countColumn.GetValue(0)!.Value;
+        
     }
 
     public DataFrame Sort(params Column[] columns)
@@ -1216,8 +1219,11 @@ public class DataFrame
             }
         };
 
-        var response = new DataFrame(SparkSession, plan.Root).Collect();
-        return (double)response[0][0];
+        var response = new DataFrame(SparkSession, plan.Root).CollectAsArrowBatch();
+        var first = response.First();
+        var corrColumn = first.Column("corr") as DoubleArray;
+        
+        return corrColumn.GetValue(0)!.Value;
     }
 
     public double Cov(string col1, string col2)
@@ -1233,8 +1239,11 @@ public class DataFrame
             }
         };
 
-        var response = new DataFrame(SparkSession, plan.Root).Collect();
-        return (double)response[0][0];
+        var response = new DataFrame(SparkSession, plan.Root).CollectAsArrowBatch();
+        var first = response.First();
+        var covColumn = first.Column("cov") as DoubleArray;
+        
+        return covColumn.GetValue(0)!.Value;
     }
 
     public DataFrame CrossJoin(DataFrame other)
@@ -1413,16 +1422,40 @@ public class DataFrame
         return new DataFrame(SparkSession, plan.Root);
     }
 
+    /// <summary>
+    /// Returns the first row as .NET list of arrays
+    /// </summary>
+    /// <returns></returns>
     public Row First()
     {
         return Take(1).FirstOrDefault();
     }
-
+    
+    /// <summary>
+    /// Get the first X rows using a full convert of Arrow to .NET types, the preferred is to use `HeadAsArrow`
+    /// </summary>
+    /// <param name="rows"></param>
+    /// <returns></returns>
     public IEnumerable<Row> Head(int rows = 1)
     {
         return Take(rows);
     }
+    
+    /// <summary>
+    /// Get the first X rows using a full convert of Arrow to .NET types, the preferred is to use `HeadAsArrow`
+    /// </summary>
+    /// <param name="rows"></param>
+    /// <returns></returns>
+    public IEnumerable<RecordBatch> HeadAsArrow(int rows = 1)
+    {
+        return TakeAsArrow(rows);
+    }
 
+    /// <summary>
+    /// Pulls back the X number of rows and does a full convert from Arrow to .NET types, the preferred is to use `TakeAsArrow`
+    /// </summary>
+    /// <param name="limit"></param>
+    /// <returns></returns>
     public IEnumerable<Row> Take(int limit)
     {
         var plan = new Plan
@@ -1439,6 +1472,24 @@ public class DataFrame
         var schema = dataFrame.Schema;
 
         return dataFrame.Collect();
+    }
+    
+    public IEnumerable<RecordBatch> TakeAsArrow(int limit)
+    {
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                Limit = new Limit
+                {
+                    Input = Relation, Limit_ = limit
+                }
+            }
+        };
+        var dataFrame = new DataFrame(SparkSession, plan.Root);
+        var schema = dataFrame.Schema;
+
+        return dataFrame.CollectAsArrowBatch();
     }
 
     /// <summary>
