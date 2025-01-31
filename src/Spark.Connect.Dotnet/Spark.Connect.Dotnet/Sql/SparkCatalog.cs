@@ -15,6 +15,11 @@ public class SparkCatalog
         _sparkSession = sparkSession;
     }
 
+    /// <summary>
+    /// Caches the specified table in-memory or with given storage level.
+    /// </summary>
+    /// <param name="tableName">Name of the table to get.</param>
+    /// <param name="storageLevel">Storage level to set for persistence.</param>
     public void CacheTable(string tableName, StorageLevel storageLevel)
     {
         var plan = Plan();
@@ -27,6 +32,9 @@ public class SparkCatalog
         Task.Run(() => executor.ExecAsync()).Wait();
     }
 
+    /// <summary>
+    /// Removes all cached tables from the in-memory cache.
+    /// </summary>
     public void ClearCache()
     {
         var plan = Plan();
@@ -37,6 +45,18 @@ public class SparkCatalog
         task.Wait();
     }
 
+    /// <summary>
+    /// Creates a table based on the dataset in a data source.
+    /// The data source is specified by the <paramref name="source"/> and a set of <paramref name="options"/>. 
+    /// If <paramref name="source"/> is not specified, the default data source configured by spark.sql.sources.default will be used.
+    /// Optionally, a schema can be provided as the schema of the returned <see cref="DataFrame"/> and created external table.
+    /// </summary>
+    /// <param name="tableName">Name of the table to create.</param>
+    /// <param name="path">The path in which the data for this table exists.</param>
+    /// <param name="source">The source of this table such as 'parquet, 'orc', etc.</param>
+    /// <param name="schema">The schema for this table.</param>
+    /// <param name="options">Extra options to specify in the table.</param>
+    /// <returns>A <see cref="DataFrame"/> associated with the external table.</returns>
     public DataFrame CreateExternalTable(string tableName, string path, string source = "", StructType? schema = null,
         IEnumerable<MapField<string, string>>? options = null)
     {
@@ -69,6 +89,17 @@ public class SparkCatalog
         return new DataFrame(_sparkSession, executor.GetRelation());
     }
 
+    /// <summary>
+    /// Creates a table based on the dataset in a data source.
+    /// When <paramref name="path"/> is specified, an external table is created from the data at the given path. Otherwise a managed table is created. 
+    /// </summary>
+    /// <param name="tableName">Name of the table to create.</param>
+    /// <param name="path">The path in which the data for this table exists.</param>
+    /// <param name="source">The source of this table such as 'parquet, 'orc', etc.</param>
+    /// <param name="schema">The schema for this table.</param>
+    /// <param name="description">The description of this table.</param>
+    /// <param name="options">Extra options to specify in the table.</param>
+    /// <returns>A <see cref="DataFrame"/> associated with the table.</returns>
     public DataFrame CreateTable(string tableName, string? path = null, string? source = null,
         StructType? schema = null, string? description = null, Dictionary<string, string>? options = null)
     {
@@ -108,6 +139,10 @@ public class SparkCatalog
         return new DataFrame(_sparkSession, executor.GetRelation());
     }
 
+    /// <summary>
+    /// Returns the current default catalog in this session.
+    /// </summary>
+    /// <returns>The name of the default catalog as a <see cref="string"/>.</returns>
     public string CurrentCatalog()
     {
         var plan = Plan();
@@ -125,6 +160,10 @@ public class SparkCatalog
         return builder.ToString(); 
     }
 
+    /// <summary>
+    /// Returns the current default database in this session.
+    /// </summary>
+    /// <returns>The current default database name as a <see cref="string"/>.</returns>
     public string CurrentDatabase()
     {
         var plan = Plan();
@@ -142,6 +181,11 @@ public class SparkCatalog
         return builder.ToString(); 
     }
 
+    /// <summary>
+    /// Check if the database with the specified name exists.
+    /// </summary>
+    /// <param name="dbName">Name of the database to check existence.</param>
+    /// <returns>A <see cref="bool"/> indicating whether the database exists.</returns>
     public bool DatabaseExists(string dbName)
     {
         var plan = Plan();
@@ -157,6 +201,11 @@ public class SparkCatalog
         return recordBatches.Any(p => (p.Column("value") as BooleanArray).GetValue(0)!.Value);
     }
 
+    /// <summary>
+    /// Drops the global temporary view with the given view name in the catalog.
+    /// </summary>
+    /// <param name="viewName">Name of the global view to drop.</param>
+    /// <returns>A <see cref="bool"/> indicating whether the global view was successfully dropped or not.</returns>
     public bool DropGlobalTempView(string viewName)
     {
         var plan = Plan();
@@ -172,6 +221,13 @@ public class SparkCatalog
         return recordBatches.Any(p => (p.Column("value") as BooleanArray).GetValue(0)!.Value);
     }
 
+    /// <summary>
+    /// Drops the local temporary view with the given view name in the catalog.
+    /// If the view has been cached before, then it will also be uncached.
+    /// Returns true if this view is dropped successfully, false otherwise.
+    /// </summary>
+    /// <param name="viewName">Name of the temporary view to drop.</param>
+    /// <returns>A <see cref="bool"/> indicating whether the temporary view was successfully dropped or not.</returns>
     public bool DropTempView(string viewName)
     {
         var plan = Plan();
@@ -187,6 +243,12 @@ public class SparkCatalog
         return recordBatches.Any(p => (p.Column("value") as BooleanArray).GetValue(0)!.Value);
     }
 
+    /// <summary>
+    /// Check if the function with the specified name exists.This can either be a temporary function or a function.
+    /// </summary>
+    /// <param name="functionName">Name of the function to check existence.</param>
+    /// <param name="dbName">Name of the database to check function existence in.</param>
+    /// <returns>A <see cref="bool"/> indicating whether the function exists.</returns>
     public bool FunctionExists(string functionName, string? dbName = null)
     {
         var plan = Plan();
@@ -207,6 +269,11 @@ public class SparkCatalog
         return recordBatches.Any(p => (p.Column("value") as BooleanArray).GetValue(0)!.Value);
     }
 
+    /// <summary>
+    /// Get the database with the specified name.
+    /// </summary>
+    /// <param name="dbName">Name of the database to check function existence in.</param>
+    /// <returns>The <see cref="Database"/> found by the name.</returns>
     public Database GetDatabase(string dbName)
     {
         var plan = Plan();
@@ -228,6 +295,12 @@ public class SparkCatalog
         return new Database(nameArray.GetString(0), catalogArray.GetString(0), descriptionArray.GetString(0), locationArray.GetString(0));
     }
 
+    /// <summary>
+    /// Get the function with the specified name. This function can be a temporary function or a function.
+    /// </summary>
+    /// <param name="functionName">Name of the function to check existence.</param>
+    /// <param name="dbName">Name of the database to check function existence in.</param>
+    /// <returns>The <see cref="Function"/> found by the name.</returns>
     public Function GetFunction(string functionName, string? dbName = null)
     {
         var plan = Plan();
@@ -272,12 +345,18 @@ public class SparkCatalog
             isTemporaryArray.GetValue(0)!.Value);
     }
 
-    public Table GetTable(string functionName, string? dbName = null)
+    /// <summary>
+    /// Get the table or view with the specified name. This table can be a temporary view or a table/view.
+    /// </summary>
+    /// <param name="tableName">Name of the table to get.</param>
+    /// <param name="dbName">Name of the database to check table existence in.</param>
+    /// <returns>The <see cref="Table"/> found by the name.</returns>
+    public Table GetTable(string tableName, string? dbName = null)
     {
         var plan = Plan();
         plan.Root.Catalog.GetTable = new GetTable
         {
-            TableName = functionName
+            TableName = tableName
         };
 
         if (!string.IsNullOrEmpty(dbName))
@@ -287,7 +366,6 @@ public class SparkCatalog
 
         var executor = new RequestExecutor(_sparkSession, plan, ArrowHandling.ArrowBuffers);
         executor.Exec();
-        
         
         var recordBatches = executor.GetArrowBatches();
         var firstBatch = recordBatches.First();
@@ -316,6 +394,11 @@ public class SparkCatalog
             isTemporaryArray.GetValue(0)!.Value);
     }
 
+    /// <summary>
+    /// Returns true if the table is currently cached in-memory.
+    /// </summary>
+    /// <param name="tableName">Name of the table to get.</param>
+    /// <returns><see cref="bool"/></returns>
     public bool IsCached(string tableName)
     {
         var plan = Plan();
@@ -333,6 +416,11 @@ public class SparkCatalog
         return valuesArray.GetValue(0)!.Value;
     }
 
+    /// <summary>
+    /// Returns a list of catalogs in this session.
+    /// </summary>
+    /// <param name="patternName">The pattern that the catalog name needs to match.</param>
+    /// <returns>A list of <see cref="CatalogMetadata"/>.</returns>
     public List<CatalogMetadata> ListCatalogs(string? patternName = null)
     {
         var plan = Plan();
@@ -366,6 +454,12 @@ public class SparkCatalog
         return catalogs;
     }
 
+    /// <summary>
+    /// Returns a list of columns for the given table/view in the specified database.
+    /// </summary>
+    /// <param name="tableName">Name of the table to list columns.</param>
+    /// <param name="dbName">Name of the database to find the table to list columns.</param>
+    /// <returns>A list of <see cref="Column"/>.</returns>
     public List<Column> ListColumns(string tableName, string? dbName = null)
     {
         var plan = Plan();
@@ -410,6 +504,11 @@ public class SparkCatalog
         return columns;
     }
 
+    /// <summary>
+    /// Returns a list of databases available across all sessions.
+    /// </summary>
+    /// <param name="patternName">The pattern that the database name needs to match.</param>
+    /// <returns>A list of <see cref="Database"/>.</returns>
     public List<Database> ListDatabases(string? patternName = null)
     {
         var plan = Plan();
@@ -447,6 +546,12 @@ public class SparkCatalog
         return databases;
     }
 
+    /// <summary>
+    /// Returns a list of functions registered in the specified database.
+    /// </summary>
+    /// <param name="dbName">Name of the database to list the functions. dbName can be qualified with catalog name.</param>
+    /// <param name="patternName">The pattern that the function name needs to match.</param>
+    /// <returns>A list of <see cref="Function"/>.</returns>
     public List<Function> ListFunctions(string? dbName = null, string? patternName = null)
     {
         var plan = Plan();
@@ -503,6 +608,12 @@ public class SparkCatalog
         return functions;
     }
 
+    /// <summary>
+    /// Returns a list of tables/views in the specified database.
+    /// </summary>
+    /// <param name="dbName">Name of the database to list the tables. dbName can be qualified with catalog name.</param>
+    /// <param name="patternName">The pattern that the database name needs to match.</param>
+    /// <returns>A list of <see cref="Table"/>.</returns>
     public List<Table> ListTables(string? dbName = null, string? patternName = null)
     {
         var plan = Plan();
@@ -558,6 +669,11 @@ public class SparkCatalog
         return tables;
     }
 
+    /// <summary>
+    /// Recovers all the partitions of the given table and updates the catalog.
+    /// Only works with a partitioned table, and not a view.
+    /// </summary>
+    /// <param name="tableName">Name of the table to get.</param>
     public void RecoverPartitions(string tableName)
     {
         var plan = Plan();
@@ -570,6 +686,10 @@ public class SparkCatalog
         executor.Exec();
     }
 
+    /// <summary>
+    /// Invalidates and refreshes all the cached data (and the associated metadata) for any DataFrame that contains the given data source path.
+    /// </summary>
+    /// <param name="path">The path to refresh the cache.</param>
     public void RefreshByPath(string path)
     {
         var plan = Plan();
@@ -582,6 +702,10 @@ public class SparkCatalog
         executor.Exec();
     }
 
+    /// <summary>
+    /// Invalidates and refreshes all the cached data and metadata of the given table.
+    /// </summary>
+    /// <param name="tableName">Name of the table to get.</param>
     public void RefreshTable(string tableName)
     {
         var plan = Plan();
@@ -594,6 +718,10 @@ public class SparkCatalog
         executor.Exec();
     }
 
+    /// <summary>
+    /// Sets the current default catalog in this session.
+    /// </summary>
+    /// <param name="catalogName">Name of the catalog to set.</param>
     public void SetCurrentCatalog(string catalogName)
     {
         var plan = Plan();
@@ -606,6 +734,10 @@ public class SparkCatalog
         executor.Exec();
     }
 
+    /// <summary>
+    /// Sets the current default database in this session.
+    /// </summary>
+    /// <param name="dbName">Name of the database to set.</param>
     public void SetCurrentDatabase(string dbName)
     {
         var plan = Plan();
@@ -618,6 +750,12 @@ public class SparkCatalog
         executor.Exec();
     }
 
+    /// <summary>
+    /// Check if the table or view with the specified name exists. This can either be a temporary view or a table/view.
+    /// </summary>
+    /// <param name="tableName"> name of the table to check existence.If no database is specified, first try to treat tableName as a multi-layer-namespaidentifier then try tableName as a normal table name in the current database if necessary.</param>
+    /// <param name="dbName">Name of the database to check table existence in.</param>
+    /// <returns>A <see cref="bool"/>indicating whether the table/view exists.</returns>
     public bool TableExists(string tableName, string? dbName = null)
     {
         var plan = Plan();
@@ -640,6 +778,10 @@ public class SparkCatalog
         return items.GetValue(0)!.Value;
     }
 
+    /// <summary>
+    /// Removes the specified table from the in-memory cache.
+    /// </summary>
+    /// <param name="tableName">name of the table to get.</param>
     public void UncacheTable(string tableName)
     {
         var plan = Plan();
