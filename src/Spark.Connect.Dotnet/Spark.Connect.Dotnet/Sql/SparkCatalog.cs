@@ -751,7 +751,7 @@ public class SparkCatalog
     }
 
     /// <summary>
-    /// Check if the table or view with the specified name exists.This can either be a temporary view or a table/view.
+    /// Check if the table or view with the specified name exists. This can either be a temporary view or a table/view.
     /// </summary>
     /// <param name="tableName"> name of the table to check existence.If no database is specified, first try to treat tableName as a multi-layer-namespaidentifier then try tableName as a normal table name in the current database if necessary.</param>
     /// <param name="dbName">Name of the database to check table existence in.</param>
