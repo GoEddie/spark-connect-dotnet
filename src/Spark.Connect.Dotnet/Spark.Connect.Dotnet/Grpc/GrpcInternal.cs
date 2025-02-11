@@ -451,7 +451,11 @@ public static class GrpcInternal
         return items;
     }
     
-
+    /// <summary>
+    /// Interrupt all operations of this session currently running on the connected server.
+    /// </summary>
+    /// <param name="session"></param>
+    /// <exception cref="SparkException"></exception>
     public static async Task<List<string>> InterruptAll(SparkSession session)
     {
         var interruptRequest = new InterruptRequest

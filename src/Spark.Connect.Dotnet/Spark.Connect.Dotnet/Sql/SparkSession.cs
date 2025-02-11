@@ -879,6 +879,9 @@ public class SparkSession
     {
     }
 
+    /// <summary>
+    /// Interrupt all operations of this session currently running on the connected server.
+    /// </summary>
     public List<string> InterruptAll()
     {
         var task = Task.Run(()=>GrpcInternal.InterruptAll(this));
