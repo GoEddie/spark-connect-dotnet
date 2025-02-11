@@ -66,3 +66,15 @@ To output metrics as responses are reveived enable:
 ```csharp
 spark.Conf.Set("spark.connect.dotnet.showmetrics", "true");
 ```
+
+## Request Wait Timeout
+
+When we send a request to the server, we need to kill the connection and retry after X seconds because if we have an idle connection then Azure Databricks will kill the tcp connection. To handle this we send a request, wait x seconds and if we haven't completed the response we re-connect to the running query and keep re-connecting every x seconds.
+
+To change how long we wait before killing the connection and re-connecting you can set:
+
+```csharp
+spark.Conf.Set("spark.connect.dotnet.requestretrytimelimit", "30");
+```
+
+The setting is the amount of seconds, it defaults to 45. It isn't really needed for Spark 4 as it has a sort of keep alive where it sends a response even while the server is busy doing something.

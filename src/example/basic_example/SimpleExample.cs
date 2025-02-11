@@ -47,12 +47,15 @@ internal class SimpleExample
 
         var parquetPath = Path.Join(tempOutputFolder, "parquetFile");
 
-        dataFrame2
-            .WithColumn("id multiplied by 1000", Functions.Col("id") * 1000)
+        var df3 = dataFrame2.WithColumn("id multiplied by 1000", Functions.Col("id") * 1000);
+            
+        df3
             .Write()
             .Format("parquet")
             .Write(parquetPath);
 
         Console.WriteLine($"Wrote Parquet to '{parquetPath}'");
+        
+        df3.ShowRelation();
     }
 }

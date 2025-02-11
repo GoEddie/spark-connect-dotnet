@@ -1,12 +1,19 @@
 using System.Text.RegularExpressions;
-using Spark.Connect.Dotnet.Sql;
 
 namespace Spark.Connect.Dotnet.Grpc;
 
+/// <summary>
+/// Wrap UNRESOLVED_COLUMN.WITH_SUGGESTION
+/// </summary>
 public class UnresolvedColumnWithSuggestionException : SparkException
 {
     //UNRESOLVED_COLUMN.WITH_SUGGESTION
 
+    /// <summary>
+    /// Wrap UNRESOLVED_COLUMN.WITH_SUGGESTION
+    /// </summary>
+    /// <param name="exceptionMessage"></param>
+    /// <param name="exception"></param>
     public UnresolvedColumnWithSuggestionException(string exceptionMessage, Exception exception) : base(
         exceptionMessage, exception)
     {
@@ -25,29 +32,11 @@ public class UnresolvedColumnWithSuggestionException : SparkException
         OverrideMessage = $@"The Column `{columnName}` was not found, did you mean one of: {existingColumns}?";
     }
 
+    /// <summary>
+    /// Wrap UNRESOLVED_COLUMN.WITH_SUGGESTION
+    /// </summary>
+    /// <param name="exception"></param>
     public UnresolvedColumnWithSuggestionException(Exception exception) : base(exception)
-    {
-    }
-}
-
-public class WindowFunctionWithoutOverException : SparkException
-{
-    //WINDOW_FUNCTION_WITHOUT_OVER_CLAUSE
-
-    public WindowFunctionWithoutOverException(string exceptionMessage, Exception exception) : base(exceptionMessage,
-        exception)
-    {
-        //Format = [WINDOW_FUNCTION_WITHOUT_OVER_CLAUSE] Window function "(.*?)" requires an OVER clause.
-        var input = exceptionMessage;
-        // Extract the column name
-        var windowFunctionPattern = @"Window function ""(.*?)""";
-        var windowFunction = Regex.Match(input, windowFunctionPattern).Value;
-
-        OverrideMessage =
-            $@"The Window Function `{FunctionsWrapper.CSharpFunctionName(windowFunction)}` requires an OVER clause";
-    }
-
-    public WindowFunctionWithoutOverException(Exception exception) : base(exception)
     {
     }
 }

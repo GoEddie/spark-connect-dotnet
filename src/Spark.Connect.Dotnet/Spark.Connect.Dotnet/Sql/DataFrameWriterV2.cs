@@ -8,6 +8,7 @@ public class DataFrameWriterV2
     private readonly SparkSession _session;
     private readonly string _tableName;
     private readonly DataFrame _what;
+    private readonly Dictionary<string, string> _tableProperties = new Dictionary<string, string>();
 
     public DataFrameWriterV2(string tableName, SparkSession session, DataFrame what)
     {
@@ -39,8 +40,19 @@ public class DataFrameWriterV2
                 }
             }
         };
-        
+
+        foreach (var prop in _tableProperties.Keys)
+        {
+            plan.Command.WriteOperationV2.TableProperties.Add(prop, _tableProperties[prop]);
+        }
+
         var executor = new RequestExecutor(_session, plan);
         await executor.ExecAsync();
+    }
+
+    public DataFrameWriterV2 TableProperty(string key, string value)
+    {
+        _tableProperties[key] = value;
+        return this;
     }
 }

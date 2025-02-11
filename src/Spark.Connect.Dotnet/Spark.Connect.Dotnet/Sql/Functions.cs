@@ -1548,7 +1548,7 @@ public partial class Functions : FunctionsWrapper
     /// <Summary>
     ///     Round
     ///     Round the given value to `scale` decimal places using HALF_UP rounding mode if `scale` >= 0 or at integral part
-    ///     when `scale` < 0.
+    ///     when `scale` &lt; 0.
     /// </Summary>
     public static Column Round(string col, Column scale)
     {
@@ -1558,7 +1558,7 @@ public partial class Functions : FunctionsWrapper
     /// <Summary>
     ///     Round
     ///     Round the given value to `scale` decimal places using HALF_UP rounding mode if `scale` >= 0 or at integral part
-    ///     when `scale` < 0.
+    ///     when `scale` &lt; 0.
     /// </Summary>
     public static Column Round(Column col, Column scale)
     {
@@ -1568,7 +1568,7 @@ public partial class Functions : FunctionsWrapper
     /// <Summary>
     ///     Bround
     ///     Round the given value to `scale` decimal places using HALF_EVEN rounding mode if `scale` >= 0 or at integral part
-    ///     when `scale` < 0.
+    ///     when `scale` &lt; 0.
     /// </Summary>
     public static Column Bround(string col, Column scale)
     {
@@ -1578,7 +1578,7 @@ public partial class Functions : FunctionsWrapper
     /// <Summary>
     ///     Bround
     ///     Round the given value to `scale` decimal places using HALF_EVEN rounding mode if `scale` >= 0 or at integral part
-    ///     when `scale` < 0.
+    ///     when `scale` &lt; 0.
     /// </Summary>
     public static Column Bround(Column col, Column scale)
     {

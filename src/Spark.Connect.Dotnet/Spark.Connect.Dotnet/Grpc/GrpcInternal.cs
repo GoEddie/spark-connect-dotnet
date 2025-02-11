@@ -7,8 +7,23 @@ using Spark.Connect.Dotnet.Sql;
 
 namespace Spark.Connect.Dotnet.Grpc;
 
+/// <summary>
+/// This is the class used to pass messages down the gRPC channel.
+/// </summary>
 public static class GrpcInternal
 {
+    /// <summary>
+    /// Explain
+    /// </summary>
+    /// <param name="client"></param>
+    /// <param name="sessionId"></param>
+    /// <param name="plan"></param>
+    /// <param name="headers"></param>
+    /// <param name="userContext"></param>
+    /// <param name="clientType"></param>
+    /// <param name="explainExtended"></param>
+    /// <param name="mode"></param>
+    /// <returns></returns>
     public static string Explain(SparkConnectService.SparkConnectServiceClient client, string sessionId, Plan plan,
         Metadata headers, UserContext userContext, string clientType, bool explainExtended, string? mode)
     {
@@ -34,6 +49,13 @@ public static class GrpcInternal
         return analyzeResponse.Explain.ExplainString;
     }
 
+    /// <summary>
+    /// Persist
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="relation"></param>
+    /// <param name="storageLevel"></param>
+    /// <returns></returns>
     public static Relation Persist(SparkSession session, Relation relation, StorageLevel storageLevel)
     {
         var analyzeRequest = new AnalyzePlanRequest
@@ -49,6 +71,18 @@ public static class GrpcInternal
         return relation;
     }
 
+    /// <summary>
+    /// Schema
+    /// </summary>
+    /// <param name="client"></param>
+    /// <param name="sessionId"></param>
+    /// <param name="plan"></param>
+    /// <param name="headers"></param>
+    /// <param name="userContext"></param>
+    /// <param name="clientType"></param>
+    /// <param name="explainExtended"></param>
+    /// <param name="mode"></param>
+    /// <returns></returns>
     public static DataType Schema(SparkConnectService.SparkConnectServiceClient client, string sessionId, Plan plan,
         Metadata headers, UserContext userContext, string clientType, bool explainExtended, string mode)
     {
@@ -65,6 +99,11 @@ public static class GrpcInternal
         return analyzeResponse.Schema.Schema_;
     }
 
+    /// <summary>
+    /// What is the Spark Version you are connect to?
+    /// </summary>
+    /// <param name="session"></param>
+    /// <returns></returns>
     public static string Version(SparkSession session)
     {
         var analyzeRequest = new AnalyzePlanRequest
@@ -76,6 +115,12 @@ public static class GrpcInternal
         return analyzeResponse.SparkVersion.Version;
     }
 
+    /// <summary>
+    /// Get a list of the input files
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="plan"></param>
+    /// <returns></returns>
     public static IEnumerable<string> InputFiles(SparkSession session, Plan plan)
     {
         var analyzeRequest = new AnalyzePlanRequest
@@ -91,6 +136,12 @@ public static class GrpcInternal
         return analyzeResponse.InputFiles.Files.Select(p => p);
     }
 
+    /// <summary>
+    /// Is it a local plan?
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="plan"></param>
+    /// <returns></returns>
     public static bool IsLocal(SparkSession session, Plan plan)
     {
         var analyzeRequest = new AnalyzePlanRequest
@@ -106,6 +157,13 @@ public static class GrpcInternal
         return analyzeResponse.IsLocal.IsLocal_;
     }
 
+    /// <summary>
+    /// Get the TreeString
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="relation"></param>
+    /// <param name="level"></param>
+    /// <returns></returns>
     public static string TreeString(SparkSession session, Relation relation, int? level = null)
     {
         var analyzeRequest = new AnalyzePlanRequest
@@ -129,6 +187,12 @@ public static class GrpcInternal
         return analyzeResponse.TreeString.TreeString_;
     }
 
+    /// <summary>
+    /// Create a semantic hash of the relation
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="relation"></param>
+    /// <returns></returns>
     public static int SemanticHash(SparkSession session, Relation relation)
     {
         var analyzeRequest = new AnalyzePlanRequest
@@ -148,6 +212,12 @@ public static class GrpcInternal
         return analyzeResponse.SemanticHash.Result;
     }
 
+    /// <summary>
+    /// What is the storage level?
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="relation"></param>
+    /// <returns></returns>
     public static StorageLevel StorageLevel(SparkSession session, Relation relation)
     {
         var analyzeRequest = new AnalyzePlanRequest
@@ -164,6 +234,12 @@ public static class GrpcInternal
         return analyzeResponse.GetStorageLevel.StorageLevel;
     }
 
+    /// <summary>
+    /// Is it a Streaming plan
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="plan"></param>
+    /// <returns></returns>
     public static bool IsStreaming(SparkSession session, Plan plan)
     {
         var analyzeRequest = new AnalyzePlanRequest
@@ -179,6 +255,13 @@ public static class GrpcInternal
         return analyzeResponse.IsStreaming.IsStreaming_;
     }
 
+    /// <summary>
+    /// Same Semantics, uses AnalyzePlanRequest
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="target"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public static bool SameSemantics(SparkSession session, Relation target, Relation other)
     {
         var analyzeRequest = new AnalyzePlanRequest
@@ -201,6 +284,12 @@ public static class GrpcInternal
         return analyzeResponse.SameSemantics.Result;
     }
     
+    /// <summary>
+    /// Unset a config option
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="key"></param>
+    /// <exception cref="SparkException"></exception>
     public static async Task ExecUnSetConfigCommandResponse(SparkSession session, string key)
     {
         var configRequest = new ConfigRequest
@@ -245,6 +334,12 @@ public static class GrpcInternal
         }
     }
 
+    /// <summary>
+    /// Set Config Item
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="options"></param>
+    /// <exception cref="SparkException"></exception>
     public static async Task ExecSetConfigCommandResponse(SparkSession session, IDictionary<string, string> options)
     {
         var configRequest = new ConfigRequest
@@ -295,6 +390,13 @@ public static class GrpcInternal
         }
     }
 
+    /// <summary>
+    /// Get All Config Response
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="prefix"></param>
+    /// <returns></returns>
+    /// <exception cref="SparkException"></exception>
     public static async Task<Dictionary<string, string>> ExecGetAllConfigCommandResponse(SparkSession session,
         string? prefix = null)
     {

@@ -3,6 +3,8 @@ name: Spark Dotnet
 on:
   pull_request:
     branches: [ "main" ]
+  push:
+    branches: [ "main" ]
 
 jobs:
 
@@ -31,7 +33,7 @@ jobs:
 
     - uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '7.0'  # Specify your .NET Core version here
+        dotnet-version: '8.0'  # Specify your .NET Core version here
     
     - name: Print current directory
       run: pwd
@@ -58,12 +60,12 @@ jobs:
 
     - uses: vemonet/setup-spark@v1
       with:
-        spark-version: '3.5.3'
+        spark-version: '3.5.4'
         hadoop-version: '3'
     
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
 
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.3
+    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.4
 
     - name: Execute unit tests Spark 3.5
       working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
@@ -76,25 +78,25 @@ jobs:
         path: ./test_results3.xml
     
 
-    - uses: vemonet/setup-spark@v1
-      with:
-        spark-url: https://archive.apache.org/dist/spark/spark-4.0.0-preview2/spark-4.0.0-preview2-bin-hadoop3.tgz
-        spark-version: '4.0.0-preview2'
-        hadoop-version: '3'
+    # - uses: vemonet/setup-spark@v1
+    #   with:
+    #     spark-url: https://archive.apache.org/dist/spark/spark-4.0.0-preview2/spark-4.0.0-preview2-bin-hadoop3.tgz
+    #     spark-version: '4.0.0-preview2'
+    #     hadoop-version: '3'
     
-    - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
+    # - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
     
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.0-preview2
+    # - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.0-preview2
 
-    - name: Execute unit tests Spark 4.0
-      working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
-      run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results4.xml" --filter "SparkMinVersion=4"
+    # - name: Execute unit tests Spark 4.0
+    #   working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
+    #   run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results4.xml" --filter "SparkMinVersion=4"
 
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      with:
-        name: Test Results
-        path: ./test_results4.xml
+    # - name: Upload test results
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: Test Results
+    #     path: ./test_results4.xml
 
 
     

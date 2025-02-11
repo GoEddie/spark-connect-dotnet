@@ -147,7 +147,7 @@ public class SparkSession
                 try
                 {   
                     Console.WriteLine(DateTime.Now + " :: Trying Connection");
-                    Sql("SELECT 'spark-connect-dotnet' as client").Collect();
+                    Sql("SELECT 'spark-connect-dotnet' as client").CollectAsArrowBatch();
                     return;
                 }
                 catch (Exception ex)
@@ -305,7 +305,7 @@ public class SparkSession
     ///     ```csharp
     ///     var df = spark.Range(100);
     ///     var dict = new Dictionary
-    ///     <string, object>
+    ///     &lt;string, object&gt;
     ///         ();
     ///         dict["c"] = df["id"]; //could do Col("id") etc
     ///         dict["dataFramePassedIn"] = df;
@@ -361,7 +361,7 @@ public class SparkSession
     /// <summary>
     ///     Pass in a list of tuples, schema is guessed by the type of the first tuple's child types:
     ///     CreateDataFrame(new List
-    ///     <object, object>
+    ///     &lt;object, object&gt;
     ///         (){
     ///         ("tupple", 1), ("another", 2)
     ///         });
@@ -399,7 +399,7 @@ public class SparkSession
     /// <summary>
     ///     Pass in a list of tuples, schema is guessed by the type of the first tuple's child types:
     ///     CreateDataFrame(new List
-    ///     <object, object>
+    ///     &lt;object, object&gt;
     ///         (){
     ///         ("tupple", 1), ("another", 2)
     ///         });
@@ -435,7 +435,7 @@ public class SparkSession
 
     /// <summary>
     ///     Pass in a List of Dictionary
-    ///     <string, type> - the key is used as the name of the field. The schema is guessed at using the first dictionary
+    ///     &lt;string, type&gt; - the key is used as the name of the field. The schema is guessed at using the first dictionary
     /// </summary>
     /// <param name="rows"></param>
     /// <returns></returns>
@@ -455,7 +455,7 @@ public class SparkSession
 
     /// <summary>
     ///     Pass in a List of Dictionary
-    ///     <string, type> - the key is used as the name of the field. The schema is passed in explicitly
+    ///     &lt;string, type&gt; - the key is used as the name of the field. The schema is passed in explicitly
     /// </summary>
     /// <param name="rows"></param>
     /// <param name="schema"></param>
@@ -519,16 +519,16 @@ public class SparkSession
     /// <summary>
     ///     Pass in rows and an explicit schema:
     ///     CreateDataFrame(new List
-    ///     <object>
+    ///     &lt;object&gt;
     ///         (){
     ///         new List
-    ///         <object>
+    ///         &lt;object&gt;
     ///             (){"abc", 123, 100.123},
     ///             new List
-    ///             <object>
+    ///             &lt;object&gt;
     ///                 (){"def", 456, 200.456},
     ///                 new List
-    ///                 <object>
+    ///                 &lt;object&gt;
     ///                     (){"xyz", 999, 999.456},
     ///                     }, new StructType(
     ///                     new StructField("col_a", StringType(), true),
