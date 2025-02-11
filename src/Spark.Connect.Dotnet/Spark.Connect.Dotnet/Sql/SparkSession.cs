@@ -879,6 +879,15 @@ public class SparkSession
     {
     }
 
+    public List<string> InterruptAll()
+    {
+        var task = Task.Run(()=>GrpcInternal.InterruptAll(this));
+        task.Wait();
+
+        return task.Result;
+            
+    }
+
     public string Version()
     {
         return GrpcInternal.Version(this);
