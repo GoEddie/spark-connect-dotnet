@@ -143,4 +143,10 @@ public class SparkSession_Tests : E2ETestBase
             .Select(Col("another_col"));
         Logger.WriteLine(df.Relation.ToString());
     }
+
+    [Fact]
+    public void InterruptAll_Test()
+    {
+        Spark.InterruptAll();
+    }
 }

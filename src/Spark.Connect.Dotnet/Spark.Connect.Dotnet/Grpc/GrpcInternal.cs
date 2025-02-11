@@ -451,4 +451,40 @@ public static class GrpcInternal
         return items;
     }
     
+    /// <summary>
+    /// Interrupt all operations of this session currently running on the connected server.
+    /// </summary>
+    /// <param name="session"></param>
+    /// <exception cref="SparkException"></exception>
+    public static async Task<List<string>> InterruptAll(SparkSession session)
+    {
+        var interruptRequest = new InterruptRequest
+        {
+          ClientType = session.ClientType,  SessionId = session.SessionId, UserContext = session.UserContext,
+          InterruptType = InterruptRequest.Types.InterruptType.All
+        };
+
+        AsyncUnaryCall<InterruptResponse> Exec()
+        {
+            try
+            {
+                return session.GrpcClient.InterruptAsync(interruptRequest, session.Headers);
+            }
+            catch (Exception exception)
+            {              
+                if (exception is RpcException rpcException)
+                {
+                    throw SparkExceptionFactory.GetExceptionFromRpcException(rpcException);
+                }
+
+                throw new SparkException(exception);
+            }
+        }
+
+        var response = await Exec();
+
+        return response.InterruptedIds.Select(s => s).ToList();
+        
+    }
+
 }
