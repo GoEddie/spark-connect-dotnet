@@ -360,6 +360,11 @@ public abstract class SparkDataType
             return new DecimalType();
         }
         
+        if(type.Short != null)
+        {
+            return new ShortType();
+        }
+
         throw new NotImplementedException($"Need Type For '{type.KindCase}'");
     }
 }
