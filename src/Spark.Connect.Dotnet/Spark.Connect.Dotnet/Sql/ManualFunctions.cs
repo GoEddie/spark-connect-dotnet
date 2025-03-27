@@ -12,8 +12,9 @@ namespace Spark.Connect.Dotnet.Sql;
 
 public partial class Functions : FunctionsWrapper
 {
-    private static readonly DateOnly UnixEpoch = new(1970, 1, 1);
+    private static readonly DateOnly UnixEpochDateOnly = new(1970, 1, 1);
     private static readonly TimeSpan UnixEpochTimespan = new(1970, 1, 1);
+    private static readonly DateTime UnixEpochDateTime = new DateTime(1970, 1, 1);
     
     public static Column Lit(Dictionary<string, float> dict)
     {
@@ -238,7 +239,7 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Lit(DateOnly value)
     {
-        var daysSinceUnixEpoch = value.DayNumber - UnixEpoch.DayNumber;
+        var daysSinceUnixEpoch = value.DayNumber - UnixEpochDateOnly.DayNumber;
 
         return new Column(new Expression
         {
@@ -265,8 +266,8 @@ public partial class Functions : FunctionsWrapper
 
     public static Column Lit(DateTime value)
     {
-        var durationSinceEpoch = value - UnixEpochTimespan;
-        var microseconds = durationSinceEpoch.Ticks / 10;
+        var durationSinceEpoch = value - UnixEpochDateTime;
+        var microseconds = Convert.ToInt64(durationSinceEpoch.TotalMicroseconds);
 
         return new Column(new Expression
         {

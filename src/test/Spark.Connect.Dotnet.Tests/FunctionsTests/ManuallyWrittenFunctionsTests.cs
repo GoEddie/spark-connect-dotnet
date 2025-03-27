@@ -1743,5 +1743,18 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         df.Show();
         df.PrintSchema();
     }
-    
+
+    [Fact]
+    public void LitDateTime_Test()
+    {
+        DateTime dt = DateTime.Parse("1980-04-01 01:23:21");
+        Source.Select(Lit(dt)).Show();
+    }
+
+    [Fact]
+    public void LitDateOnly_Test()
+    {
+        DateOnly dateOnly = new DateOnly(1980, 04, 01);
+        Source.Select(Lit(dateOnly)).Show();
+    }
 }
