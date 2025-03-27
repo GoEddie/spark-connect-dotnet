@@ -60,12 +60,12 @@ jobs:
 
     - uses: vemonet/setup-spark@v1
       with:
-        spark-version: '3.5.4'
+        spark-version: '3.5.5'
         hadoop-version: '3'
     
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
 
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.4
+    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.5
 
     - name: Execute unit tests Spark 3.5
       working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
