@@ -78,3 +78,11 @@ spark.Conf.Set("spark.connect.dotnet.requestretrytimelimit", "30");
 ```
 
 The setting is the amount of seconds, it defaults to 45. It isn't really needed for Spark 4 as it has a sort of keep alive where it sends a response even while the server is busy doing something.
+
+## Connection Timeout
+
+If the client can't connect to the spark server then it will wait for 30 seconds before closing the connection, you can configure how long we wait in seconds by using:
+
+```csharp
+spark.Conf.Set("spark.connect.dotnet.connecttimelimit", "30");
+```
