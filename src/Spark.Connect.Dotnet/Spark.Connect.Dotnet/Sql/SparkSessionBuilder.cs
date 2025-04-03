@@ -186,6 +186,12 @@ public static class SparkDotnetKnownConfigKeys
     public const string PrintMetrics = RuntimeConf.SparkDotnetConfigKey + "showmetrics";
     public const string DontDecodeArrow = RuntimeConf.SparkDotnetConfigKey + "dontdecodearrow";
     public const string RequestExecutorCancelTimeout = RuntimeConf.SparkDotnetConfigKey + "requestretrytimelimit";
+    public const string ConnectTimeLimit = RuntimeConf.SparkDotnetConfigKey + "connecttimelimit";
+}
+
+public static class SparkDotnetDefaultConfigValues
+{
+    public const string ConnectTimeLimit = "30";
 }
 
 public class RuntimeConf
