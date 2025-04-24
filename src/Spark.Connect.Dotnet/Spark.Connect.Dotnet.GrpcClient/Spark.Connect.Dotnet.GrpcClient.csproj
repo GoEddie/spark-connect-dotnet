@@ -65,6 +65,10 @@
         <Protobuf Include="spark\connect\relations.proto"/>
         <None Remove="spark\connect\types.proto"/>
         <Protobuf Include="spark\connect\types.proto"/>
+        <None Remove="spark\connect\ml.proto" />
+        <Protobuf Include="spark\connect\ml.proto" />
+        <None Remove="spark\connect\ml_common.proto" />
+        <Protobuf Include="spark\connect\ml_common.proto" />
     </ItemGroup>
 
     <PropertyGroup>
