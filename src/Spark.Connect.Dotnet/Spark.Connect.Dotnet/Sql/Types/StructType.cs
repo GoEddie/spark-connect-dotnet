@@ -4,6 +4,7 @@ using Apache.Arrow.Types;
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.ML.LinAlg;
 using static Spark.Connect.Dotnet.Sql.Types.SparkDataType;
 
 namespace Spark.Connect.Dotnet.Sql.Types;
@@ -115,7 +116,7 @@ public class StructType : SparkDataType
         return string.Join(", ", Fields.Select(f => f.Ddl()));
     }
 
-    public string Json()
+    public override string Json()
     {
         return DataTypeJsonSerializer.StructTypeToJson(this);
     }
@@ -377,6 +378,12 @@ public static class DataTypeJsonSerializer
             if (field.DataType is StructType structTypeField)
             {
                 json.Append(StructTypeToJson(field, structTypeField));
+                continue;
+            }
+
+            if (field.DataType is HasCustomJson hasJson)
+            {
+                json.Append(hasJson.Json().Replace("__NAME__", field.Name));
                 continue;
             }
 

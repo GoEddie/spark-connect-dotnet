@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
@@ -362,6 +364,294 @@ public class SparkSession
         return Sql(sql, dict);
     }
 
+    ///  <summary>
+    ///  This is the preferred way of calling `CreateDataFrame` and it has the best chance of being able to create the data for you.
+    ///  </summary>
+    ///  <param name="list">A list of tuples containing the data</param>
+    ///  <param name="dataFrameSchema">If you don't specify a schema then we attempt to create it for you with default names</param>
+    ///  <returns>DataFrame</returns>
+    ///  <exception cref="NullReferenceException"></exception>
+    ///  <example>
+    /// var rawData = new List&lt;(int Id, int? abc, DenseVector Vector)&gt;()
+    ///     {
+    ///         (1, 3, new DenseVector([0.0, 1.1, 0.1])),
+    ///         (2, null, new DenseVector([2.0, 1.0, -1.0])),
+    ///         (3, 99, new DenseVector([2.0, 1.3, 1.0])),
+    ///         (4, null, new DenseVector([0.0, 1.2, -0.5]))
+    ///     };
+    /// 
+    /// var df = Spark.CreateDataFrame(rawData.Cast&lt;ITuple&gt;());
+    /// df.Show();
+    ///  </example>
+    public DataFrame CreateDataFrame(IEnumerable<ITuple> list, StructType? dataFrameSchema = null) => CreateDataFrame(list.ToList(), dataFrameSchema);
+
+    ///  <summary>
+    ///  This is the preferred way of calling `CreateDataFrame` and it has the best chance of being able to create the data for you.
+    ///  </summary>
+    ///  <param name="list">A list of tuples containing the data</param>
+    ///  <param name="dataFrameSchema">If you don't specify a schema then we attempt to create it for you with default names</param>
+    ///  <returns>DataFrame</returns>
+    ///  <exception cref="NullReferenceException"></exception>
+    ///  <example>
+    /// var rawData = new List&lt;(int Id, int? abc, DenseVector Vector)&gt;()
+    ///     {
+    ///         (1, 3, new DenseVector([0.0, 1.1, 0.1])),
+    ///         (2, null, new DenseVector([2.0, 1.0, -1.0])),
+    ///         (3, 99, new DenseVector([2.0, 1.3, 1.0])),
+    ///         (4, null, new DenseVector([0.0, 1.2, -0.5]))
+    ///     };
+    /// 
+    /// var df = Spark.CreateDataFrame(rawData.Cast&lt;ITuple&gt;());
+    /// df.Show();
+    ///  </example>
+    public DataFrame CreateDataFrame(IList<ITuple> list, StructType? dataFrameSchema = null) 
+    {
+        var firstItem = list.First();
+     
+        if (dataFrameSchema == null)
+        {
+            var fields = new List<StructField>();
+            for (int i = 0; i < firstItem.Length; i++)
+            {
+                var field = new StructField($"_c{i}", SparkDataType.FromDotNetType(firstItem[i]), true);
+                fields.Add(field);
+            }
+
+            dataFrameSchema = new StructType(fields.ToArray());
+        }
+        
+        var builtBuilders = new List<IArrowArray>();
+        
+        for (int i = 0; i < firstItem.Length; i++)
+        {
+            if (firstItem[i] is IUserDefinedType)
+            {
+                var dataType = SparkDataType.FromDotNetType(firstItem[i]);
+                var builders = dataType.GetArrowArrayBuilders().ToList();
+                
+                foreach (var row in list)
+                {
+                    var value = row[i];
+                    var values = (value as IUserDefinedType).GetDataForDataframe();
+                    
+                    for (var j = 0; j < builders.Count; j++)
+                    {
+                        var builder = builders[j];
+                        AddValueToBuilder(builder, values[j]); 
+                    }
+                }
+                
+                var builtChildArrays = BuildBuilders(builders);
+                
+                var builtArray = new StructArray(
+                    dataType.ToArrowType(),
+                    list.Count,
+                    builtChildArrays,
+                    ArrowBuffer.Empty,0); 
+                
+                builtBuilders.Add(builtArray);
+            }
+            else
+            {
+                var builder = SparkDataType.FromDotNetType(firstItem[i]).GetArrowArrayBuilders().First();
+                
+                foreach (var row in list)
+                {
+                    var value = row[i];
+                    AddValueToBuilder(builder, value);
+                }
+                
+                builtBuilders.Add(BuildBuilder(builder));
+            }
+        }
+        
+        var arrowSchema = new Schema(((Apache.Arrow.Types.StructType)dataFrameSchema.ToArrowType()).Fields, new List<KeyValuePair<string, string>>());
+        var batch = new RecordBatch(arrowSchema, builtBuilders, 4);
+        
+        this.Conf.Set(SparkDotnetKnownConfigKeys.DecodeArrowType, "ArrowBuffers");
+        var df = this.CreateDataFrame(batch, arrowSchema, dataFrameSchema.Json());
+        return df;
+    }
+
+    private IEnumerable<IArrowArray> BuildBuilders(List<IArrowArrayBuilder> builders)
+    {
+        var builtArrays = new List<IArrowArray>();
+        
+        foreach (var builder in builders)
+        {
+            builtArrays.Add(BuildBuilder(builder));
+        }
+        
+        return builtArrays;
+        
+    }
+
+    private static IArrowArray BuildBuilder(IArrowArrayBuilder builder)
+    {
+        switch (builder)
+        {
+            case BooleanArray.Builder boo:
+                return boo.Build();
+            case Date32Array.Builder d32:
+                return d32.Build();
+            case Date64Array.Builder d64:
+                return d64.Build();
+            case Decimal128Array.Builder dec128:
+                return dec128.Build();
+            case Decimal256Array.Builder dec256:
+                return dec256.Build();
+            case Decimal32Array.Builder dec32:
+                return dec32.Build();
+            case Decimal64Array.Builder dec64:
+                return dec64.Build();
+            case DoubleArray.Builder dbl: 
+                return dbl.Build();
+            case FloatArray.Builder flt:
+                return flt.Build();
+            
+            case Int8Array.Builder int8:
+                return int8.Build();
+            case Int16Array.Builder int16: 
+                return int16.Build();
+            case Int32Array.Builder int32: 
+                return int32.Build();
+            case Int64Array.Builder int64:
+                return int64.Build();
+            case Time32Array.Builder time32:
+                return time32.Build();
+            case Time64Array.Builder time64:
+                return time64.Build();
+            case TimestampArray.Builder ts:
+                return ts.Build();
+            case UInt8Array.Builder uint8:
+                return uint8.Build();
+            case UInt16Array.Builder uint16:
+                return uint16.Build();
+            case UInt32Array.Builder uint32:
+                return uint32.Build();
+            case UInt64Array.Builder uint64:
+                return uint64.Build();
+            case StringArray.Builder str:
+                return str.Build();
+            
+            case MapArray.Builder map:
+                return map.Build();
+            case ListArray.Builder la:
+                return la.Build();
+            default:
+                throw new NotImplementedException($"AddValueToBuilder need {builder.GetType().Name}");
+        }
+    }
+
+    private static void AddValueToBuilder(IArrowArrayBuilder builder,object value)
+    {
+        if (value is null)
+        {
+            switch(builder)
+            {
+                case IArrowArrayBuilder<Int8Array, Int8Array.Builder> int8: 
+                    int8.AppendNull();
+                    break;
+                case IArrowArrayBuilder<Int16Array, Int16Array.Builder> int16: 
+                    int16.AppendNull();
+                    break;
+                case IArrowArrayBuilder<Int32Array, Int32Array.Builder> int32: 
+                    int32.AppendNull();
+                    break;
+                
+                case IArrowArrayBuilder<Int64Array, Int64Array.Builder> int64:
+                    int64.AppendNull();
+                    break;
+                case IArrowArrayBuilder<UInt8Array, UInt8Array.Builder> uint8:
+                    uint8.AppendNull();
+                    break;
+                case IArrowArrayBuilder<UInt16Array, UInt16Array.Builder> uint16:
+                    uint16.AppendNull();
+                    break;
+                case IArrowArrayBuilder<UInt32Array, UInt32Array.Builder> uint32:
+                    uint32.AppendNull();
+                    break;
+                case IArrowArrayBuilder<UInt64Array, UInt64Array.Builder> uint64:
+                    uint64.AppendNull();
+                    break;
+                case IArrowArrayBuilder<FloatArray, FloatArray.Builder> flt:
+                    flt.AppendNull();
+                    break;
+                case IArrowArrayBuilder<DoubleArray, DoubleArray.Builder> dbl:
+                    dbl.AppendNull();
+                    break;
+                case IArrowArrayBuilder<BooleanArray, BooleanArray.Builder> boo:
+                    boo.AppendNull();
+                    break;
+                case IArrowArrayBuilder<Date32Array, Date32Array.Builder> d32:
+                    d32.AppendNull();
+                    break;
+                case IArrowArrayBuilder<Date64Array, Date64Array.Builder> d64:
+                    d64.AppendNull();
+                    break;
+                case IArrowArrayBuilder<Time32Array, Time32Array.Builder> time32:
+                    time32.AppendNull();
+                    break;
+                case IArrowArrayBuilder<Time64Array, Time64Array.Builder> time64:
+                    time64.AppendNull();
+                    break;
+                case IArrowArrayBuilder<TimestampArray, TimestampArray.Builder> ts:
+                    ts.AppendNull();
+                    break;
+                case IArrowArrayBuilder<Decimal128Array, Decimal128Array.Builder> dec128:
+                    dec128.AppendNull();
+                    break;
+                case IArrowArrayBuilder<Decimal256Array, Decimal256Array.Builder> dec256:
+                    dec256.AppendNull();
+                    break;
+                case IArrowArrayBuilder<Decimal32Array, Decimal32Array.Builder> dec32:
+                    dec32.AppendNull();
+                    break;
+                
+                case IArrowArrayBuilder<Decimal64Array, Decimal64Array.Builder> dec64:
+                    dec64.AppendNull();
+                    break;
+                case IArrowArrayBuilder<MapArray, MapArray.Builder> map:
+                    map.AppendNull();
+                    break;
+                    
+                case IArrowArrayBuilder<StringArray, StringArray.Builder> str: 
+                    str.AppendNull();
+                    break;   
+                
+                case IArrowArrayBuilder<ListArray, ListArray.Builder> la:
+                    la.AppendNull();
+                    break;
+                default:
+                    throw new NotImplementedException($"AddValueToBuilder need {builder.GetType().Name}");
+            };
+        }
+        else
+        {
+            switch(builder)
+            {
+                case IArrowArrayBuilder<sbyte, Int8Array, Int8Array.Builder> int8: 
+                    int8.Append((sbyte)value);
+                    break;
+                case IArrowArrayBuilder<short, Int16Array, Int16Array.Builder> int16: int16.Append((short)value);
+                    break;
+                case IArrowArrayBuilder<int, Int32Array, Int32Array.Builder> int32: int32.Append((int)value);
+                    break;
+                case IArrowArrayBuilder<string, StringArray, StringArray.Builder> str: str.Append((string)value);
+                    break;   
+                case IArrowArrayBuilder<double, DoubleArray, DoubleArray.Builder> dbl: dbl.Append((double)value);
+                    break;
+                case ListArray.Builder dbl:
+                    dbl.Append();
+                    (dbl.ValueBuilder as DoubleArray.Builder).AppendRange((List<double>)value);
+                    break;
+                default:
+                    throw new NotImplementedException($"AddValueToBuilder need {builder.GetType().Name}");
+            };
+        }
+        
+    }
+
     /// <summary>
     ///     Pass in a list of tuples, schema is guessed by the type of the first tuple's child types:
     ///     CreateDataFrame(new List
@@ -556,6 +846,70 @@ public class SparkSession
 
         var batchBuilder = new RecordBatch.Builder();
 
+        batchBuilder = ConvertToArrow(schemaFields, columns, batchBuilder);
+
+        var batch = batchBuilder.Build();
+
+        writer.WriteStart();
+        writer.WriteRecordBatch(batch);
+        writer.WriteEnd();
+
+        stream.Position = 0;
+
+        var createdRelation = new LocalRelation
+        {
+            Data = ByteString.FromStream(stream)
+        };
+
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                LocalRelation = createdRelation
+            }
+        };
+
+        var executor = new RequestExecutor(this, plan);
+        Task.Run(() => executor.ExecAsync()).Wait();
+        return new DataFrame(this, executor.GetRelation());
+    }
+
+    public DataFrame CreateDataFrame(RecordBatch batch, Schema schema, string jsonSparkSchema = "")
+    {
+        var stream = new MemoryStream();
+        var writer = new ArrowStreamWriter(stream, schema);
+        
+        writer.WriteStart();
+        writer.WriteRecordBatch(batch);
+        writer.WriteEnd();
+
+        stream.Position = 0;
+
+        var createdRelation = new LocalRelation
+        {
+            Data = ByteString.FromStream(stream)
+        };
+
+        if (!string.IsNullOrEmpty(jsonSparkSchema))
+        {
+            createdRelation.Schema = jsonSparkSchema;
+        }
+        
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                LocalRelation = createdRelation
+            }
+        };
+
+        var executor = new RequestExecutor(this, plan);
+        Task.Run(() => executor.ExecAsync()).Wait();
+        return new DataFrame(this, executor.GetRelation());
+    }
+
+    private static RecordBatch.Builder ConvertToArrow(List<Field> schemaFields, dynamic columns, RecordBatch.Builder batchBuilder)
+    {
         var i = 0;
         foreach (var schemaCol in schemaFields)
         {
@@ -567,8 +921,11 @@ public class SparkSession
             switch (schemaCol.DataType)
             {
                 case StringType:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
-                        arrayBuilder => arrayBuilder.String(builder => builder.AppendRange(column)));
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.String(builder =>
+                        {
+                            builder.Append((column) is string ? column : column.ToString());
+                        }
+                    ));
                     break;
                 case Int32Type:
                     batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
@@ -612,49 +969,60 @@ public class SparkSession
                         arrayBuilder => arrayBuilder.Int64(builder => AppendTimestamp(column, builder)));
                     break;
 
-                case ListType:
-                    throw new NotImplementedException(
-                        "Currently you can't pass a complex type to CreateDataFrame - use Spark.Sql array, map, etc i.e. spark.Range(1).Select(Map(...)) will do the same thing as CreateDataFrame or WithColumn etc");
+                case ListType lt:
+                    
+                    var batchBuilder3 = new RecordBatch.Builder();
+                    var column3 = columns[i-1];
 
+                    // var data = DataToColumns(new List<IEnumerable<object>>() { column2 });
+
+                    foreach (var item in column3)
+                    {
+                        batchBuilder3 = ConvertToArrow(lt.Fields.ToList(), new List<dynamic>(){item}, batchBuilder3);  
+                    }
+                      
+                    
+                    
+                    batchBuilder.Append(schemaCol.Name, false, batchBuilder3.Build());
+                    // throw new NotImplementedException(
+                    //     "Currently you can't pass a complex type to CreateDataFrame - use Spark.Sql array, map, etc i.e. spark.Range(1).Select(Map(...)) will do the same thing as CreateDataFrame or WithColumn etc");
+                    break;
                 case MapType:
                     throw new NotImplementedException(
                         "Currently you can't pass a complex type to CreateDataFrame - use Spark.Sql array, map, etc i.e. spark.Range(1).Select(Map(...)) will do the same thing as CreateDataFrame or WithColumn etc");
+                
+                case Apache.Arrow.Types.StructType st:
+                    var batchBuilder2 = new RecordBatch.Builder();
+                    var column2 = columns[i-1];
 
+                    // var data = DataToColumns(new List<IEnumerable<object>>() { column2 });
+                    
+                    batchBuilder2 = ConvertToArrow(st.Fields.ToList(), column2[0], batchBuilder2);    
+                    
+                    
+                    batchBuilder.Append(schemaCol.Name, false, batchBuilder2.Build());
+                    
+                    break;
                 default:
                     throw new SparkException($"Need Arrow Type for Builder: {schemaCol.DataType}");
             }
         }
 
-        var batch = batchBuilder.Build();
-
-        writer.WriteStart();
-        writer.WriteRecordBatch(batch);
-        writer.WriteEnd();
-
-        stream.Position = 0;
-
-        var createdRelation = new LocalRelation
-        {
-            Data = ByteString.FromStream(stream)
-        };
-
-        var plan = new Plan
-        {
-            Root = new Relation
-            {
-                LocalRelation = createdRelation
-            }
-        };
-
-        var executor = new RequestExecutor(this, plan);
-        Task.Run(() => executor.ExecAsync()).Wait();
-        return new DataFrame(this, executor.GetRelation());
+        return batchBuilder;
     }
 
     private static IEnumerable<Int32Array.Builder> AppendInt(dynamic? column, Int32Array.Builder builder)
     {
-        var list = (List<int?>)column;
         var retList = new List<Int32Array.Builder>();
+
+        if (column is int)
+        {
+            retList.Add(builder.Append((int)column));
+            return retList;
+        }
+        
+        var list = (List<int?>)column;
+
         foreach (var i in list)
         {
             retList.Add(builder.Append(i));
@@ -803,8 +1171,16 @@ public class SparkSession
 
     private static IEnumerable<DoubleArray.Builder> AppendDouble(dynamic? column, DoubleArray.Builder builder)
     {
-        var list = (List<double?>)column;
         var retList = new List<DoubleArray.Builder>();
+        
+        if (column is double)
+        {
+            retList.Add(builder.Append((double)column));
+            return retList;
+        }
+        
+        var list = (List<double?>)column;
+        
         foreach (var i in list)
         {
             retList.Add(builder.Append(i));
@@ -814,7 +1190,7 @@ public class SparkSession
     }
 
 
-    private dynamic DataToColumns(IEnumerable<IEnumerable<object>> data)
+    private static dynamic DataToColumns(IEnumerable<IEnumerable<object>> data)
     {
         if (!data.Any())
         {
@@ -846,8 +1222,9 @@ public class SparkSession
 
     private static IList CreateGenericList(Type elementType)
     {
+        
         if (elementType == typeof(IDictionary<string, object>) || elementType == typeof(Dictionary<string, object>) ||
-            elementType == typeof(string) || elementType == typeof(string[]))
+            elementType == typeof(string) || elementType == typeof(string[]) || elementType == typeof(object[]))
         {
             var listType = typeof(List<>);
 
@@ -909,4 +1286,5 @@ public class SparkSession
     {
         return Read.Table(name);
     }
+    
 }

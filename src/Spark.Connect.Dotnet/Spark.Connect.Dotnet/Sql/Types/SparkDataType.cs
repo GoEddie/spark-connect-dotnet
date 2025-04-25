@@ -1,9 +1,16 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using Apache.Arrow;
 using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Grpc;
 
 namespace Spark.Connect.Dotnet.Sql.Types;
+
+public interface IUserDefinedType
+{
+    public SparkDataType GetDataType();
+    public object[] GetDataForDataframe();
+}
 
 public abstract class SparkDataType
 {
@@ -18,6 +25,8 @@ public abstract class SparkDataType
     public abstract DataType ToDataType();
     public abstract IArrowType ToArrowType();
 
+    public virtual IEnumerable<IArrowArrayBuilder> GetArrowArrayBuilders() => [ArrowHelpers.GetArrowBuilderForArrowType(ToArrowType())];
+
     public virtual string SimpleString()
     {
         return TypeName;
@@ -26,6 +35,11 @@ public abstract class SparkDataType
     public virtual string JsonTypeName()
     {
         return SimpleString();
+    }
+
+    public virtual string Json()
+    {
+        return $"\"{JsonTypeName()}\"";
     }
 
     public virtual string ToDdl(string name, bool nullable)
@@ -260,9 +274,8 @@ public abstract class SparkDataType
         IDictionary<string, int?> => MapType(StringType(), IntType(), true),
         IDictionary<string, string?> => MapType(StringType(), StringType(), true),
         IDictionary<string, object> dict => MapType(StringType(), FromDotNetType(dict.Values.FirstOrDefault()), true),
-
         string[] => ArrayType(StringType()),
-
+        IUserDefinedType udt => udt.GetDataType(),
         _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
     };
 

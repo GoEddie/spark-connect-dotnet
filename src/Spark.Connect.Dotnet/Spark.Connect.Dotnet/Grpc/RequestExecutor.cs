@@ -73,11 +73,12 @@ public class RequestExecutor : IDisposable
         _session = session;
         _plan = plan;
         _arrowHandling = arrowHandling;
-        if (_session.Conf.IsTrue(SparkDotnetKnownConfigKeys.DontDecodeArrow))
-        {
-            _arrowHandling = ArrowHandling.None;
-        }
 
+        if (Enum.TryParse(session.Conf.GetOrDefault(SparkDotnetKnownConfigKeys.DecodeArrowType, arrowHandling.ToString()), true, out ArrowHandling arrowHandlineOverride))
+        {
+            _arrowHandling = arrowHandlineOverride;
+        }
+        
         _relation = plan.Root;
     }
 
