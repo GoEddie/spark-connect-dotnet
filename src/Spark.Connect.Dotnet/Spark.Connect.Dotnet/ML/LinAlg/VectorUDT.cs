@@ -3,12 +3,9 @@ using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Sql;
 using Spark.Connect.Dotnet.Sql.Types;
 using IntegerType = Spark.Connect.Dotnet.Sql.Types.IntegerType;
-using StringType = Spark.Connect.Dotnet.Sql.Types.StringType;
 using StructType = Apache.Arrow.Types.StructType;
 
 namespace Spark.Connect.Dotnet.ML.LinAlg;
-
-
 
 public class DenseVector(List<double> values) : IUserDefinedType
 {
@@ -20,7 +17,19 @@ public class DenseVector(List<double> values) : IUserDefinedType
 #pragma warning disable CS8601, CS8625 
     public object[] GetDataForDataframe() => [(sbyte)1, null, null as List<int>, Values];
 #pragma warning restore CS8601, CS8625
-    public SparkDataType GetDataType() => new DenseVectorUDT();
+    public SparkDataType GetDataType() => new VectorUDT();
+    
+}
+
+public class SparseVector(int size, List<int> indices, List<double> values) : IUserDefinedType
+{
+    public List<double> Values { get; } = values;
+    public List<int> Indices { get; } = indices;
+    
+    public int Size { get; } = size;
+    
+    public object[] GetDataForDataframe() => [(sbyte)0, Size, Indices, Values];
+    public SparkDataType GetDataType() => new VectorUDT();
     
 }
 
@@ -34,9 +43,9 @@ public abstract class UserDefinedType(string typeName) : SparkDataType(typeName)
     public abstract Spark.Connect.Dotnet.Sql.Types.StructType GetStructType();
 }
 
-public class DenseVectorUDT : UserDefinedType
+public class VectorUDT : UserDefinedType
 {
-    public DenseVectorUDT() : base("org.apache.spark.ml.linalg.VectorUDT")
+    public VectorUDT() : base("org.apache.spark.ml.linalg.VectorUDT")
     {
         _arrowBuilders = CreateArrowBuilders();
     }
@@ -118,40 +127,3 @@ public class DenseVectorUDT : UserDefinedType
     }
 }
 
-public class SparseVectorUDT : SparkDataType
-{
-    public SparseVectorUDT() : base("org.apache.spark.ml.linalg.VectorUDT")
-    {
-    }
-    
-    public override DataType ToDataType()
-    {
-        return new DataType()
-        {
-            Struct = new DataType.Types.Struct()
-            {
-                Fields =
-                {
-                    new List<DataType.Types.StructField>()
-                    {
-                        new() { DataType = new ByteType().ToDataType(), Name = "type" }, 
-                        new() { DataType = new IntegerType().ToDataType(), Name = "size" }, 
-                        new() { DataType = new ArrayType(SparkDataType.IntegerType(), false).ToDataType(), Name = "indices" }, 
-                        new() { DataType = new ArrayType(SparkDataType.DoubleType(), false).ToDataType(), Name = "values" }
-                    }
-                }
-            }
-        };
-    }
-
-    public override IArrowType ToArrowType()
-    {   
-        return new StructType(new List<Field>()
-        {
-            new ("type", ByteType().ToArrowType(), false),
-            new ("size", IntegerType().ToArrowType(), false),
-            new ("indices", ArrayType(SparkDataType.IntegerType()).ToArrowType(), false),
-            new ("values", ArrayType(SparkDataType.DoubleType()).ToArrowType(), false)
-        });
-    }
-}

@@ -520,6 +520,7 @@ public class SparkSession
         var schema = new Schema(arrowFields, metaData);
         var batch = new RecordBatch(schema, builtArrays, list.Count);
         var df = CreateDataFrame(batch, schema, dataFrameSchema.Json());
+        // var df = CreateDataFrame(batch, schema);
         return df;
     }
 
@@ -711,15 +712,18 @@ public class SparkSession
                 }
                 else
                 {
-                    if (data is int[] intArray)
+                    switch (data)
                     {
-                        intBuilder.AppendRange(intArray);
+                        case int[] a:
+                            intBuilder.AppendRange(a);
+                            break;
+                        case IList<int> intList:
+                            intBuilder.AppendRange(intList);
+                            break;
+                        case int i:
+                            intBuilder.Append(i);
+                            break;       
                     }
-                    else
-                    {
-                        intBuilder.Append((int)data!);                        
-                    }
-
                 }
 
                 break;

@@ -10,7 +10,7 @@ namespace Spark.Connect.Dotnet.Tests;
 public class SparkSession_CreateDataFrame_Tests(ITestOutputHelper logger) : E2ETestBase(logger)
 {
     [Fact]
-    public void CreateDataFrame_Test()
+    public void CreateDataFrame_WithDenseVector_Test()
     {
         var rawData = new List<(int Id, int? abc, DenseVector Vector)>()
         {
@@ -20,6 +20,22 @@ public class SparkSession_CreateDataFrame_Tests(ITestOutputHelper logger) : E2ET
 
         var df = Spark.CreateDataFrame(rawData.Cast<ITuple>());
         df.Show();
+        df.PrintSchema();
+    }
+    
+    [Fact]
+    public void CreateDataFrame_WithSparseVector_Test()
+    {
+        var rawData = new List<(int Id, int? abc, SparseVector Vector)>()
+        {
+            (1, 3, new SparseVector(5, [0, 1,3], [0.0, 1.1, 0.1])),
+            (2, null, new SparseVector(5, [0, 1,3], [0.0, 1.1, 0.1])),
+            (3, 99, new SparseVector(5, [1,2, 3], [0.0, 1.1, 0.1])), 
+            (4, null, new SparseVector(5, [0,1,4], [0.0, 1.1, 0.1]))
+        };
+
+        var df = Spark.CreateDataFrame(rawData.Cast<ITuple>());
+        df.Show(4, 1000);
         df.PrintSchema();
     }
 
@@ -38,7 +54,7 @@ public class SparkSession_CreateDataFrame_Tests(ITestOutputHelper logger) : E2ET
             new List<StructField>()
             {
                 new StructField("id99999999HSHSHSHSHSHSH", SparkDataType.IntType(), false), new StructField("abc", SparkDataType.IntType(), true)
-                , new StructField("vector", new DenseVectorUDT(), false)
+                , new StructField("vector", new VectorUDT(), false)
             }
         );
 
@@ -98,8 +114,10 @@ public class SparkSession_CreateDataFrame_Tests(ITestOutputHelper logger) : E2ET
             };
         
         var df = Spark.CreateDataFrame(data.Cast<ITuple>());
+        // df.Write().Parquet("/Users/ed/tmp/arrow/ouput.parquet");
         df.Show();
         df.PrintSchema();
+       
     }
 
     [Fact]
