@@ -7,14 +7,8 @@ using static Spark.Connect.Dotnet.Sql.Functions;
 
 namespace Spark.Connect.Dotnet.Tests;
 
-public class SparkSession_CreateDataFrame_Tests : E2ETestBase
+public class SparkSession_CreateDataFrame_Tests(ITestOutputHelper logger) : E2ETestBase(logger)
 {
-    public SparkSession_CreateDataFrame_Tests(ITestOutputHelper logger) : base(logger)
-    {
-        Spark.Conf.Set(SparkDotnetKnownConfigKeys.DecodeArrowType, "ArrowBuffers");
-    }
-
-    
     [Fact]
     public void CreateDataFrame_Test()
     {
@@ -84,6 +78,26 @@ public class SparkSession_CreateDataFrame_Tests : E2ETestBase
             }), true)
         });
         var df = Spark.CreateDataFrame(deeplyNestedData.Cast<ITuple>(), schema);
+        df.Show();
+        df.PrintSchema();
+    }
+
+    [Fact]
+    public void CreateDataFrameWithAllTypes_Test()
+    {
+        var data
+            = new List<(int id, short ids, byte b, string s, bool bo, DateTime dt, decimal d, float f, double dbl, long l, byte[] bytes, char c, Guid guid, DateTimeOffset
+                dto)>
+            {
+                (1, 1, 1, "1", true, new DateTime(2020, 1, 1), 1.0m, 1.0f, 1.0, 1, new byte[] { 1, 2, 3 }, '1', Guid.NewGuid()
+                    , new DateTimeOffset(2020, 1, 1, 1, 1, 1, TimeSpan.Zero))
+                ,(2, 2, 2, "2", false, new DateTime(2020, 2, 2), 2.0m, 2.0f, 2.0, 2, new byte[] { 2, 2, 2 }, '2', Guid.NewGuid()
+                    , new DateTimeOffset(2020, 2, 2, 2, 2, 2, TimeSpan.Zero))
+                ,(3, 3, 3, "3", true, new DateTime(2020, 3, 3), 3.0m, 3.0f, 3.0, 3, new byte[] { 3, 3, 3 }, '3', Guid.NewGuid()
+                    , new DateTimeOffset(2020, 3, 3, 3, 3, 3, TimeSpan.Zero))
+            };
+        
+        var df = Spark.CreateDataFrame(data.Cast<ITuple>());
         df.Show();
         df.PrintSchema();
     }

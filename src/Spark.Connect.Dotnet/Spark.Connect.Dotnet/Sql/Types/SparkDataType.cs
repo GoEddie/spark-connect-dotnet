@@ -269,10 +269,15 @@ public abstract class SparkDataType
         double => DoubleType(),
         float => FloatType(),
         short => ShortType(),
+        char => StringType(),
         string => StringType(),
+        Guid => StringType(),
         DateTime => TimestampType(),
+        DateTimeOffset => TimestampNtzType(),
+        // TimeSpan => IntervalTyp(),
         DateOnly => DateType(),
-        byte => ByteType(),
+        byte => ShortType(),    //byte doesn't exist in spark, use sbyte if you want a byte
+        sbyte => ByteType(),
         bool => BooleanType(),
         decimal => DecimalType(),
         IDictionary<string, long?> => MapType(StringType(), LongType(), true),
@@ -282,6 +287,7 @@ public abstract class SparkDataType
         string[] => ArrayType(StringType()),
         IUserDefinedType udt => udt.GetDataType(),
         ITuple tup => CreateStructFromTuple(tup),
+        System.Array array => ArrayType(FromDotNetType(array.GetValue(0))),
         _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
     };
 

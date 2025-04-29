@@ -6,6 +6,7 @@ using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
 using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Grpc.Net.Client.Configuration;
@@ -17,11 +18,13 @@ using Spark.Connect.Dotnet.Sql.Types;
 using BinaryType = Apache.Arrow.Types.BinaryType;
 using BooleanType = Apache.Arrow.Types.BooleanType;
 using DoubleType = Apache.Arrow.Types.DoubleType;
+using Field = Apache.Arrow.Field;
 using FloatType = Apache.Arrow.Types.FloatType;
 using MapType = Apache.Arrow.Types.MapType;
 using StringType = Apache.Arrow.Types.StringType;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using TimestampType = Apache.Arrow.Types.TimestampType;
+using Type = System.Type;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -553,8 +556,14 @@ public class SparkSession
                 case Int8Array.Builder int8ArrayBuilder:
                     builtArrays.Add(int8ArrayBuilder.Build());
                     break;
+                case Int16Array.Builder int16ArrayBuilder:
+                    builtArrays.Add(int16ArrayBuilder.Build());
+                    break;
                 case Int32Array.Builder integerArrayBuilder:
                     builtArrays.Add(integerArrayBuilder.Build());
+                    break;
+                case Int64Array.Builder integer64ArrayBuilder:
+                    builtArrays.Add(integer64ArrayBuilder.Build());
                     break;
                 case Decimal32Array.Builder decimalArrayBuilder:
                     builtArrays.Add(decimalArrayBuilder.Build());
@@ -574,13 +583,19 @@ public class SparkSession
                 case Decimal128Array.Builder decimal128ArrayBuilder:
                     builtArrays.Add(decimal128ArrayBuilder.Build());
                     break;
+                case TimestampArray.Builder timestampArrayBuilder:
+                    builtArrays.Add(timestampArrayBuilder.Build());
+                    break;
+                case FloatArray.Builder floatArrayBuilder:
+                    builtArrays.Add(floatArrayBuilder.Build());
+                    break;
                 
                 case ListArray.Builder listArrayBuilder:
                     builtArrays.Add(listArrayBuilder.Build());
                     break;
                 default:
-                    Console.WriteLine($"Unknown field type: {nextBuilder.Value}");
-                    break;
+                    throw new NotImplementedException($"Unknown field type: {nextBuilder.Value}");
+                    
             }
             
             nextBuilder = nextBuilder.Next!;
@@ -666,7 +681,29 @@ public class SparkSession
 
                 break;
                 
-                
+            case Int16Array.Builder int16Builder:
+                if (data is null)
+                {
+                    int16Builder.AppendNull();
+                }
+                else
+                {
+                    switch (data)
+                    {
+                        case short s:
+                            int16Builder.Append(s);
+                            break;
+                        case byte b:
+                            int16Builder.Append((short)b);
+                            break;
+                        case IList<short> shortList:
+                            int16Builder.AppendRange(shortList);
+                            break;
+                    }
+                }
+
+                break;
+
             case Int32Array.Builder intBuilder:
                 if (data is null)
                 {
@@ -683,6 +720,25 @@ public class SparkSession
                         intBuilder.Append((int)data!);                        
                     }
 
+                }
+
+                break;
+            
+            case Int64Array.Builder int64Builder:
+                if (data is null)
+                {
+                    int64Builder.AppendNull();
+                }
+                else
+                {
+                    if (data is long[] int64Array)
+                    {
+                        int64Builder.AppendRange(int64Array);
+                    }
+                    else
+                    {
+                        int64Builder.Append((long)data!);                        
+                    }
                 }
 
                 break;
@@ -713,6 +769,33 @@ public class SparkSession
                 }
 
                 break;
+            
+            case FloatArray.Builder floatBuilder:
+               
+                if (data is null)
+                {
+                    floatBuilder.AppendNull();
+                }
+                else
+                {
+                    switch (data)
+                    {
+                        case float[] floatArray:
+                            floatBuilder.AppendRange(floatArray);
+                            break;
+                        case IList<float> floatList:
+                            floatBuilder.AppendRange(floatList);
+                            break;
+                        case float val:
+                            floatBuilder.Append(val);
+                            break;
+                        default:
+                            Console.WriteLine($"Unknown field type: {currentBuilder}");
+                            break;
+                    }
+                }
+
+                break;
             case StringArray.Builder stringBuilder:
                 if (data is null)
                 {
@@ -720,9 +803,19 @@ public class SparkSession
                 }
                 else
                 {
-                    stringBuilder.Append((string)data);
+                    switch (data)
+                    {
+                        case char c:
+                            stringBuilder.Append(c.ToString());
+                            break;
+                        case string str:
+                            stringBuilder.Append(str);
+                            break;
+                        case Guid guid:
+                            stringBuilder.Append(guid.ToString());
+                            break;
+                    }
                 }
-
                 break;
             case Decimal128Array.Builder decimal128Builder:
                 if (data is null)
@@ -747,6 +840,27 @@ public class SparkSession
 
                 break;
             
+            case TimestampArray.Builder timestampBuilder:
+                if (data is null)
+                {
+                    timestampBuilder.AppendNull();
+                }
+                else
+                {
+                    switch (data)
+                    {
+                        case DateTime dateTime:
+                            var timestamp = new DateTimeOffset(dateTime, TimeSpan.Zero);
+                            timestampBuilder.Append(timestamp);
+                            break;
+                        case DateTimeOffset dateTimeOffset:
+                            timestampBuilder.Append(dateTimeOffset);
+                            break;
+                    }
+                }
+
+                break;
+                
             default:
                  
                 Console.WriteLine($"Unknown field type: {currentBuilder}");
@@ -754,185 +868,6 @@ public class SparkSession
         }
     }
     
-
-    private IEnumerable<IArrowArray> BuildBuilders(List<IArrowArrayBuilder> builders)
-    {
-        var builtArrays = new List<IArrowArray>();
-        
-        foreach (var builder in builders)
-        {
-            builtArrays.Add(BuildBuilder(builder));
-        }
-        
-        return builtArrays;
-        
-    }
-
-    private static IArrowArray BuildBuilder(IArrowArrayBuilder builder)
-    {
-        switch (builder)
-        {
-            case BooleanArray.Builder boo:
-                return boo.Build();
-            case Date32Array.Builder d32:
-                return d32.Build();
-            case Date64Array.Builder d64:
-                return d64.Build();
-            case Decimal128Array.Builder dec128:
-                return dec128.Build();
-            case Decimal256Array.Builder dec256:
-                return dec256.Build();
-            case Decimal32Array.Builder dec32:
-                return dec32.Build();
-            case Decimal64Array.Builder dec64:
-                return dec64.Build();
-            case DoubleArray.Builder dbl: 
-                return dbl.Build();
-            case FloatArray.Builder flt:
-                return flt.Build();
-            
-            case Int8Array.Builder int8:
-                return int8.Build();
-            case Int16Array.Builder int16: 
-                return int16.Build();
-            case Int32Array.Builder int32: 
-                return int32.Build();
-            case Int64Array.Builder int64:
-                return int64.Build();
-            case Time32Array.Builder time32:
-                return time32.Build();
-            case Time64Array.Builder time64:
-                return time64.Build();
-            case TimestampArray.Builder ts:
-                return ts.Build();
-            case UInt8Array.Builder uint8:
-                return uint8.Build();
-            case UInt16Array.Builder uint16:
-                return uint16.Build();
-            case UInt32Array.Builder uint32:
-                return uint32.Build();
-            case UInt64Array.Builder uint64:
-                return uint64.Build();
-            case StringArray.Builder str:
-                return str.Build();
-            
-            case MapArray.Builder map:
-                return map.Build();
-            case ListArray.Builder la:
-                return la.Build();
-            default:
-                throw new NotImplementedException($"AddValueToBuilder need {builder.GetType().Name}");
-        }
-    }
-
-    private static void AddValueToBuilder(IArrowArrayBuilder builder,object value)
-    {
-        if (value is null)
-        {
-            switch(builder)
-            {
-                case IArrowArrayBuilder<Int8Array, Int8Array.Builder> int8: 
-                    int8.AppendNull();
-                    break;
-                case IArrowArrayBuilder<Int16Array, Int16Array.Builder> int16: 
-                    int16.AppendNull();
-                    break;
-                case IArrowArrayBuilder<Int32Array, Int32Array.Builder> int32: 
-                    int32.AppendNull();
-                    break;
-                
-                case IArrowArrayBuilder<Int64Array, Int64Array.Builder> int64:
-                    int64.AppendNull();
-                    break;
-                case IArrowArrayBuilder<UInt8Array, UInt8Array.Builder> uint8:
-                    uint8.AppendNull();
-                    break;
-                case IArrowArrayBuilder<UInt16Array, UInt16Array.Builder> uint16:
-                    uint16.AppendNull();
-                    break;
-                case IArrowArrayBuilder<UInt32Array, UInt32Array.Builder> uint32:
-                    uint32.AppendNull();
-                    break;
-                case IArrowArrayBuilder<UInt64Array, UInt64Array.Builder> uint64:
-                    uint64.AppendNull();
-                    break;
-                case IArrowArrayBuilder<FloatArray, FloatArray.Builder> flt:
-                    flt.AppendNull();
-                    break;
-                case IArrowArrayBuilder<DoubleArray, DoubleArray.Builder> dbl:
-                    dbl.AppendNull();
-                    break;
-                case IArrowArrayBuilder<BooleanArray, BooleanArray.Builder> boo:
-                    boo.AppendNull();
-                    break;
-                case IArrowArrayBuilder<Date32Array, Date32Array.Builder> d32:
-                    d32.AppendNull();
-                    break;
-                case IArrowArrayBuilder<Date64Array, Date64Array.Builder> d64:
-                    d64.AppendNull();
-                    break;
-                case IArrowArrayBuilder<Time32Array, Time32Array.Builder> time32:
-                    time32.AppendNull();
-                    break;
-                case IArrowArrayBuilder<Time64Array, Time64Array.Builder> time64:
-                    time64.AppendNull();
-                    break;
-                case IArrowArrayBuilder<TimestampArray, TimestampArray.Builder> ts:
-                    ts.AppendNull();
-                    break;
-                case IArrowArrayBuilder<Decimal128Array, Decimal128Array.Builder> dec128:
-                    dec128.AppendNull();
-                    break;
-                case IArrowArrayBuilder<Decimal256Array, Decimal256Array.Builder> dec256:
-                    dec256.AppendNull();
-                    break;
-                case IArrowArrayBuilder<Decimal32Array, Decimal32Array.Builder> dec32:
-                    dec32.AppendNull();
-                    break;
-                
-                case IArrowArrayBuilder<Decimal64Array, Decimal64Array.Builder> dec64:
-                    dec64.AppendNull();
-                    break;
-                case IArrowArrayBuilder<MapArray, MapArray.Builder> map:
-                    map.AppendNull();
-                    break;
-                    
-                case IArrowArrayBuilder<StringArray, StringArray.Builder> str: 
-                    str.AppendNull();
-                    break;   
-                
-                case IArrowArrayBuilder<ListArray, ListArray.Builder> la:
-                    la.AppendNull();
-                    break;
-                default:
-                    throw new NotImplementedException($"AddValueToBuilder need {builder.GetType().Name}");
-            };
-        }
-        else
-        {
-            switch(builder)
-            {
-                case IArrowArrayBuilder<sbyte, Int8Array, Int8Array.Builder> int8: 
-                    int8.Append((sbyte)value);
-                    break;
-                case IArrowArrayBuilder<short, Int16Array, Int16Array.Builder> int16: int16.Append((short)value);
-                    break;
-                case IArrowArrayBuilder<int, Int32Array, Int32Array.Builder> int32: int32.Append((int)value);
-                    break;
-                case IArrowArrayBuilder<string, StringArray, StringArray.Builder> str: str.Append((string)value);
-                    break;   
-                case IArrowArrayBuilder<double, DoubleArray, DoubleArray.Builder> dbl: dbl.Append((double)value);
-                    break;
-                case ListArray.Builder dbl:
-                    dbl.Append();
-                    (dbl.ValueBuilder as DoubleArray.Builder).AppendRange((List<double>)value);
-                    break;
-                default:
-                    throw new NotImplementedException($"AddValueToBuilder need {builder.GetType().Name}");
-            };
-        }
-        
-    }
 
     /// <summary>
     ///     Pass in a list of tuples, schema is guessed by the type of the first tuple's child types:

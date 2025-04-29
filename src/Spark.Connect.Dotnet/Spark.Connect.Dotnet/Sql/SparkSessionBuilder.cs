@@ -184,15 +184,14 @@ public static class SparkDotnetKnownConfigKeys
 {
     public const string GrpcLogging = RuntimeConf.SparkDotnetConfigKey + "grpclogging";
     public const string PrintMetrics = RuntimeConf.SparkDotnetConfigKey + "showmetrics";
+    
     /// <summary>
-    /// This is no longer used, instead use DecodeArrowType
+    /// This is no longer used
     /// </summary>
     public const string DontDecodeArrow = RuntimeConf.SparkDotnetConfigKey + "dontdecodearrow";
     
     /// <summary>
-    /// Controls whether we attempt to decode the arrow response, set to either "SlowConvertToDotNet" which attempts to
-    ///  convert the arrow data to .NET objects and doesn't support everything or use "ArrowBuffers" which is recommended
-    ///  and will be the default at some point.
+    /// This is no longer used. Either call `Collect` or `CollectAsRecordBatch` on a `DataFrame`
     /// </summary>
     public const string DecodeArrowType = RuntimeConf.SparkDotnetConfigKey + "decodearrowtype";
     public const string RequestExecutorCancelTimeout = RuntimeConf.SparkDotnetConfigKey + "requestretrytimelimit";

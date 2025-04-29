@@ -7,6 +7,11 @@ using Spark.Connect.Dotnet.Sql;
 namespace Spark.Connect.Dotnet.Grpc;
 
 
+/// <summary>
+/// This is deprecated, if you use `Collect` this decodes using the slow convert to dot net, if you use `CollectAsRecordBatch` thar uses ArrowBuffers.
+///
+/// If you don't call `Collect` or `CollectAsRecordBatch` we just do nothing.
+/// </summary>
 public enum ArrowHandling
 {
     None = 0,
@@ -33,7 +38,6 @@ public class RequestExecutor : IDisposable
 {
     private readonly SparkSession _session;
     private readonly Plan _plan;
-    private readonly ArrowHandling _arrowHandling;
     private readonly GrpcLogger _logger;
 
     private string _operationId = string.Empty;
@@ -66,19 +70,12 @@ public class RequestExecutor : IDisposable
     /// </summary>
     /// <param name="session"></param>
     /// <param name="plan"></param>
-    /// <param name="arrowHandling"></param>
+    /// <param name="arrowHandling">Deprecated, is ignored</param>
     public RequestExecutor(SparkSession session, Plan plan, ArrowHandling arrowHandling = ArrowHandling.SlowConvertToDotNet)
     {
         _logger = GetLogger(session);
         _session = session;
         _plan = plan;
-        _arrowHandling = arrowHandling;
-
-        if (Enum.TryParse(session.Conf.GetOrDefault(SparkDotnetKnownConfigKeys.DecodeArrowType, arrowHandling.ToString()), true, out ArrowHandling arrowHandlineOverride))
-        {
-            _arrowHandling = arrowHandlineOverride;
-        }
-        
         _relation = plan.Root;
     }
 
@@ -168,15 +165,15 @@ public class RequestExecutor : IDisposable
                 {
                     _logger.Log(GrpcLoggingLevel.Verbose, "Have Arrow Batch");
                     
-
-                    if (_schema == null)
-                    {
-                        _logger.Log(GrpcLoggingLevel.Verbose, "Cannot decode arrow batch as schema is null");
-                    }
-                    else
-                    {
-                        await HandleArrowResponse(current.ArrowBatch);
-                    }
+                    HandleArrowResponse(current.ArrowBatch);
+                    // if (_schema == null)
+                    // {
+                    //     _logger.Log(GrpcLoggingLevel.Verbose, "Cannot decode arrow batch as schema is null");
+                    // }
+                    // else
+                    // {
+                    //     HandleArrowResponse(current.ArrowBatch);
+                    // }
                 }
 
                 if (current.Metrics != null)
@@ -275,14 +272,14 @@ public class RequestExecutor : IDisposable
     
     private List<ExecutePlanResponse.Types.ArrowBatch> _arrowBatches = new();
     
-    private async Task HandleArrowResponse(ExecutePlanResponse.Types.ArrowBatch arrowBatch)
+    private void HandleArrowResponse(ExecutePlanResponse.Types.ArrowBatch arrowBatch)
     {
         _arrowBatches.Add(arrowBatch);
         
-        if (_arrowHandling == ArrowHandling.None)
-        {
-            _logger.Log(GrpcLoggingLevel.Verbose, "Not decoding Arrow as ArrowHandling is None");
-        }
+        // if (_arrowHandling == ArrowHandling.None)
+        // {
+        //     _logger.Log(GrpcLoggingLevel.Verbose, "Not decoding Arrow as ArrowHandling is None");
+        // }
 
         // if (_arrowHandling == ArrowHandling.SlowConvertToDotNet)
         // {
@@ -290,12 +287,12 @@ public class RequestExecutor : IDisposable
         //         _rows.AddRange(await wrapper.ArrowBatchToRows(arrowBatch, _schema));
         // }
 
-        if (_arrowHandling == ArrowHandling.ArrowBuffers)
-        {
-            var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(arrowBatch.Data.ToByteArray()));
-            var recordBatch = await reader.ReadNextRecordBatchAsync();
-            _recordBatches.Add(recordBatch);
-        }
+        // if (_arrowHandling == ArrowHandling.ArrowBuffers)
+        // {
+        //     var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(arrowBatch.Data.ToByteArray()));
+        //     var recordBatch = await reader.ReadNextRecordBatchAsync();
+        //     _recordBatches.Add(recordBatch);
+        // }
     }
 
     private AsyncServerStreamingCall<ExecutePlanResponse> GetResponse()
@@ -443,11 +440,21 @@ public class RequestExecutor : IDisposable
 
     public IList<RecordBatch> GetArrowBatches()
     {
-        if (_arrowHandling != ArrowHandling.ArrowBuffers)
+        if (_recordBatches.Count > 0)
         {
-            throw new Exception($"Arrow Batches are not available as you need to set ArrowHandling.ArrowBuffers in the constructor to the RequestExecutor, current value set = '{_arrowHandling}'");
+            return _recordBatches;
         }
-
+        
+        foreach (var arrowBatch in _arrowBatches)
+        {
+            Task.Run( async () =>
+            {
+                var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(arrowBatch.Data.ToByteArray()));
+                var recordBatch = await reader.ReadNextRecordBatchAsync();
+                _recordBatches.Add(recordBatch);
+            }).Wait();
+        }
+        
         return _recordBatches;
     }
 
