@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Collections;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -6,7 +5,6 @@ using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
 using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Grpc.Net.Client.Configuration;
@@ -389,7 +387,7 @@ public class SparkSession
     /// df.Show();
     ///  </example>
     public DataFrame CreateDataFrame(IEnumerable<ITuple> list, StructType? dataFrameSchema = null) => CreateDataFrame(list.ToList(), dataFrameSchema);
-
+    
     private static LinkedList<IArrowArrayBuilder> CreateBuildersForSchema(StructType schema)
     {
         var builders = new List<IArrowArrayBuilder>();
@@ -448,10 +446,10 @@ public class SparkSession
     }
     
     
-    
-    
     ///  <summary>
     ///  This is the preferred way of calling `CreateDataFrame` and it has the best chance of being able to create the data for you.
+    ///
+    ///  For examples please see "src/test/Spark.Connect.Dotnet.Tests/SparkSession_CreateDataFrame_Tests.cs"
     ///  </summary>
     ///  <param name="list">A list of tuples containing the data</param>
     ///  <param name="dataFrameSchema">If you don't specify a schema then we attempt to create it for you with default names</param>
@@ -520,7 +518,6 @@ public class SparkSession
         var schema = new Schema(arrowFields, metaData);
         var batch = new RecordBatch(schema, builtArrays, list.Count);
         var df = CreateDataFrame(batch, schema, dataFrameSchema.Json());
-        // var df = CreateDataFrame(batch, schema);
         return df;
     }
 
@@ -637,242 +634,18 @@ public class SparkSession
             else
             {
                 listBuilder.Append();
-                WriteToBuilder(listBuilder.ValueBuilder, data);    
+                ArrowHelpers.WriteToBuilder(listBuilder.ValueBuilder, data);    
             }
         }
         else
         {
-            WriteToBuilder(currentBuilder.Value, data);    
+            ArrowHelpers. WriteToBuilder(currentBuilder.Value, data);    
         }
         
         return  currentBuilder.Next;
     }
 
-    private void WriteToBuilder(IArrowArrayBuilder currentBuilder, object? data)
-    {
-        switch (currentBuilder)
-        {
-            case BooleanArray.Builder boolBuilder:
-                if (data is null)
-                {
-                    boolBuilder.AppendNull();
-                }
-                else
-                {
-                    boolBuilder.Append((bool)data!);
-                }
-
-                break;
-            case Int8Array.Builder int8Builder:
-                if (data is null)
-                {
-                    int8Builder.AppendNull();
-                }
-                else
-                {
-                    if (data is sbyte[] byteArray)
-                    {
-                        int8Builder.AppendRange(byteArray);
-                    }
-                    else
-                    {
-                        int8Builder.Append((sbyte)data!);                        
-                    }
-                }
-
-                break;
-                
-            case Int16Array.Builder int16Builder:
-                if (data is null)
-                {
-                    int16Builder.AppendNull();
-                }
-                else
-                {
-                    switch (data)
-                    {
-                        case short s:
-                            int16Builder.Append(s);
-                            break;
-                        case byte b:
-                            int16Builder.Append((short)b);
-                            break;
-                        case IList<short> shortList:
-                            int16Builder.AppendRange(shortList);
-                            break;
-                    }
-                }
-
-                break;
-
-            case Int32Array.Builder intBuilder:
-                if (data is null)
-                {
-                    intBuilder.AppendNull();
-                }
-                else
-                {
-                    switch (data)
-                    {
-                        case int[] a:
-                            intBuilder.AppendRange(a);
-                            break;
-                        case IList<int> intList:
-                            intBuilder.AppendRange(intList);
-                            break;
-                        case int i:
-                            intBuilder.Append(i);
-                            break;       
-                    }
-                }
-
-                break;
-            
-            case Int64Array.Builder int64Builder:
-                if (data is null)
-                {
-                    int64Builder.AppendNull();
-                }
-                else
-                {
-                    if (data is long[] int64Array)
-                    {
-                        int64Builder.AppendRange(int64Array);
-                    }
-                    else
-                    {
-                        int64Builder.Append((long)data!);                        
-                    }
-                }
-
-                break;
-            
-            case DoubleArray.Builder doubleBuilder:
-               
-                if (data is null)
-                {
-                    doubleBuilder.AppendNull();
-                }
-                else
-                {
-                    switch (data)
-                    {
-                        case double[] doubleArray:
-                            doubleBuilder.AppendRange(doubleArray);
-                            break;
-                        case IList<double> doubleList:
-                            doubleBuilder.AppendRange(doubleList);
-                            break;
-                        case double val:
-                            doubleBuilder.Append(val);
-                            break;
-                        default:
-                            Console.WriteLine($"Unknown field type: {currentBuilder}");
-                            break;
-                    }
-                }
-
-                break;
-            
-            case FloatArray.Builder floatBuilder:
-               
-                if (data is null)
-                {
-                    floatBuilder.AppendNull();
-                }
-                else
-                {
-                    switch (data)
-                    {
-                        case float[] floatArray:
-                            floatBuilder.AppendRange(floatArray);
-                            break;
-                        case IList<float> floatList:
-                            floatBuilder.AppendRange(floatList);
-                            break;
-                        case float val:
-                            floatBuilder.Append(val);
-                            break;
-                        default:
-                            Console.WriteLine($"Unknown field type: {currentBuilder}");
-                            break;
-                    }
-                }
-
-                break;
-            case StringArray.Builder stringBuilder:
-                if (data is null)
-                {
-                    stringBuilder.AppendNull();
-                }
-                else
-                {
-                    switch (data)
-                    {
-                        case char c:
-                            stringBuilder.Append(c.ToString());
-                            break;
-                        case string str:
-                            stringBuilder.Append(str);
-                            break;
-                        case Guid guid:
-                            stringBuilder.Append(guid.ToString());
-                            break;
-                    }
-                }
-                break;
-            case Decimal128Array.Builder decimal128Builder:
-                if (data is null)
-                {
-                    decimal128Builder.AppendNull();
-                }
-                else
-                {
-                    decimal128Builder.Append((decimal)data);
-                }
-
-                break;
-            case Date32Array.Builder date32Builder:
-                if (data is null)
-                {
-                    date32Builder.AppendNull();
-                }
-                else
-                {
-                    date32Builder.Append((DateTime)data);
-                }
-
-                break;
-            
-            case TimestampArray.Builder timestampBuilder:
-                if (data is null)
-                {
-                    timestampBuilder.AppendNull();
-                }
-                else
-                {
-                    switch (data)
-                    {
-                        case DateTime dateTime:
-                            var timestamp = new DateTimeOffset(dateTime, TimeSpan.Zero);
-                            timestampBuilder.Append(timestamp);
-                            break;
-                        case DateTimeOffset dateTimeOffset:
-                            timestampBuilder.Append(dateTimeOffset);
-                            break;
-                    }
-                }
-
-                break;
-                
-            default:
-                 
-                Console.WriteLine($"Unknown field type: {currentBuilder}");
-                break;
-        }
-    }
     
-
     /// <summary>
     ///     Pass in a list of tuples, schema is guessed by the type of the first tuple's child types:
     ///     CreateDataFrame(new List
