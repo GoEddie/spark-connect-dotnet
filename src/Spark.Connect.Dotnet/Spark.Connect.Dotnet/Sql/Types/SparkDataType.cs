@@ -26,6 +26,8 @@ public abstract class SparkDataType
     public abstract DataType ToDataType();
     public abstract IArrowType ToArrowType();
 
+    public virtual bool CanCreateArrowBuilder => true;
+    
     public virtual IEnumerable<IArrowArrayBuilder> GetArrowArrayBuilders() => [ArrowHelpers.GetArrowBuilderForArrowType(ToArrowType())];
 
     public virtual string SimpleString()

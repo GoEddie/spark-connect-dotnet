@@ -272,25 +272,28 @@ public class RequestExecutor : IDisposable
 
         return true;
     }
-
+    
+    private List<ExecutePlanResponse.Types.ArrowBatch> _arrowBatches = new();
+    
     private async Task HandleArrowResponse(ExecutePlanResponse.Types.ArrowBatch arrowBatch)
     {
+        _arrowBatches.Add(arrowBatch);
+        
         if (_arrowHandling == ArrowHandling.None)
         {
             _logger.Log(GrpcLoggingLevel.Verbose, "Not decoding Arrow as ArrowHandling is None");
         }
 
-        if (_arrowHandling == ArrowHandling.SlowConvertToDotNet)
-        {
-            var wrapper = new ArrowWrapper();
-            _rows.AddRange(await wrapper.ArrowBatchToRows(arrowBatch, _schema));
-        }
+        // if (_arrowHandling == ArrowHandling.SlowConvertToDotNet)
+        // {
+        //     var wrapper = new ArrowWrapper();
+        //         _rows.AddRange(await wrapper.ArrowBatchToRows(arrowBatch, _schema));
+        // }
 
         if (_arrowHandling == ArrowHandling.ArrowBuffers)
         {
             var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(arrowBatch.Data.ToByteArray()));
             var recordBatch = await reader.ReadNextRecordBatchAsync();
-
             _recordBatches.Add(recordBatch);
         }
     }
@@ -419,7 +422,24 @@ public class RequestExecutor : IDisposable
     /// Get any data returned by the last request
     /// </summary>
     /// <returns></returns>
-    public IList<Row> GetData() => _rows;
+    public IList<Row> GetData()
+    {
+        if (_rows.Count > 0)
+        {
+            return _rows;
+        }
+        //Use Slow Convert to convert the arrow batches into .NET
+        foreach (var arrowBatch in _arrowBatches)
+        {
+            var wrapper = new ArrowWrapper();
+            Task.Run( async () =>
+            {
+                _rows.AddRange( await wrapper.ArrowBatchToRows(arrowBatch, _schema));
+            }).Wait();
+        }
+
+        return _rows;
+    }
 
     public IList<RecordBatch> GetArrowBatches()
     {

@@ -14,6 +14,7 @@ public class SparkSession_CreateDataFrame_Tests : E2ETestBase
         Spark.Conf.Set(SparkDotnetKnownConfigKeys.DecodeArrowType, "ArrowBuffers");
     }
 
+    
     [Fact]
     public void CreateDataFrame_Test()
     {
@@ -52,29 +53,7 @@ public class SparkSession_CreateDataFrame_Tests : E2ETestBase
         df.PrintSchema();
     }
     
-    [Fact]
-    public void CreateDataFrameORIG_WithSchema_Test()
-    {
-        var rawData = new List<(int Id, int? abc, DenseVector Vector)>()
-        {
-            (1, 3, new DenseVector([0.0, 1.1, 0.1])), (2, null, new DenseVector([2.0, 1.0, -1.0])), (3, 99, new DenseVector([2.0, 1.3, 1.0]))
-            , (4, null, new DenseVector([0.0, 1.2, -0.5]))
-        };
-
-        var schema = new StructType(
-            new List<StructField>()
-            {
-                new StructField("id99999999HSHSHSHSHSHSH", SparkDataType.IntType(), false), new StructField("abc", SparkDataType.IntType(), true)
-                , new StructField("vector", new DenseVectorUDT(), false)
-            }
-        );
-
-        var df = Spark.CreateDataFrameORIG(rawData.Cast<ITuple>().ToList(), schema);
-        df.Show();
-        df.PrintSchema();
-    }
-
-
+    
     [Fact]
     public void CreateDataFrameWithStruct_Test()
     {

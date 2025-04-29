@@ -136,6 +136,8 @@ public class StructType : SparkDataType
             }
         };
     }
+    
+    public override bool CanCreateArrowBuilder => false;
 
     public override IArrowType ToArrowType()
     {
@@ -185,7 +187,7 @@ public class StructField
     public string Name { get; set; }
     public SparkDataType DataType { get; set; }
     public bool Nullable { get; set; }
-
+    
     public string Ddl()
     {
         if (DataType is ArrayType arrayDataType)

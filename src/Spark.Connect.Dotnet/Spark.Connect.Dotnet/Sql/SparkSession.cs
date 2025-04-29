@@ -392,8 +392,14 @@ public class SparkSession
         var builders = new List<IArrowArrayBuilder>();
         foreach (var field in schema.Fields)
         {
-            // builders.AddRange( CreateBuildersForField(field));
-            builders.AddRange(field.DataType.GetArrowArrayBuilders());
+            if (field.DataType.CanCreateArrowBuilder)
+            {
+                builders.AddRange(field.DataType.GetArrowArrayBuilders());    
+            }
+            else
+            {
+                builders.AddRange( CreateBuildersForField(field)); 
+            }
         }
         
         var linkedList = new LinkedList<IArrowArrayBuilder>();
@@ -406,37 +412,34 @@ public class SparkSession
 
     private static IList<IArrowArrayBuilder> CreateBuildersForField(StructField field)
     {
-        if (field.DataType is StructType)
+        switch (field.DataType)
         {
-            var childBuilders = new List<IArrowArrayBuilder>();
-            foreach (var childField in (field.DataType as StructType).Fields)
+            case StructType type:
             {
-                if (childField.DataType is StructType)
+                var childBuilders = new List<IArrowArrayBuilder>();
+                foreach (var childField in type.Fields)
                 {
-                    childBuilders.AddRange(CreateBuildersForField(childField));
-                }
-                else
-                {
-                    var childBuilder = ArrowHelpers.GetArrowBuilderForArrowType(childField.DataType.ToArrowType());
-                    childBuilders.Add(childBuilder);    
-                }
+                    if (childField.DataType is StructType)
+                    {
+                        childBuilders.AddRange(CreateBuildersForField(childField));
+                    }
+                    else
+                    {
+                        var childBuilder = ArrowHelpers.GetArrowBuilderForArrowType(childField.DataType.ToArrowType());
+                        childBuilders.Add(childBuilder);    
+                    }
                 
+                }
+                return childBuilders;
             }
-            return childBuilders;
+            case ArrayType:
+            {
+                var listBuilder = new ListArray.Builder(field.DataType.ToArrowType());
+                var childBuilder = listBuilder.ValueBuilder;
+                return [childBuilder];
+            }
         }
 
-        if (field.DataType is ArrayType)
-        {
-            var listBuilder = new ListArray.Builder(field.DataType.ToArrowType());
-            var childBuilder = listBuilder.ValueBuilder;
-            return [childBuilder];
-        }
-
-        if (field.DataType is IUserDefinedType udt)
-        {
-            System.Console.WriteLine(udt);
-        }
-        
         var builder = ArrowHelpers.GetArrowBuilderForArrowType(field.DataType.ToArrowType());
         return [builder];
     }
@@ -750,90 +753,7 @@ public class SparkSession
                 break;
         }
     }
-
-
-    public DataFrame CreateDataFrameORIG(IList<ITuple> list, StructType? dataFrameSchema = null) 
-    {
-        /*
-         *  We have a list of tuples which are typed but here we don't know what those types are so we need
-         *   to take the first row and use that to work out the types of each column. I suppose we could use 
-         *   the struct type but think we should respect the actual type.
-         *
-         *  The way arrow works is that we create an array for each column (arrow is columnar) but we have a
-         *   list of rows. The Arrow Arrays are created using `Builders` each data type has its own builder
-         *   so we figure out the types and then we can create the correct type of builder and then use that
-         *   builder to create the array (`Builder.Build()`).
-         *
-         *  There are a couple of slightly harder cases such as List's which create a new item in the column
-         *   array for the list and then there is a separate builder for the child objects. 
-         * 
-         */
-        var firstItem = list.First();
-     
-        if (dataFrameSchema == null)
-        {
-            var fields = new List<StructField>();
-            for (int i = 0; i < firstItem.Length; i++)
-            {
-                var field = new StructField($"_c{i}", SparkDataType.FromDotNetType(firstItem[i]), true);
-                fields.Add(field);
-            }
-
-            dataFrameSchema = new StructType(fields.ToArray());
-        }
-        
-        var builtBuilders = new List<IArrowArray>();
-        
-        for (int i = 0; i < firstItem.Length; i++)
-        {
-            if (firstItem[i] is IUserDefinedType)
-            {
-                var dataType = SparkDataType.FromDotNetType(firstItem[i]);
-                var builders = dataType.GetArrowArrayBuilders().ToList();
-                
-                foreach (var row in list)
-                {
-                    var value = row[i];
-                    var values = (value as IUserDefinedType).GetDataForDataframe();
-                    
-                    for (var j = 0; j < builders.Count; j++)
-                    {
-                        var builder = builders[j];
-                        AddValueToBuilder(builder, values[j]); 
-                    }
-                }
-                
-                var builtChildArrays = BuildBuilders(builders);
-                
-                var builtArray = new StructArray(
-                    dataType.ToArrowType(),
-                    list.Count,
-                    builtChildArrays,
-                    ArrowBuffer.Empty,0); 
-                
-                builtBuilders.Add(builtArray);
-            }
-            else
-            {
-                var builder = SparkDataType.FromDotNetType(firstItem[i]).GetArrowArrayBuilders().First();
-                
-                foreach (var row in list)
-                {
-                    var value = row[i];
-                    AddValueToBuilder(builder, value);
-                }
-                
-                builtBuilders.Add(BuildBuilder(builder));
-            }
-        }
-        
-        var arrowSchema = new Schema(((Apache.Arrow.Types.StructType)dataFrameSchema.ToArrowType()).Fields, new List<KeyValuePair<string, string>>());
-        var batch = new RecordBatch(arrowSchema, builtBuilders, 4);
-        
-        this.Conf.Set(SparkDotnetKnownConfigKeys.DecodeArrowType, "ArrowBuffers");
-        var df = CreateDataFrame(batch, arrowSchema, dataFrameSchema.Json());
-        return df;
-    }
+    
 
     private IEnumerable<IArrowArray> BuildBuilders(List<IArrowArrayBuilder> builders)
     {
@@ -1294,11 +1214,8 @@ public class SparkSession
             switch (schemaCol.DataType)
             {
                 case StringType:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, arrayBuilder => arrayBuilder.String(builder =>
-                        {
-                            builder.Append((column) is string ? column : column.ToString());
-                        }
-                    ));
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, 
+                        arrayBuilder => arrayBuilder.String(builder => AppendString(column, builder)));
                     break;
                 case Int32Type:
                     batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
@@ -1395,6 +1312,25 @@ public class SparkSession
         }
         
         var list = (List<int?>)column;
+
+        foreach (var i in list)
+        {
+            retList.Add(builder.Append(i));
+        }
+
+        return retList;
+    }
+    private static IEnumerable<StringArray.Builder> AppendString(dynamic? column, StringArray.Builder builder)
+    {
+        var retList = new List<StringArray.Builder>();
+
+        if (column is string)
+        {
+            retList.Add(builder.Append((string)column));
+            return retList;
+        }
+        
+        var list = (List<string?>)column;
 
         foreach (var i in list)
         {
