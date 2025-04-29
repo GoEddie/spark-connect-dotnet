@@ -24,12 +24,17 @@ public class DenseVector(List<double> values) : IUserDefinedType
     
 }
 
-public interface HasCustomJson
+public interface IHasCustomJson
 {
     public string Json();
 }
 
-public class DenseVectorUDT : SparkDataType, HasCustomJson
+public abstract class UserDefinedType(string typeName) : SparkDataType(typeName), IHasCustomJson
+{
+    public abstract Spark.Connect.Dotnet.Sql.Types.StructType GetStructType();
+}
+
+public class DenseVectorUDT : UserDefinedType
 {
     public DenseVectorUDT() : base("org.apache.spark.ml.linalg.VectorUDT")
     {
@@ -43,29 +48,39 @@ public class DenseVectorUDT : SparkDataType, HasCustomJson
 
     }
 
+    public override Sql.Types.StructType GetStructType()
+    {
+        return new Sql.Types.StructType()
+        {
+            Fields =
+            {
+                new StructField() { Name = "type", DataType = new ByteType() }, 
+                new StructField() { Name = "size", DataType = new IntegerType() }, 
+                new StructField() { Name = "indices", DataType = new ArrayType(IntegerType(), false) },
+                new StructField() { Name = "values", DataType = new ArrayType(DoubleType(), false) }
+
+            }
+        };
+    }
+
+
     public override DataType ToDataType()
     {
-        var dt = new DataType();
-        
         return new DataType()
         {
-            Udt = new DataType.Types.UDT()
+            Struct = new DataType.Types.Struct()
             {
-                
+                Fields =
+                {
+                    new List<DataType.Types.StructField>()
+                    {
+                        new() { DataType = new ByteType().ToDataType(), Name = "type", Nullable = false }, 
+                        new() { DataType = new IntegerType().ToDataType(), Name = "size", Nullable = true }, 
+                        new() { DataType = new ArrayType(SparkDataType.IntegerType(), false).ToDataType(), Name = "indices", Nullable = true},
+                        new() { DataType = new ArrayType(SparkDataType.DoubleType(), false).ToDataType(), Name = "values" , Nullable = true}
+                    }
+                }
             }
-            // Struct = new DataType.Types.Struct()
-            // {
-            //     Fields =
-            //     {
-            //         new List<DataType.Types.StructField>()
-            //         {
-            //             new() { DataType = new ByteType().ToDataType(), Name = "type", Nullable = false }, 
-            //             new() { DataType = new IntegerType().ToDataType(), Name = "size", Nullable = true }, 
-            //             new() { DataType = new ArrayType(SparkDataType.IntegerType(), false).ToDataType(), Name = "indices", Nullable = true},
-            //             new() { DataType = new ArrayType(SparkDataType.DoubleType(), false).ToDataType(), Name = "values" , Nullable = true}
-            //         }
-            //     }
-            // }
         };
     }
 
@@ -101,7 +116,6 @@ public class DenseVectorUDT : SparkDataType, HasCustomJson
     {
         return _arrowBuilders;
     }
-    
 }
 
 public class SparseVectorUDT : SparkDataType

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Apache.Arrow;
@@ -270,14 +271,33 @@ public abstract class SparkDataType
         DateTime => TimestampType(),
         DateOnly => DateType(),
         byte => ByteType(),
+        bool => BooleanType(),
+        decimal => DecimalType(),
         IDictionary<string, long?> => MapType(StringType(), LongType(), true),
         IDictionary<string, int?> => MapType(StringType(), IntType(), true),
         IDictionary<string, string?> => MapType(StringType(), StringType(), true),
         IDictionary<string, object> dict => MapType(StringType(), FromDotNetType(dict.Values.FirstOrDefault()), true),
         string[] => ArrayType(StringType()),
         IUserDefinedType udt => udt.GetDataType(),
+        ITuple tup => CreateStructFromTuple(tup),
         _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
     };
+
+    private static SparkDataType CreateStructFromTuple(ITuple tuple)
+    {
+        
+        var dataTypes = new List<SparkDataType>();
+        
+        for(var i=0; i<tuple.Length; i++)
+        {
+            var o = tuple[i];
+            dataTypes.Add(FromDotNetType(o));            
+        }
+
+        var structType = new StructType(dataTypes.Select((t, i) => new StructField($"field_{i}", t, true)).ToArray());
+        return structType;
+        
+    }
 
     public static SparkDataType FromSparkConnectType(DataType type)
     {

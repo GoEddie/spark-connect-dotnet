@@ -381,7 +381,7 @@ public static class DataTypeJsonSerializer
                 continue;
             }
 
-            if (field.DataType is HasCustomJson hasJson)
+            if (field.DataType is IHasCustomJson hasJson)
             {
                 json.Append(hasJson.Json().Replace("__NAME__", field.Name));
                 continue;

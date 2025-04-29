@@ -21,7 +21,7 @@ public class ArrowHelpers
         ArrowTypeId.Date32 => new Date32Array.Builder(),
         ArrowTypeId.Date64 => new Date64Array.Builder(),
         ArrowTypeId.Timestamp => new TimestampArray.Builder(),
-        ArrowTypeId.Struct => throw new NotImplementedException("NEED struct builder"),
+        ArrowTypeId.Struct => throw new NotImplementedException("Structs don't need a builder, build the children and then new a struct array"),
         ArrowTypeId.List => new ListArray.Builder(((ListType)type).ValueField.DataType),
         ArrowTypeId.Map => throw new NotImplementedException("NEED map builder"),
         ArrowTypeId.Interval => new DayTimeIntervalArray.Builder(),
