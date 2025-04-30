@@ -1,8 +1,10 @@
-﻿using Apache.Arrow;
+﻿#pragma warning disable CS8981
+using Apache.Arrow;
 using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Sql;
 using static Spark.Connect.Dotnet.Sql.Functions;
 using f=Spark.Connect.Dotnet.Sql.Functions;
+#pragma warning restore CS8981
 
 var spark = SparkSession
     .Builder
@@ -42,7 +44,7 @@ void SingleInt32Column()
             
             for (var i = 0; i < column.Length; i++)
             {
-                Console.WriteLine($"row: {i} value: {int32Array.GetValue(i)}");
+                Console.WriteLine($"row: {i} value: {int32Array!.GetValue(i)}");
             }
         }
     }
@@ -132,7 +134,7 @@ void ListOfInt32Column()
     //Create a new row
     listBuilder.Append();
     //Add the child values
-    listValuesBuilder.Append(1);
+    listValuesBuilder!.Append(1);
     listValuesBuilder.Append(2);
     listValuesBuilder.Append(3);
     
@@ -180,7 +182,7 @@ void ListOfInt32Column()
         {
             var int32ListArray = (column as ListArray);
 
-            for (var i = 0; i < int32ListArray.Length; i++)
+            for (var i = 0; i < int32ListArray!.Length; i++)
             {
                 if (int32ListArray.IsNull(i))
                 {
@@ -308,8 +310,8 @@ void MapTypes()
     var valueBuilder = mapArrayBuilder.ValueBuilder as Int32Array.Builder;
     
     mapArrayBuilder.Append();
-    keyBuilder.Append("A");
-    valueBuilder.Append(1);
+    keyBuilder!.Append("A");
+    valueBuilder!.Append(1);
 
     mapArrayBuilder.AppendNull();
     

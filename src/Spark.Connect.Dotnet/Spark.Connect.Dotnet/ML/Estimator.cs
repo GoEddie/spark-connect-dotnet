@@ -1,0 +1,75 @@
+using System.Reflection;
+using System.Reflection.Emit;
+using Google.Protobuf.Collections;
+using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.ML.Classification;
+using Spark.Connect.Dotnet.ML.Feature;
+using Spark.Connect.Dotnet.ML.Param;
+using Spark.Connect.Dotnet.Sql;
+
+namespace Spark.Connect.Dotnet.ML;
+
+
+
+public abstract class Estimator<T>(string uid, string className, ParamMap defaultParams) : Params(defaultParams), Identifiable 
+    where T : Transformer
+{
+    public string Uid { get; set; } = uid;
+    protected string ClassName { get; set;} = className;
+
+    public T Fit(DataFrame df, ParamMap? paramMap = null)
+    {
+        var parameters = new MapField<string, Expression.Types.Literal>();
+        if (paramMap is null)
+        {
+            paramMap = this.ParamMap;    
+        }
+        
+        foreach (var param in paramMap.GetAll())
+        {
+            var litExpression = Functions.Lit(param.Value).Expression.Literal;
+            parameters.Add(param.Name, litExpression);  
+        } 
+        
+        var plan = new Plan()
+        {
+            Command = new Command()
+            { 
+                MlCommand = new MlCommand()
+                {
+                    Fit = new MlCommand.Types.Fit()
+                    {
+                        Dataset = df.Relation, 
+                        Params = new MlParams()
+                        {
+                            Params = { parameters }
+                        },
+                        Estimator = new MlOperator()
+                        {
+                            Uid = Uid, 
+                            Name = ClassName, 
+                            Type = MlOperator.Types.OperatorType.Estimator
+                        }
+                    },
+                }
+            }
+        };
+
+        var executor = new RequestExecutor(df.SparkSession, plan);
+        executor.Exec();
+
+        var mlResult = executor.GetMlCommandResult();
+        
+        switch (typeof(T))
+        {
+           case { } when typeof(T) == typeof(LogisticRegressionModel):
+               return (T)(object)new LogisticRegressionModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
+           case {} when typeof(T) == typeof(IDFModel):
+               return (T)(object)new IDFModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
+           default:
+                throw new NotImplementedException($"Unable to create a `Transformer` for {typeof(T).Name}");
+        }
+        
+    }
+    
+}

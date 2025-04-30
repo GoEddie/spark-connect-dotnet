@@ -46,6 +46,7 @@ public class RequestExecutor : IDisposable
     
     private CancellationTokenSource _currentCancellationSource = new ();
 
+    private MlCommandResult? _mlResult;
     private Relation? _relation;
     private DataType? _schema;
     private readonly List<Row> _rows = new ();
@@ -123,6 +124,7 @@ public class RequestExecutor : IDisposable
         var token = _currentCancellationSource.Token;
         return token;
     }
+
     
     private async Task<bool> ProcessRequest()
     {
@@ -138,7 +140,12 @@ public class RequestExecutor : IDisposable
             while (response.ResponseStream is { Current: not null })
             {
                 var current = response.ResponseStream.Current;
-
+                if (current.MlCommandResult != null)
+                {
+                    //Console.WriteLine(current.MlCommandResult);  
+                    _mlResult = current.MlCommandResult;
+                }
+                
                 if (current.ResultComplete != null)
                 {
                     _isComplete = true;
@@ -275,24 +282,6 @@ public class RequestExecutor : IDisposable
     private void HandleArrowResponse(ExecutePlanResponse.Types.ArrowBatch arrowBatch)
     {
         _arrowBatches.Add(arrowBatch);
-        
-        // if (_arrowHandling == ArrowHandling.None)
-        // {
-        //     _logger.Log(GrpcLoggingLevel.Verbose, "Not decoding Arrow as ArrowHandling is None");
-        // }
-
-        // if (_arrowHandling == ArrowHandling.SlowConvertToDotNet)
-        // {
-        //     var wrapper = new ArrowWrapper();
-        //         _rows.AddRange(await wrapper.ArrowBatchToRows(arrowBatch, _schema));
-        // }
-
-        // if (_arrowHandling == ArrowHandling.ArrowBuffers)
-        // {
-        //     var reader = new ArrowStreamReader(new ReadOnlyMemory<byte>(arrowBatch.Data.ToByteArray()));
-        //     var recordBatch = await reader.ReadNextRecordBatchAsync();
-        //     _recordBatches.Add(recordBatch);
-        // }
     }
 
     private AsyncServerStreamingCall<ExecutePlanResponse> GetResponse()
@@ -469,6 +458,12 @@ public class RequestExecutor : IDisposable
     /// </summary>
     /// <returns></returns>
     public Relation GetRelation() => _relation!;
+    
+    /// <summary>
+    /// Returns the MLCommandResult Object from an ML Operation
+    /// </summary>
+    /// <returns></returns>
+    public MlCommandResult GetMlCommandResult() => _mlResult;
 
     /// <summary>
     /// Get the streaming query id
