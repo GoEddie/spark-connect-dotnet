@@ -75,7 +75,11 @@ public class SparkSession
             }
         });
 
-        Task.Run(() => channel.ConnectAsync()).Wait();
+        var connectTimeLimit = int.Parse(sparkConnectDotnetConf.GetValueOrDefault(SparkDotnetKnownConfigKeys.ConnectTimeLimit, 
+                SparkDotnetDefaultConfigValues.ConnectTimeLimit));
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromSeconds(connectTimeLimit));
+        channel.ConnectAsync(cts.Token).Wait();
 
         GrpcClient = new SparkConnectService.SparkConnectServiceClient(channel);
         VerifyDatabricksClusterRunning(databricksConnectionMaxVerificationTime);
