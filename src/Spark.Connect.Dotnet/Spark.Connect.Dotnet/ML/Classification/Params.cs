@@ -3,6 +3,10 @@ using Spark.Connect.Dotnet.ML.Param;
 
 namespace Spark.Connect.Dotnet.ML.Classification;
 
+/// <summary>
+/// Wraps the `ParamMap`
+/// </summary>
+/// <param name="defaultParams">The default parameters to use</param>
 public class Params(ParamMap defaultParams)
 {
     public ParamMap ParamMap { get; set; } = defaultParams;

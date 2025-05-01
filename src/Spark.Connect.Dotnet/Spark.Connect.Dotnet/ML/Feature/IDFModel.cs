@@ -1,4 +1,3 @@
-using Spark.Connect.Dotnet.ML.Classification;
 using Spark.Connect.Dotnet.ML.Param;
 using Spark.Connect.Dotnet.Sql;
 
@@ -19,8 +18,6 @@ public class IDFModel(string uid, ObjectRef objRef, SparkSession sparkSession, P
     {
         var mlResult = Transformer.Load(path, sparkSession, ClassName);
         var paramMap = ParamMap.FromMLOperatorParams(mlResult.OperatorInfo.Params.Params, IDF.DefaultParams.Clone());
-        
-        var objectRef = GetObjectRef(mlResult.OperatorInfo.ObjRef);
         var loadedModel = new IDFModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, sparkSession, paramMap);
         
         return loadedModel;

@@ -4,6 +4,7 @@ using Apache.Arrow;
 using Apache.Arrow.Types;
 using Spark.Connect;
 using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.ML;
 using Spark.Connect.Dotnet.ML.Classification;
 using Spark.Connect.Dotnet.ML.Feature;
 using Spark.Connect.Dotnet.ML.LinAlg;
@@ -60,8 +61,6 @@ Console.WriteLine(transformerFromDisk.ExplainParams());
 var df2 = transformerFromDisk.Transform(training);
 df2.Show(4, 1000);
 
-var n = 4;
-
 var dataIDF = new List<(double f, DenseVector Vector)>()
 {
     (1, new DenseVector([1.0, 2.0])), 
@@ -93,11 +92,25 @@ idfModel.Save("/tmp/transformers/idf-model");
 
 var loadedIdf = IDFModel.Load("/tmp/transformers/idf-model", spark);
 
-
-
 idfModel.Transform(dfIDF).Show(3, 10000);
-
 
 var dfFromLoaded = loadedIdf.Transform(dfIDF);
 
 dfFromLoaded.Show(3, 10000);
+
+var tokenizer = new Tokenizer(spark);
+// tokenizer.ParamMap.Add("outputCol", "words");
+
+tokenizer.SetInputCol("text");
+tokenizer.SetOutputCol("words-go-here");
+
+var dfWords = spark.CreateDataFrame((new List<(int id, string text)>()
+{
+    (1, "This is a test"), (2, "This is another test")
+}).Cast<ITuple>(), new Spark.Connect.Dotnet.Sql.Types.StructType((List<StructField>) [new StructField("id", new Int32Type(), false), new StructField("text", new StringType(), false)]));
+
+var tokens = tokenizer.Transform(dfWords, tokenizer.ParamMap.Update(new(){{"outputCol", "override-output-col"}}));
+tokens.Show(3, 10000);
+
+tokenizer.Save("/tmp/transformers/tokenizer");
+var loadedTokenizer = Tokenizer.Load("/tmp/transformers/tokenizer", spark);

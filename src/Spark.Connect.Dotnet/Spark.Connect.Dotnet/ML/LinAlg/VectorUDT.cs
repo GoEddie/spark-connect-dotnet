@@ -7,61 +7,6 @@ using StructType = Apache.Arrow.Types.StructType;
 
 namespace Spark.Connect.Dotnet.ML.LinAlg;
 
-public static class Vectors
-{
-    /// <summary>
-    /// Helper method to mimic python, you can just new DenseVector
-    /// </summary>
-    /// <param name="values"></param>
-    /// <returns>DenseVector</returns>
-    public static DenseVector Dense(List<double> values) => new DenseVector(values);
-    
-    /// <summary>
-    /// Helper method to mimic python, you can just new SparseVector
-    /// </summary>
-    /// <param name="size"></param>
-    /// <param name="indices"></param>
-    /// <param name="values"></param>
-    /// <returns>SparseVector</returns>
-    public static SparseVector Sparse(int size, List<int> indices, List<double> values) => new SparseVector(size, indices, values);
-}
-
-public class DenseVector(List<double> values) : IUserDefinedType
-{
-    public List<double> Values { get; } = values;
-    
-// we return null so we can send null to spark, we handle it and only ever check that the
-// value is null and if so the arrow builder does AppendNull,
-// we don't ever try to actually use the null values.
-#pragma warning disable CS8601, CS8625 
-    public object[] GetDataForDataframe() => [(sbyte)1, null, null as List<int>, Values];
-#pragma warning restore CS8601, CS8625
-    public SparkDataType GetDataType() => new VectorUDT();
-    
-}
-
-public class SparseVector(int size, List<int> indices, List<double> values) : IUserDefinedType
-{
-    public List<double> Values { get; } = values;
-    public List<int> Indices { get; } = indices;
-    
-    public int Size { get; } = size;
-    
-    public object[] GetDataForDataframe() => [(sbyte)0, Size, Indices, Values];
-    public SparkDataType GetDataType() => new VectorUDT();
-    
-}
-
-public interface IHasCustomJson
-{
-    public string Json();
-}
-
-public abstract class UserDefinedType(string typeName) : SparkDataType(typeName), IHasCustomJson
-{
-    public abstract Spark.Connect.Dotnet.Sql.Types.StructType GetStructType();
-}
-
 public class VectorUDT : UserDefinedType
 {
     public VectorUDT() : base("org.apache.spark.ml.linalg.VectorUDT")
@@ -139,7 +84,6 @@ public class VectorUDT : UserDefinedType
         return builders;
     }
     
-
     public override IEnumerable<IArrowArrayBuilder> GetArrowArrayBuilders()
     {
         return _arrowBuilders;

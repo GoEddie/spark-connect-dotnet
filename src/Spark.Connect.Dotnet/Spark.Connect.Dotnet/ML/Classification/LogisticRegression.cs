@@ -2,6 +2,9 @@ using Spark.Connect.Dotnet.ML.Param;
 
 namespace Spark.Connect.Dotnet.ML.Classification;
 
+/// <summary>
+/// Logistic regression. This class supports multinomial logistic (softmax) and binomial logistic regression.
+/// </summary>
 public class LogisticRegression() : Estimator<LogisticRegressionModel>( IdentifiableHelper.RandomUID("logreg-static"), "org.apache.spark.ml.classification.LogisticRegression", DefaultParams)
 {
     public static readonly ParamMap DefaultParams = new(

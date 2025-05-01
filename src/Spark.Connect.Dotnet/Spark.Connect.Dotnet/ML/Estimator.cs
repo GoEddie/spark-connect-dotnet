@@ -1,5 +1,3 @@
-using System.Reflection;
-using System.Reflection.Emit;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
 using Spark.Connect.Dotnet.ML.Classification;
@@ -9,13 +7,18 @@ using Spark.Connect.Dotnet.Sql;
 
 namespace Spark.Connect.Dotnet.ML;
 
-
-
+/// <summary>
+/// Estimators, used to create things like `LogisticRegression`
+/// </summary>
+/// <param name="uid"></param>
+/// <param name="className"></param>
+/// <param name="defaultParams"></param>
+/// <typeparam name="T"></typeparam>
 public abstract class Estimator<T>(string uid, string className, ParamMap defaultParams) : Params(defaultParams), Identifiable 
     where T : Transformer
 {
     public string Uid { get; set; } = uid;
-    protected string ClassName { get; set;} = className;
+    private string ClassName { get; set;} = className;
 
     public T Fit(DataFrame df, ParamMap? paramMap = null)
     {
