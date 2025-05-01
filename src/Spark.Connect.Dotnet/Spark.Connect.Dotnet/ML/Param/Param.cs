@@ -1,6 +1,7 @@
 using System.Xml;
 using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Sql;
+using Spark.Connect.Dotnet.Sql.Types;
 
 namespace Spark.Connect.Dotnet.ML.Param;
 
@@ -222,7 +223,28 @@ public class ParamMap
         var dict = new Dictionary<string, Expression.Types.Literal>();
         foreach (var param in _setParams)
         {
-            dict.Add(param.Name, Functions.Lit(param.Value).Expression.Literal as Expression.Types.Literal);
+            if (param.Value is Array array)
+            {
+                var value = new Expression.Types.Literal
+                {
+                    Array = new Expression.Types.Literal.Types.Array()
+                    {
+                        ElementType = SparkDataType.FromDotNetType(array.GetType().GetElementType()).ToDataType()
+                    }
+                };
+
+                foreach (var element in array)
+                {
+                    value.Array.Elements.Add(Functions.Lit(element).Expression.Literal);
+                }
+                
+                dict.Add(param.Name, value);
+            }
+            else
+            {
+                dict.Add(param.Name, Functions.Lit(param.Value).Expression.Literal as Expression.Types.Literal);    
+            }
+            
         }
         return dict;
     }

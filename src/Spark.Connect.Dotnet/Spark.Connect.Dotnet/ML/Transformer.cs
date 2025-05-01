@@ -53,6 +53,7 @@ public class Transformer : Params, Identifiable
     public DataFrame Transform(DataFrame df, ParamMap? paramMapOverride = null)
     {
         var parameterMap = paramMapOverride ?? ParamMap;
+        
         var plan = new Plan()
         {
             Root = new Relation()

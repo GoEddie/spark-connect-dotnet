@@ -1,4 +1,4 @@
-namespace Spark.Connect.Dotnet.ML.Classification;
+namespace Spark.Connect.Dotnet.ML;
 
 /// <summary>
 /// Provides functionality similar to Scala's Identifiable class in Spark.

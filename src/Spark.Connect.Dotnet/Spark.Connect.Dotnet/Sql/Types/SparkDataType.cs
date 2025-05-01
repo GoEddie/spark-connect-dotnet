@@ -262,7 +262,23 @@ public abstract class SparkDataType
         throw new NotImplementedException($"Missing DataType From String: '{type}'");
     }
 
-    public static SparkDataType FromDotNetType(object o) => o switch
+    public static SparkDataType FromDotNetType(Type type) => Type.GetTypeCode(type) switch
+    {
+        TypeCode.Boolean => BooleanType()
+        , TypeCode.Char => StringType()
+        , TypeCode.SByte => ByteType()
+        , TypeCode.Byte => ShortType()
+        , TypeCode.Int16 => ShortType()
+        , TypeCode.Int32 => IntType()
+        , TypeCode.Int64 => BigIntType()
+        , TypeCode.Double => DoubleType()
+        , TypeCode.Decimal => DecimalType()
+        , TypeCode.DateTime => DateType()
+        , TypeCode.String => StringType()
+        , _ => throw new ArgumentOutOfRangeException()
+    };
+    
+    public static SparkDataType FromDotNetObject(object o) => o switch
     {
         int => IntType(),
         long => LongType(),
@@ -283,11 +299,11 @@ public abstract class SparkDataType
         IDictionary<string, long?> => MapType(StringType(), LongType(), true),
         IDictionary<string, int?> => MapType(StringType(), IntType(), true),
         IDictionary<string, string?> => MapType(StringType(), StringType(), true),
-        IDictionary<string, object> dict => MapType(StringType(), FromDotNetType(dict.Values.FirstOrDefault()), true),
+        IDictionary<string, object> dict => MapType(StringType(), FromDotNetObject(dict.Values.FirstOrDefault()), true),
         string[] => ArrayType(StringType()),
         IUserDefinedType udt => udt.GetDataType(),
         ITuple tup => CreateStructFromTuple(tup),
-        System.Array array => ArrayType(FromDotNetType(array.GetValue(0))),
+        System.Array array => ArrayType(FromDotNetObject(array.GetValue(0))),
         _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
     };
 
@@ -299,7 +315,7 @@ public abstract class SparkDataType
         for(var i=0; i<tuple.Length; i++)
         {
             var o = tuple[i];
-            dataTypes.Add(FromDotNetType(o));            
+            dataTypes.Add(FromDotNetObject(o));            
         }
 
         var structType = new StructType(dataTypes.Select((t, i) => new StructField($"field_{i}", t, true)).ToArray());

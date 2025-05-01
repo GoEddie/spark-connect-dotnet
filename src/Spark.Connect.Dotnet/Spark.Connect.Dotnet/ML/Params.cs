@@ -1,7 +1,7 @@
 using System.Text;
 using Spark.Connect.Dotnet.ML.Param;
 
-namespace Spark.Connect.Dotnet.ML.Classification;
+namespace Spark.Connect.Dotnet.ML;
 
 /// <summary>
 /// Wraps the `ParamMap`

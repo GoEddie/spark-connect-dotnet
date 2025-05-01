@@ -490,7 +490,7 @@ public class SparkSession
             var fields = new List<StructField>();
             for (int i = 0; i < firstItem.Length; i++)
             {
-                var field = new StructField($"_c{i}", SparkDataType.FromDotNetType(firstItem[i]), true);
+                var field = new StructField($"_c{i}", SparkDataType.FromDotNetObject(firstItem[i]), true);
                 fields.Add(field);
             }
 
@@ -779,7 +779,7 @@ public class SparkSession
         var usedColNumbers = 0;
         for (var i = 0; i < row.Count; i++)
         {
-            var type = SparkDataType.FromDotNetType(row[i]);
+            var type = SparkDataType.FromDotNetObject(row[i]);
             var colName = colNames.Length > i ? colNames[i] : $"_{usedColNumbers++}";
 
             fields.Add(new StructField(colName, type, true));
