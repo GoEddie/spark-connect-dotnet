@@ -1241,9 +1241,8 @@ public class SparkSession
         return columns;
     }
 
-    private static IList CreateGenericList(Type elementType)
+    public static IList CreateGenericList(Type elementType)
     {
-        
         if (elementType == typeof(IDictionary<string, object>) || elementType == typeof(Dictionary<string, object>) ||
             elementType == typeof(string) || elementType == typeof(string[]) || elementType == typeof(object[]))
         {

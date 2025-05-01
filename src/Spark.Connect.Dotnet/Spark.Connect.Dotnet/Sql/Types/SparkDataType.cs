@@ -262,7 +262,21 @@ public abstract class SparkDataType
         throw new NotImplementedException($"Missing DataType From String: '{type}'");
     }
 
-    public static SparkDataType FromDotNetType(Type type) => Type.GetTypeCode(type) switch
+    private static TypeCode GetTypeCode(Type type)
+    {
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            // Get the underlying type
+            Type underlyingType = Nullable.GetUnderlyingType(type);
+        
+            // Return type code of the underlying type
+            return Type.GetTypeCode(underlyingType);
+        }
+        
+        return Type.GetTypeCode(type);
+    }
+    
+    public static SparkDataType FromDotNetType(Type type) => GetTypeCode(type) switch
     {
         TypeCode.Boolean => BooleanType()
         , TypeCode.Char => StringType()
@@ -275,7 +289,9 @@ public abstract class SparkDataType
         , TypeCode.Decimal => DecimalType()
         , TypeCode.DateTime => DateType()
         , TypeCode.String => StringType()
-        , _ => throw new ArgumentOutOfRangeException()
+        ,TypeCode.Single => FloatType()
+        
+        , _ => throw new ArgumentOutOfRangeException($"Unknown Type Code '{GetTypeCode(type)}' for type '{type}'")
     };
     
     public static SparkDataType FromDotNetObject(object o) => o switch

@@ -99,7 +99,6 @@ var dfFromLoaded = loadedIdf.Transform(dfIDF);
 dfFromLoaded.Show(3, 10000);
 
 var tokenizer = new Tokenizer(spark);
-// tokenizer.ParamMap.Add("outputCol", "words");
 
 tokenizer.SetInputCol("text");
 tokenizer.SetOutputCol("words-go-here");

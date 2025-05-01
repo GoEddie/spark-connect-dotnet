@@ -24,7 +24,7 @@ public class ParamMap
     }
     
     private List<Param> _defaultParams { get; } = new List<Param>();
-    private List<Param> _setParams { get; } = new List<Param>();
+    private IDictionary<string, Param> _setParams { get; } = new Dictionary<string, Param>();
 
     /// <summary>
     /// Add a param, this overrides the default if there is one
@@ -68,10 +68,7 @@ public class ParamMap
     /// </summary>
     /// <param name="name">Name of the `Param` to check</param>
     /// <returns>`bool` whether it exists or not</returns>
-    public bool IsDefined(string name)
-    {
-        return _defaultParams.Any(p => p.Name == name) || _setParams.Any(p => p.Name == name);
-    }
+    public bool IsDefined(string name) => _defaultParams.Any(p => p.Name == name) || _setParams.ContainsKey(name);
 
     /// <summary>
     /// Has the `Param` been explicitly set on the map, is it different from the default. If it is the same as the
@@ -89,7 +86,7 @@ public class ParamMap
     /// <returns>`bool` if the param is set and is not the default</returns>
     public bool IsSet(string name)
     {
-        return _setParams.Any(p => p.Name == name);
+        return _setParams.ContainsKey(name);
     }
 
     /// <summary>
@@ -100,7 +97,7 @@ public class ParamMap
     {
         if (IsSet(name))
         {
-            _setParams.Remove(_setParams.First(p => p.Name == name));
+            _setParams.Remove(name);
         }
     }
     
@@ -112,7 +109,7 @@ public class ParamMap
     {
         if (IsSet(param))
         {
-            _setParams.Remove(param);
+            _setParams.Remove(param.Name);
         }
     }
     
@@ -123,31 +120,7 @@ public class ParamMap
     public void Add(Param param)
     {
         var defaultParam = GetDefault(param.Name);
-        
-        if (defaultParam == null)
-        {   // I think this will fail later on when they try to use it
-            _setParams.Add(param);
-            return;
-        }
-        
-        var alreadySet = _setParams.FirstOrDefault(p => p.Name == param.Name);
-        
-        if (param.Value == defaultParam.Value)
-        {
-            if (alreadySet != null)
-            {
-                _setParams.Remove(alreadySet);
-            }
-        }
-        else
-        {
-            if (alreadySet != null)
-            {
-                _setParams.Remove(alreadySet);
-            }
-            
-            _setParams.Add(param);
-        }
+        _setParams[param.Name] = param;
     }
 
     /// <summary>
@@ -157,11 +130,11 @@ public class ParamMap
     /// <returns>`Param` if it exists or null</returns>
     public Param? Get(string name)
     {
-        if (_setParams.Any(p => p.Name == name))
+        if (_setParams.ContainsKey(name))
         {
-            return _setParams.First(p => p.Name == name);
+            return _setParams[name];
         }
-
+        
         if (_defaultParams.Any(p => p.Name == name))
         {
             return _defaultParams.First(p => p.Name == name);
@@ -179,7 +152,7 @@ public class ParamMap
         var paramDict = _defaultParams.ToDictionary(p => p.Name);
         foreach (var param in _setParams)
         {
-            paramDict[param.Name] = param;
+            paramDict[param.Key] = param.Value;
         }
         
         return paramDict.Values.ToList();
@@ -194,7 +167,7 @@ public class ParamMap
         var newMap = new ParamMap(_defaultParams);
         foreach (var param in _setParams)
         {
-            newMap.Add(param);
+            newMap.Add(param.Value);
         }
         return newMap;
     }
@@ -223,7 +196,7 @@ public class ParamMap
         var dict = new Dictionary<string, Expression.Types.Literal>();
         foreach (var param in _setParams)
         {
-            if (param.Value is Array array)
+            if (param.Value.Value is Array array)
             {
                 var value = new Expression.Types.Literal
                 {
@@ -238,11 +211,11 @@ public class ParamMap
                     value.Array.Elements.Add(Functions.Lit(element).Expression.Literal);
                 }
                 
-                dict.Add(param.Name, value);
+                dict.Add(param.Value.Name, value);
             }
             else
             {
-                dict.Add(param.Name, Functions.Lit(param.Value).Expression.Literal as Expression.Types.Literal);    
+                dict.Add(param.Value.Name, Functions.Lit(param.Value.Value).Expression.Literal as Expression.Types.Literal);    
             }
             
         }
@@ -260,82 +233,82 @@ public class ParamMap
         foreach (var oiParam in paramsParams)
         {
             var paramName = oiParam.Key;
-            dynamic paramValue = null;
-            
-            switch (oiParam.Value.LiteralTypeCase)
+            dynamic paramValue = GetValueFromLiteral(oiParam.Value);
+            newParams.Add(new Param(paramName, paramValue));
+        }
+        return newParams;
+    }
+
+    private static dynamic GetValueFromLiteral(Expression.Types.Literal literal)
+    {
+        switch (literal.LiteralTypeCase)
             {
                 case Expression.Types.Literal.LiteralTypeOneofCase.None:
                     break;
                 case Expression.Types.Literal.LiteralTypeOneofCase.Null:
-                    paramValue = null;
-                    break;
+                    return null;
                 case Expression.Types.Literal.LiteralTypeOneofCase.Binary:
-                    paramValue = oiParam.Value.Binary.ToByteArray();
-                    break;
+                    return literal.Binary.ToByteArray();
                 case Expression.Types.Literal.LiteralTypeOneofCase.Boolean:
-                    paramValue = oiParam.Value.Boolean;
-                    break;
+                   return literal.Boolean;
                 case Expression.Types.Literal.LiteralTypeOneofCase.Byte:
-                    paramValue = oiParam.Value.Byte;
-                    break;
+                    return literal.Byte;
                 case Expression.Types.Literal.LiteralTypeOneofCase.Short:
-                    paramValue = oiParam.Value.Short;
-                    break;
+                   return literal.Short;
                 case Expression.Types.Literal.LiteralTypeOneofCase.Integer:
-                    paramValue = oiParam.Value.Integer;
-                    break;
+                    return literal.Integer;
                 case Expression.Types.Literal.LiteralTypeOneofCase.Long:
-                    paramValue = oiParam.Value.Long;
-                    break;
+                    return literal.Long;
                 case Expression.Types.Literal.LiteralTypeOneofCase.Float:
-                    paramValue = oiParam.Value.Float;
-                    break;
+                   return literal.Float;
+               
                 case Expression.Types.Literal.LiteralTypeOneofCase.Double:
-                    paramValue = oiParam.Value.Double;
-                    break;
+                   return literal.Double;
+         
                 case Expression.Types.Literal.LiteralTypeOneofCase.Decimal:
-                    paramValue = oiParam.Value.Decimal;
-                    break;
+                   return literal.Decimal;
+          
                 case Expression.Types.Literal.LiteralTypeOneofCase.String:
-                    paramValue = oiParam.Value.String;
-                    break;
+                  return literal.String;
+       
                 case Expression.Types.Literal.LiteralTypeOneofCase.Date:
-                    paramValue = oiParam.Value.Date;
-                    break;
+                 return literal.Date;
+      
                 case Expression.Types.Literal.LiteralTypeOneofCase.Timestamp:
-                    paramValue = oiParam.Value.Timestamp;
-                    break;
+                  return literal.Timestamp;
+         
                 case Expression.Types.Literal.LiteralTypeOneofCase.TimestampNtz:
-                    paramValue = oiParam.Value.TimestampNtz;
-                    break;
+                  return  literal.TimestampNtz;
+         
                 case Expression.Types.Literal.LiteralTypeOneofCase.CalendarInterval:
-                    paramValue = oiParam.Value.CalendarInterval;
-                    break;
+                    return literal.CalendarInterval;
                 case Expression.Types.Literal.LiteralTypeOneofCase.YearMonthInterval:
-                    paramValue = oiParam.Value.YearMonthInterval;
-                    break;
+                    return literal.YearMonthInterval;
+     
                 case Expression.Types.Literal.LiteralTypeOneofCase.DayTimeInterval:
-                    paramValue = oiParam.Value.DayTimeInterval;
-                    break;
+                   return literal.DayTimeInterval;
+     
                 case Expression.Types.Literal.LiteralTypeOneofCase.Array:
-                    paramValue = oiParam.Value.Array;
-                    break;
+                    
+                    var array = SparkSession.CreateGenericList(GetValueFromLiteral(literal.Array.Elements.First()).GetType());
+                    foreach (var element in literal.Array.Elements)
+                    {
+                        array.Add(GetValueFromLiteral(element));
+                    }
+
+                    return array.ToArray();
+                
                 case Expression.Types.Literal.LiteralTypeOneofCase.Map:
-                    paramValue = oiParam.Value.Map;
-                    break;
+                    return literal.Map;
+                    
                 case Expression.Types.Literal.LiteralTypeOneofCase.Struct:
-                    paramValue = oiParam.Value.Struct;
-                    break;
+                    return literal.Struct;
                 case Expression.Types.Literal.LiteralTypeOneofCase.SpecializedArray:
-                    paramValue = oiParam.Value.SpecializedArray;
-                    break;
+                    return literal.SpecializedArray;
                 default:
-                    paramValue = $"Unknown - do not understand the literal type {oiParam.Value.LiteralTypeCase} - this is a dotnet client lib issue not a spark issue";
-                    break;
+                    return $"Unknown - do not understand the literal type {literal.LiteralTypeCase} - this is a dotnet client lib issue not a spark issue";
             }
-            
-            newParams.Add(new Param(paramName, paramValue));
-        }
-        return newParams;
+        
+        return null;
     }
 }

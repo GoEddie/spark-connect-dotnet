@@ -28,12 +28,6 @@ public abstract class Estimator<T>(string uid, string className, ParamMap defaul
             paramMap = this.ParamMap;    
         }
         
-        foreach (var param in paramMap.GetAll())
-        {
-            var litExpression = Functions.Lit(param.Value).Expression.Literal;
-            parameters.Add(param.Name, litExpression);  
-        } 
-        
         var plan = new Plan()
         {
             Command = new Command()
@@ -45,7 +39,7 @@ public abstract class Estimator<T>(string uid, string className, ParamMap defaul
                         Dataset = df.Relation, 
                         Params = new MlParams()
                         {
-                            Params = { parameters }
+                            Params = { paramMap.ToMapField() }
                         },
                         Estimator = new MlOperator()
                         {
@@ -69,8 +63,10 @@ public abstract class Estimator<T>(string uid, string className, ParamMap defaul
                return (T)(object)new LogisticRegressionModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
            case {} when typeof(T) == typeof(IDFModel):
                return (T)(object)new IDFModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
+           case {} when typeof(T) == typeof(NaiveBayesModel):
+               return (T)(object)new NaiveBayesModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
            default:
-                throw new NotImplementedException($"Unable to create a `Transformer` for {typeof(T).Name}");
+                throw new NotImplementedException($"Unable to create a `Transformer` or `Model` for {typeof(T).Name}");
         }
         
     }
