@@ -1,9 +1,17 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using Apache.Arrow;
 using Apache.Arrow.Types;
 using Spark.Connect.Dotnet.Grpc;
 
 namespace Spark.Connect.Dotnet.Sql.Types;
+
+public interface IUserDefinedType
+{
+    public SparkDataType GetDataType();
+    public object[] GetDataForDataframe();
+}
 
 public abstract class SparkDataType
 {
@@ -18,6 +26,10 @@ public abstract class SparkDataType
     public abstract DataType ToDataType();
     public abstract IArrowType ToArrowType();
 
+    public virtual bool CanCreateArrowBuilder => true;
+    
+    public virtual IEnumerable<IArrowArrayBuilder> GetArrowArrayBuilders() => [ArrowHelpers.GetArrowBuilderForArrowType(ToArrowType())];
+
     public virtual string SimpleString()
     {
         return TypeName;
@@ -26,6 +38,11 @@ public abstract class SparkDataType
     public virtual string JsonTypeName()
     {
         return SimpleString();
+    }
+
+    public virtual string Json()
+    {
+        return $"\"{JsonTypeName()}\"";
     }
 
     public virtual string ToDdl(string name, bool nullable)
@@ -245,26 +262,82 @@ public abstract class SparkDataType
         throw new NotImplementedException($"Missing DataType From String: '{type}'");
     }
 
-    public static SparkDataType FromDotNetType(object o) => o switch
+    private static TypeCode GetTypeCode(Type type)
+    {
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            // Get the underlying type
+            Type underlyingType = Nullable.GetUnderlyingType(type);
+        
+            // Return type code of the underlying type
+            return Type.GetTypeCode(underlyingType);
+        }
+        
+        return Type.GetTypeCode(type);
+    }
+    
+    public static SparkDataType FromDotNetType(Type type) => GetTypeCode(type) switch
+    {
+        TypeCode.Boolean => BooleanType()
+        , TypeCode.Char => StringType()
+        , TypeCode.SByte => ByteType()
+        , TypeCode.Byte => ShortType()
+        , TypeCode.Int16 => ShortType()
+        , TypeCode.Int32 => IntType()
+        , TypeCode.Int64 => BigIntType()
+        , TypeCode.Double => DoubleType()
+        , TypeCode.Decimal => DecimalType()
+        , TypeCode.DateTime => DateType()
+        , TypeCode.String => StringType()
+        ,TypeCode.Single => FloatType()
+        
+        , _ => throw new ArgumentOutOfRangeException($"Unknown Type Code '{GetTypeCode(type)}' for type '{type}'")
+    };
+    
+    public static SparkDataType FromDotNetObject(object o) => o switch
     {
         int => IntType(),
         long => LongType(),
         double => DoubleType(),
         float => FloatType(),
         short => ShortType(),
+        char => StringType(),
         string => StringType(),
+        Guid => StringType(),
         DateTime => TimestampType(),
+        DateTimeOffset => TimestampNtzType(),
+        // TimeSpan => IntervalTyp(),
         DateOnly => DateType(),
-        byte => ByteType(),
+        byte => ShortType(),    //byte doesn't exist in spark, use sbyte if you want a byte
+        sbyte => ByteType(),
+        bool => BooleanType(),
+        decimal => DecimalType(),
         IDictionary<string, long?> => MapType(StringType(), LongType(), true),
         IDictionary<string, int?> => MapType(StringType(), IntType(), true),
         IDictionary<string, string?> => MapType(StringType(), StringType(), true),
-        IDictionary<string, object> dict => MapType(StringType(), FromDotNetType(dict.Values.FirstOrDefault()), true),
-
+        IDictionary<string, object> dict => MapType(StringType(), FromDotNetObject(dict.Values.FirstOrDefault()), true),
         string[] => ArrayType(StringType()),
-
+        IUserDefinedType udt => udt.GetDataType(),
+        ITuple tup => CreateStructFromTuple(tup),
+        System.Array array => ArrayType(FromDotNetObject(array.GetValue(0))),
         _ => throw new ArgumentOutOfRangeException($"Type {o.GetType().Name} needs a FromDotNetType")
     };
+
+    private static SparkDataType CreateStructFromTuple(ITuple tuple)
+    {
+        
+        var dataTypes = new List<SparkDataType>();
+        
+        for(var i=0; i<tuple.Length; i++)
+        {
+            var o = tuple[i];
+            dataTypes.Add(FromDotNetObject(o));            
+        }
+
+        var structType = new StructType(dataTypes.Select((t, i) => new StructField($"field_{i}", t, true)).ToArray());
+        return structType;
+        
+    }
 
     public static SparkDataType FromSparkConnectType(DataType type)
     {

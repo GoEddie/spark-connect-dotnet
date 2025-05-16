@@ -18,7 +18,7 @@ public class DataFrame_SchemaTests : E2ETestBase
         var df1 = Spark.Range(0, 5).WithColumn("Name", Functions.Lit("ed"));
         var schema = df1.Schema.SimpleString();
 
-        Assert.Equal("StructType<id:bigint,Name:string>", schema);
+        Assert.Equal("StructType<id:long,Name:string>", schema);
     }
 
     [Fact]
@@ -27,8 +27,7 @@ public class DataFrame_SchemaTests : E2ETestBase
         var df1 = Spark.Sql("SELECT struct(id as id1, id as id2, id as id3) from range(100)");
         var schema = df1.Schema.SimpleString();
 
-        Assert.Equal("StructType<struct(id AS id1, id AS id2, id AS id3):StructType<id1:bigint,id2:bigint,id3:bigint>>",
-            schema);
+        Assert.Equal("StructType<struct(id AS id1, id AS id2, id AS id3):StructType<id1:long,id2:long,id3:long>>", schema);
     }
 
     [Fact]

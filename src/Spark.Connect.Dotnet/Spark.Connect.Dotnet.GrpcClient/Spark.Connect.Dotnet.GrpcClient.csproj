@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Apache.Arrow" Version="16.1.0"/>
+        <PackageReference Include="Apache.Arrow" Version="19.0.1" />
         <PackageReference Include="Google.Protobuf" Version="3.27.2"/>
         <PackageReference Include="Grpc.Core.Api" Version="2.63.0"/>
         <PackageReference Include="Grpc.Net.Client" Version="2.63.0"/>
@@ -40,6 +40,12 @@
         <Content Update="spark\connect\types.proto">
             <Link>connect\types.proto</Link>
         </Content>
+        <Content Update="spark\connect\ml_common.proto">
+            <Link>connect\ml_common.proto</Link>
+        </Content>
+        <Content Update="spark\connect\ml.proto">
+            <Link>connect\ml.proto</Link>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
@@ -65,6 +71,10 @@
         <Protobuf Include="spark\connect\relations.proto"/>
         <None Remove="spark\connect\types.proto"/>
         <Protobuf Include="spark\connect\types.proto"/>
+        <None Remove="spark\connect\ml.proto" />
+        <Protobuf Include="spark\connect\ml.proto" />
+        <None Remove="spark\connect\ml_common.proto" />
+        <Protobuf Include="spark\connect\ml_common.proto" />
     </ItemGroup>
 
     <PropertyGroup>
