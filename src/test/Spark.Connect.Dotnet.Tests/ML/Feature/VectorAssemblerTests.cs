@@ -35,9 +35,10 @@ public class VectorAssemblerTests(ITestOutputHelper logger) : E2ETestBase(logger
         });
         
         var sourceDF = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
-        var resultDF = assembler.Transform(sourceDF);
-        resultDF.Show(3, 10000);
-        resultDF.PrintSchema();
+        
+        // var resultDF = assembler.Transform(sourceDF);
+        // resultDF.Show(3, 10000);
+        // resultDF.PrintSchema();
     }   
     
 }

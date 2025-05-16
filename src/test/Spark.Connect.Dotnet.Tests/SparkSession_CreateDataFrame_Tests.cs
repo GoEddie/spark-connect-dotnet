@@ -28,7 +28,7 @@ public class SparkSession_CreateDataFrame_Tests(ITestOutputHelper logger) : E2ET
     {
         var rawData = new List<(int Id, int? abc, SparseVector Vector)>()
         {
-            (1, 3, new SparseVector(5, [0, 1,3], [0.0, 1.1, 0.1])),
+            (1, 3, new SparseVector(5, [0, 1, 3], [0.0, 1.1, 0.1])),
             (2, null, new SparseVector(5, [0, 1,3], [0.0, 1.1, 0.1])),
             (3, 99, new SparseVector(5, [1,2, 3], [0.0, 1.1, 0.1])), 
             (4, null, new SparseVector(5, [0,1,4], [0.0, 1.1, 0.1]))

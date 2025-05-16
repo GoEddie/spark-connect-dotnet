@@ -65,6 +65,10 @@ public abstract class Estimator<T>(string uid, string className, ParamMap defaul
                return (T)(object)new IDFModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
            case {} when typeof(T) == typeof(NaiveBayesModel):
                return (T)(object)new NaiveBayesModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
+           case {} when typeof(T) == typeof(StringIndexerModel):
+               return (T)(object)new StringIndexerModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
+           case {} when typeof(T) == typeof(GBTClassifierModel):
+               return (T)(object)new GBTClassifierModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
            default:
                 throw new NotImplementedException($"Unable to create a `Transformer` or `Model` for {typeof(T).Name}");
         }

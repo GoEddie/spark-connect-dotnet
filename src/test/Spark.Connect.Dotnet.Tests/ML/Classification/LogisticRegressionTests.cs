@@ -6,11 +6,11 @@ using Xunit.Abstractions;
 
 namespace Spark.Connect.Dotnet.Tests.ML.Classification;
 
-public class LinearRegressionTests(ITestOutputHelper logger) : E2ETestBase(logger)
+public class LogisticRegressionTests(ITestOutputHelper logger) : E2ETestBase(logger)
 {
     [Fact]
     [Trait("SparkMinVersion", "4")]
-    public void LinearRegression_Test()
+    public void LogisticRegression_Test()
     {
         
         var data = new List<(double f, DenseVector Vector)>()
@@ -37,7 +37,7 @@ public class LinearRegressionTests(ITestOutputHelper logger) : E2ETestBase(logge
         paramMap.Add("aggregationDepth", 299);
         paramMap.Add("rawPredictionCol", "my output col");
 
-        var transformer = lr.Fit(training, paramMap);
+        var transformer = lr.Fit(training, lr.ParamMap.Update(paramMap));
 
         var prediction = transformer.Transform(training);
         var result = prediction.Select("features", "label", "my output col", "prediction");
@@ -48,7 +48,7 @@ public class LinearRegressionTests(ITestOutputHelper logger) : E2ETestBase(logge
     
     [Fact]
     [Trait("SparkMinVersion", "4")]
-    public void LinearRegression_ReadWrite_Test()
+    public void LogisticRegression_ReadWrite_Test()
     {
         var data = new List<(double f, DenseVector Vector)>()
         {

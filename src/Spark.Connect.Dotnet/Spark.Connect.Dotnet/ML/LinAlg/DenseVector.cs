@@ -1,8 +1,9 @@
+using Spark.Connect.Dotnet.ML.Feature;
 using Spark.Connect.Dotnet.Sql.Types;
 
 namespace Spark.Connect.Dotnet.ML.LinAlg;
 
-public class DenseVector(List<double> values) : IUserDefinedType
+public class DenseVector(List<double> values) : Vector, IUserDefinedType
 {
     public List<double> Values { get; } = values;
     

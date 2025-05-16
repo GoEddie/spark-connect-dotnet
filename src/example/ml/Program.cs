@@ -76,7 +76,9 @@ var schemaIDF = new  Spark.Connect.Dotnet.Sql.Types.StructType(new[]
 
 var dfIDF = spark.CreateDataFrame(dataIDF.Cast<ITuple>(), schemaIDF);
 
-var idf = new IDF(10, "tf");
+var idf = new IDF();
+idf.SetInputCol("tf");
+idf.SetMinDocFreq(2);
 idf.ParamMap.Add("outputCol", "tf-idf");
 
 dfIDF = dfIDF.WithColumnRenamed("tf", "tfi");
@@ -108,7 +110,7 @@ var dfWords = spark.CreateDataFrame((new List<(int id, string text)>()
     (1, "This is a test"), (2, "This is another test")
 }).Cast<ITuple>(), new Spark.Connect.Dotnet.Sql.Types.StructType((List<StructField>) [new StructField("id", new Int32Type(), false), new StructField("text", new StringType(), false)]));
 
-var tokens = tokenizer.Transform(dfWords, tokenizer.ParamMap.Update(new(){{"outputCol", "override-output-col"}}));
+var tokens = tokenizer.Transform(dfWords, tokenizer.ParamMap.Update(new Dictionary<string, dynamic>(){{"outputCol", "override-output-col"}}));
 tokens.Show(3, 10000);
 
 tokenizer.Save("/tmp/transformers/tokenizer");

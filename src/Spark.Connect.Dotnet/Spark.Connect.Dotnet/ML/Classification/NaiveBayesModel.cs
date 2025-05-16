@@ -1,58 +1,38 @@
 using Spark.Connect.Dotnet.ML.Param;
+using Spark.Connect.Dotnet.Sql;
 
 namespace Spark.Connect.Dotnet.ML.Classification;
 
 /// <summary>
 ///Naive Bayes Classifiers. It supports both Multinomial and Bernoulli NB. Multinomial NB can handle finitely supported discrete data. For example, by converting documents into
 ///TF-IDF vectors, it can be used for document classification. By making every vector a binary (0/1) data, it can also be used as Bernoulli NB.The input feature values for 
-///    Multinomial NB and Bernoulli NB must be nonnegative. Since 3.0.0, it supports Complement NB which is an adaptation of the Multinomial NB. Specifically, Complement NB 
+/// Multinomial NB and Bernoulli NB must be nonnegative. Since 3.0.0, it supports Complement NB which is an adaptation of the Multinomial NB. Specifically, Complement NB 
 ///uses statistics from the complement of each class to compute the model’s coefficients. The inventors of Complement NB show empirically that the parameter estimates 
 ///for CNB are more stable than those for Multinomial NB. Like Multinomial NB, the input feature values for Complement NB must be nonnegative. Since 3.0.0, it also 
 ///supports Gaussian NB. which can handle continuous data.
 /// </summary>
-public class NaiveBayes : Estimator<NaiveBayesModel>
+public class NaiveBayesModel(string uid, ObjectRef objRef, SparkSession sparkSession, ParamMap paramMap)
+    : Model(uid, ClassName, objRef, sparkSession, paramMap)
 {
-    public static readonly ParamMap DefaultParams = new(
-    [
-            new("featuresCol", "features"), 
-            new("labelCol", "label"), 
-            new("predictionCol", "prediction"), 
-            new("probabilityCol", "probability"), 
-            new("rawPredictionCol", "rawPrediction"), 
-            new("smoothing", 1.0F), 
-            new("modelType", "multinomial"), 
-            new("thresholds", new float[]{}),
-            new("weightCol", ""),
-    ]);
+    private const string ClassName = "org.apache.spark.ml.classification.NaiveBayesModel";
 
     /// <summary>
-    /// A Naive Bayes classifier for discrete data classification tasks.
-    /// This class supports both Multinomial and Bernoulli models and can be configured via parameters.
+    /// Load a `NaiveBayesModel` that was previously saved to disk on the Spark Connect server
     /// </summary>
-    public NaiveBayes(ParamMap paramMap) : base(IdentifiableHelper.RandomUID("nb-static"), "org.apache.spark.ml.classification.NaiveBayes", paramMap.Clone())
+    /// <param name="path">Where to read the `NaiveBayesModel` from</param>
+    /// <param name="sparkSession">A `SparkSession` to read the model through</param>
+    /// <returns>`NaiveBayesModel`</returns>
+    public static NaiveBayesModel Load(string path, SparkSession sparkSession)
     {
+        var mlResult = Transformer.Load(path, sparkSession, ClassName);
+        var paramMap = ParamMap.FromMLOperatorParams(mlResult.OperatorInfo.Params.Params, NaiveBayes.DefaultParams.Clone());
         
-    }
-
-    /// <summary>
-    /// Represents the Naive Bayes classification algorithm implementation in Spark ML.
-    /// Provides functionalities to train and apply the Naive Bayes classification model.
-    /// </summary>
-    public NaiveBayes() : this(DefaultParams.Clone())
-    {
+        var loadedModel = new NaiveBayesModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, sparkSession, paramMap);
         
+        return loadedModel;
     }
-
-    /// <summary>
-    /// The `NaiveBayes` class is an algorithm for classification tasks based on Bayes' theorem
-    /// with independence assumptions between features. This serves as an estimator for a
-    /// `NaiveBayesModel`.
-    /// </summary>
-    public NaiveBayes(IDictionary<string, dynamic> paramMap) : this(DefaultParams.Clone().Update(paramMap))
-    {
-        
-    }
-
+    
+    
     /// <summary>
     /// Sets the column name for features in the dataset.
     /// </summary>

@@ -23,11 +23,22 @@ public class VectorAssembler(SparkSession sparkSession, ParamMap parameters) : T
     /// A feature transformer that merges multiple columns into a vector column.
     /// </summary>
     /// <param name="sparkSession">`SparkSession` to create the `Tokenizer` on</param>
-    public VectorAssembler(SparkSession sparkSession) : this(sparkSession,  DefaultParams)
+    public VectorAssembler(SparkSession sparkSession) : this(sparkSession,  DefaultParams.Clone())
     {
         
     }
 
+    /// <summary>
+    /// A feature transformer that merges multiple columns into a vector column.
+    /// </summary>
+    /// <param name="sparkSession">The Spark session to create the VectorAssembler in.</param>
+    /// <param name="parameters">The parameter map containing settings for the VectorAssembler.</param>
+    public VectorAssembler(SparkSession sparkSession, IDictionary<string, dynamic> parameters) : this(sparkSession, DefaultParams.Clone().Update(parameters))
+    {
+        
+    }
+    
+    
     /// <summary>
     /// Sets the inputCols parameter, required
     /// </summary>

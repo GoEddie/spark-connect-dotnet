@@ -5,10 +5,10 @@ using Spark.Connect.Dotnet.Sql.Types;
 
 namespace Spark.Connect.Dotnet.ML.Param;
 
-public class Param(string name, dynamic value)
+public class Param(string name, dynamic? value)
 {
     public string Name { get; } = name;
-    public dynamic Value { get; } = value;
+    public dynamic? Value { get; } = value;
 }
 
 /// <summary>
@@ -177,11 +177,26 @@ public class ParamMap
     /// </summary>
     /// <param name="updates">New parameters to update in the newly created `ParamMap`</param>
     /// <returns>`ParamMap` with `Params` created from the updated dictionary</returns>
-    public ParamMap Update(Dictionary<string, dynamic> updates)
+    public ParamMap Update(IDictionary<string, dynamic> updates)
     {
         foreach (var update in updates)
         {
             this.Add(update.Key, update.Value);
+        }
+
+        return this;
+    }
+
+    /// <summary>
+    /// Adds or Updates any `Param`'s in the `ParamMap` with the keys in the dictionary, returning a new copy of the `ParamMap`
+    /// </summary>
+    /// <param name="source">The `ParamMap` to copy from</param>
+    /// <returns>`ParamMap` with `Params` created from the updated dictionary</returns>
+    public ParamMap Update(ParamMap source)
+    {
+        foreach (var update in source.GetAll())
+        {
+            this.Add(update.Name, update.Value);
         }
 
         return this;
@@ -239,7 +254,7 @@ public class ParamMap
         return newParams;
     }
 
-    private static dynamic GetValueFromLiteral(Expression.Types.Literal literal)
+    public static dynamic GetValueFromLiteral(Expression.Types.Literal literal)
     {
         switch (literal.LiteralTypeCase)
             {

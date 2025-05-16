@@ -31,7 +31,7 @@ public class IDFTests : E2ETestBase
 
         var dfSource = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
 
-        var idf = new IDF(10, "tf");
+        var idf = new IDF(new Dictionary<string, dynamic>(){{"inputCol", "tf"}, {"minDocFreq", 10}});
         
         idf.ParamMap.Add("outputCol", "tf-idf");
 
@@ -60,18 +60,20 @@ public class IDFTests : E2ETestBase
         var schema = new  StructType(new[]
         {
             new StructField("label", new DoubleType(), false),
-            new StructField("tf", new VectorUDT(), false)
+            new StructField("tf99", new VectorUDT(), false)
         });
 
         var dfSource = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
 
-        var idf = new IDF(10, "tf");
+        var idf = new IDF();
+        idf.SetMinDocFreq(1000);
+        idf.SetInputCol("tf99");
         
         idf.ParamMap.Add("outputCol", "tf-idf");
 
-        dfSource = dfSource.WithColumnRenamed("tf", "tfi");
+        dfSource = dfSource.WithColumnRenamed("tf", "tf99");
 
-        var idfModel = idf.Fit(dfSource, idf.ParamMap.Update(new Dictionary<string, dynamic>(){{"inputCol", "tfi"}}));
+        var idfModel = idf.Fit(dfSource, idf.ParamMap.Update(new Dictionary<string, dynamic>(){{"inputCol", "tf99"}}));
         idfModel.Save("/tmp/transformers-idf-model");
         var loadedIdf = IDFModel.Load("/tmp/transformers-idf-model", Spark);
         var df = loadedIdf.Transform(dfSource);

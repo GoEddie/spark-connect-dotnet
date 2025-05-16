@@ -27,7 +27,7 @@ public class TokenizerTests : E2ETestBase
             (1, "This is a test"), (2, "This is another test")
         }).Cast<ITuple>(), new Spark.Connect.Dotnet.Sql.Types.StructType((List<StructField>) [new StructField("id", new Int32Type(), false), new StructField("text", new StringType(), false)]));
 
-        var tokens = tokenizer.Transform(dfWords, tokenizer.ParamMap.Update(new(){{"outputCol", "override-output-col"}}));
+        var tokens = tokenizer.Transform(dfWords, tokenizer.ParamMap.Update(new Dictionary<string, dynamic>(){{"outputCol", "override-output-col"}}));
         tokens.Show(3, 10000);
         tokens.PrintSchema();
     }
@@ -49,7 +49,7 @@ public class TokenizerTests : E2ETestBase
        tokenizer.Save("/tmp/transformers-tokenizer");
        var tokenizerFromDisk = Tokenizer.Load("/tmp/transformers-tokenizer", Spark);
         
-       var tokens = tokenizerFromDisk.Transform(dfWords, tokenizer.ParamMap.Update(new(){{"outputCol", "override-output-col"}}));
+       var tokens = tokenizerFromDisk.Transform(dfWords, tokenizer.ParamMap.Update(new Dictionary<string, dynamic>(){{"outputCol", "override-output-col"}}));
        tokens.Show(3, 10000);
        tokens.PrintSchema();
     }

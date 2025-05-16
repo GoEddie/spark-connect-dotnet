@@ -38,6 +38,7 @@ public class StructType : SparkDataType
     {
         Fields = fields;
     }
+    
 
     public StructType(Schema readerSchema) : base("StructType")
     {

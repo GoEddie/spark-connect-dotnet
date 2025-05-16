@@ -8,22 +8,9 @@ namespace Spark.Connect.Dotnet.ML.Feature;
 ///
 /// You can either pass the parameters via the constructor or set them yourself but they do need to be set.
 /// </summary>
-/// <param name="minDocFreq">Sets the minDocFreq, the default is 0</param>
-/// <param name="inputCol">Sets the inputCol, there is no default</param>
-/// <param name="outputCol">Sets the outputCol, there is no default</param>
-public class IDF(int minDocFreq = 0, string? inputCol = null, string? outputCol = null)
-    : Estimator<IDFModel>(IdentifiableHelper.RandomUID("idf-static"),
-                "org.apache.spark.ml.feature.IDF",
-                DefaultParams.Update(new()
-                    {
-                        { "minDocFreq", minDocFreq }, { "inputCol", inputCol }, { "outputCol", outputCol }
-                    }
-                ))
+public class IDF(ParamMap paramMap) : Estimator<IDFModel>(IdentifiableHelper.RandomUID("idf-static"), "org.apache.spark.ml.feature.IDF", paramMap)
 {
-    private int _minDocFreq = minDocFreq;
-    private string? _inputCol = inputCol;
-    private string? _outputCol = outputCol;
-
+    
     public static readonly ParamMap DefaultParams = new(
     [
             new("minDocFreq", 1), 
@@ -32,39 +19,56 @@ public class IDF(int minDocFreq = 0, string? inputCol = null, string? outputCol 
     ]);
 
     /// <summary>
+    /// Represents an IDF (Inverse Document Frequency) estimator used in processing text data to calculate the inverse frequency of terms across a collection of documents.
+    /// This assists in transforming data features and is particularly useful in machine learning and natural language processing workflows.
+    /// </summary>
+    public IDF() : this(DefaultParams.Clone())
+    {
+        
+    }
+
+    /// <summary>
+    /// Represents an IDF (Inverse Document Frequency) estimator used to compute the IDF of a collection of documents.
+    /// </summary>
+    /// <param name="parameters">An optional map of parameters to initialize the IDF.</param>
+    public IDF(IDictionary<string, dynamic> parameters) : this(DefaultParams.Clone().Update(parameters))
+    {
+        
+    }
+ 
+    /// <summary>
     /// Set the inputCol
     /// </summary>
     /// <param name="inputCol">Name of the input column</param>
-    public void SetInputCol(string inputCol) => _inputCol = inputCol;
+    public void SetInputCol(string inputCol) => ParamMap.Add("inputCol", inputCol);
     
     /// <summary>
     /// Get the inputCol
     /// </summary>
     /// <returns>string</returns>
-    public string GetInputCol() => _inputCol;
+    public string GetInputCol() => ParamMap.Get("inputCol").Value;
     
     /// <summary>
     /// Set the outputCol
     /// </summary>
     /// <param name="outputCol">Name of the output column</param>
-    public void SetOutputCol(string outputCol) => _outputCol = outputCol;
+    public void SetOutputCol(string outputCol) => ParamMap.Add("outputCol", outputCol);
     
     /// <summary>
     /// Get the outputCol
     /// </summary>
     /// <returns></returns>
-    public string GetOutputCol() => _outputCol;
+    public string GetOutputCol() => ParamMap.Get("outputCol").Value;
     
     /// <summary>
     /// Sets the minDocFreq
     /// </summary>
     /// <param name="minDocFreq">Min value</param>
-    public void SetMinDocFreq(int minDocFreq) => _minDocFreq = minDocFreq;
+    public void SetMinDocFreq(int minDocFreq) => ParamMap.Add("minDocFreq", minDocFreq);
     
     /// <summary>
     /// Gets the minDocFreq
     /// </summary>
     /// <returns></returns>
-    public int GetMinDocFreq() => _minDocFreq;
-
+    public int GetMinDocFreq() => ParamMap.Get("minDocFreq").Value;
 }

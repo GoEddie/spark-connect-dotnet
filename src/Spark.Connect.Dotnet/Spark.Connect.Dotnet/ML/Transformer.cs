@@ -1,5 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
 using Spark.Connect.Dotnet.Grpc;
-using Spark.Connect.Dotnet.ML.Classification;
 using Spark.Connect.Dotnet.ML.Param;
 using Spark.Connect.Dotnet.Sql;
 
@@ -27,14 +27,14 @@ public class Transformer : Params, Identifiable
     
     protected Transformer(SparkSession sparkSession, string className, ParamMap paramMap) : base(paramMap)
     {
-        _sparkSession = sparkSession;
+        SparkSession = sparkSession;
         ClassName = className;
 
         Uid = null;
         ObjRef = null;
     }
     
-    private readonly SparkSession _sparkSession;
+    protected readonly SparkSession SparkSession;
     public string? Uid { get; }
     private string ClassName { get; }
     private ObjectRef? ObjRef { get; }
@@ -124,7 +124,7 @@ public class Transformer : Params, Identifiable
             };
         }
         
-        var executor = new RequestExecutor(_sparkSession, plan);
+        var executor = new RequestExecutor(SparkSession, plan);
         executor.Exec();
     }
 
@@ -167,4 +167,127 @@ public class Transformer : Params, Identifiable
     {
         return objRef != null ? objRef.Id : Guid.NewGuid().ToString();
     }
+
+    protected dynamic Fetch(string method)
+    {
+        var plan = new Plan()
+        {
+            Command = new Command()
+            {
+                MlCommand = new MlCommand()
+                {
+                    Fetch = new Fetch()
+                    {
+                        Methods =
+                        {
+                            new[]
+                            {
+                                new Fetch.Types.Method()
+                                {
+                                    Method_ = method,
+                                }
+                            }
+                        }, ObjRef = ObjRef
+                    }
+                }
+            }
+        };
+        var executor = new RequestExecutor(SparkSession, plan);
+        executor.Exec();
+        
+       Console.WriteLine(executor.GetMlCommandResult());
+       var mlResult = executor.GetMlCommandResult();
+
+       if (mlResult.ResultTypeCase == MlCommandResult.ResultTypeOneofCase.Param)
+       {
+           var param = mlResult.Param;
+            return ParamMap.GetValueFromLiteral(param);
+       }
+       
+       throw new NotImplementedException($"Doesn't currently support fetching {method} with result type {mlResult.ResultTypeCase}");
+    }
+    
+    protected dynamic Fetch(string method, params object[] args)
+    {
+        var connectArgs = args.Select(arg => new Fetch.Types.Method.Types.Args()
+        {
+            Param = Functions.Lit(arg).Expression.Literal
+        }).ToList();
+
+        var plan = new Plan()
+        {
+            Command = new Command()
+            {
+                MlCommand = new MlCommand()
+                {
+                    Fetch = new Fetch()
+                    {
+                        Methods =
+                        {
+                            new[]
+                            {
+                                new Fetch.Types.Method()
+                                { 
+                                    Args = { connectArgs },
+                                    Method_ = method,
+                                }
+                            }
+                        }, ObjRef = ObjRef
+                    }
+                }
+            }
+        };
+        var executor = new RequestExecutor(SparkSession, plan);
+        executor.Exec();
+        
+        Console.WriteLine(executor.GetMlCommandResult());
+        var mlResult = executor.GetMlCommandResult();
+
+        if (mlResult.ResultTypeCase == MlCommandResult.ResultTypeOneofCase.Param)
+        {
+            var param = mlResult.Param;
+            return ParamMap.GetValueFromLiteral(param);
+        }
+       
+        throw new NotImplementedException($"Doesn't currently support fetching {method} with result type {mlResult.ResultTypeCase}");
+    }
+    
+    protected string FetchObjectRefs(string method)
+    {
+        var plan = new Plan()
+        {
+            Command = new Command()
+            {
+                MlCommand = new MlCommand()
+                {
+                    Fetch = new Fetch()
+                    {
+                        Methods =
+                        {
+                            new[]
+                            {
+                                new Fetch.Types.Method()
+                                {
+                                    Method_ = method,
+                                }
+                            }
+                        }, ObjRef = ObjRef
+                    }
+                }
+            }
+        };
+        var executor = new RequestExecutor(SparkSession, plan);
+        executor.Exec();
+        
+        Console.WriteLine(executor.GetMlCommandResult());
+        var mlResult = executor.GetMlCommandResult();
+
+        if (mlResult.ResultTypeCase == MlCommandResult.ResultTypeOneofCase.OperatorInfo)
+        {
+            return mlResult.OperatorInfo.ObjRef.Id;
+        }
+       
+        throw new NotImplementedException($"Doesn't currently support fetching {method} with result type {mlResult.ResultTypeCase}");
+    }
+    
 }

@@ -23,7 +23,17 @@ public class Tokenizer(SparkSession sparkSession, ParamMap parameters) : Transfo
     /// A tokenizer that converts the input string to lowercase and then splits it by white spaces, uses default parameters
     /// </summary>
     /// <param name="sparkSession">`SparkSession` to create the `Tokenizer` on</param>
-    public Tokenizer(SparkSession sparkSession) : this(sparkSession,  DefaultParams)
+    public Tokenizer(SparkSession sparkSession) : this(sparkSession,  DefaultParams.Clone())
+    {
+        
+    }
+
+    /// <summary>
+    /// A tokenizer that processes an input string by converting it to lowercase and splitting it into tokens based on white space.
+    /// </summary>
+    /// <param name="sparkSession">The Spark session required to initialize the `Tokenizer`.</param>
+    /// <param name="parameters">A dictionary of parameters for configuring the `Tokenizer`. Parameters can also be set manually after initialization.</param>
+    public Tokenizer(SparkSession sparkSession, IDictionary<string, dynamic> parameters) : this(sparkSession, DefaultParams.Clone().Update(parameters))
     {
         
     }
@@ -62,7 +72,7 @@ public class Tokenizer(SparkSession sparkSession, ParamMap parameters) : Transfo
     /// Sets the minDocFreq parameter, defaults to 1
     /// </summary>
     /// <param name="val">The minDocFreq</param>
-    public int GetMinDocFreq() => ((int)this.ParamMap.Get("minDocFreq").Value);
+    public int GetMinDocFreq() => ((int)this.ParamMap.Get("minDocFreq").Value!);
 
     /// <summary>
     /// Load the `Tokenizer` from the Spark Connect server
@@ -74,7 +84,7 @@ public class Tokenizer(SparkSession sparkSession, ParamMap parameters) : Transfo
     {
         var mlResult = Load(path, spark, ClassName);
         
-        var paramMap = ParamMap.FromMLOperatorParams(mlResult.OperatorInfo.Params.Params, IDF.DefaultParams.Clone());
+        var paramMap = ParamMap.FromMLOperatorParams(mlResult.OperatorInfo.Params.Params, DefaultParams.Clone());
         var tokenizer = new Tokenizer(spark, paramMap);
         return tokenizer;
     }
