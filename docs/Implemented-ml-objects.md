@@ -6,7 +6,7 @@ Note that the current implementation is not complete and is subject to change.
 |-------------|----------------------------------------------------------------------------|-------------|
 | Transformer | org.apache.spark.ml.classification.NaiveBayesModel                         | Yes         |
 | Transformer | org.apache.spark.ml.classification.GBTClassificationModel                  |             |
-| Transformer | org.apache.spark.ml.feature.Word2VecModel                                  |             |
+| Transformer | org.apache.spark.ml.feature.Word2VecModel                                  | Yes         |
 | Transformer | org.apache.spark.ml.feature.CountVectorizerModel                           |             |
 | Transformer | org.apache.spark.ml.feature.TargetEncoderModel                             |             |
 | Transformer | org.apache.spark.ml.classification.LinearSVCModel                          |             |
@@ -83,7 +83,7 @@ Note that the current implementation is not complete and is subject to change.
 | Estimator   | org.apache.spark.ml.classification.LinearSVC                               |             |
 | Estimator   | org.apache.spark.ml.regression.DecisionTreeRegressor                       |             |
 | Estimator   | org.apache.spark.ml.feature.VectorIndexer                                  |             |
-| Estimator   | org.apache.spark.ml.feature.Word2Vec                                       |             |
+| Estimator   | org.apache.spark.ml.feature.Word2Vec                                       | Yes         |
 | Estimator   | org.apache.spark.ml.feature.IDF                                            |             |
 | Estimator   | org.apache.spark.ml.classification.GBTClassifier                           |             |
 | Estimator   | org.apache.spark.ml.classification.RandomForestClassifier                  |             |
