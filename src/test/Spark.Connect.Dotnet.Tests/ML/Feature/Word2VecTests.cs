@@ -45,15 +45,16 @@ public class Word2VecTests(ITestOutputHelper logger) : E2ETestBase(logger)
     {
         var data = new List<(int id, string[] words)>()
         {
-
-    [Fact]
+            (0, new[] { "ab", "bc", "cd" }),
+            (1, new[] { "de", "ef", "fg" })
+        word2Vec.SetMinCount(1);
     [Trait("SparkMinVersion", "4")]
     public void Word2VecModel_Params_Test()
     {
         var data = new List<(int id, string[] words)>()
         {
-            (0, new[] { "a", "b", "c" }),
-            (1, new[] { "d", "e", "f" })
+            (0, new[] { "ab", "bc", "cd" }),
+            (1, new[] { "de", "ef", "fg" })
         };
 
         var schema = new StructType(new[]
@@ -67,6 +68,7 @@ public class Word2VecTests(ITestOutputHelper logger) : E2ETestBase(logger)
         var word2Vec = new Word2Vec();
         word2Vec.SetInputCol("words");
         word2Vec.SetOutputCol("result");
+        word2Vec.SetMinCount(1);
 
         var model = word2Vec.Fit(documentDF);
 
