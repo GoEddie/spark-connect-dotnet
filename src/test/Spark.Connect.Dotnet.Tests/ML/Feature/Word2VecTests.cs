@@ -29,6 +29,9 @@ public class Word2VecTests(ITestOutputHelper logger) : E2ETestBase(logger)
         word2Vec.SetInputCol("words");
         word2Vec.SetOutputCol("result");
         word2Vec.SetVectorSize(2);
+        word2Vec.SetStepSize(0.1);
+        word2Vec.SetMinCount(2);
+        Assert.Equal(2, word2Vec.GetMinCount());
 
         var model = word2Vec.Fit(documentDF);
         var result = model.Transform(documentDF);

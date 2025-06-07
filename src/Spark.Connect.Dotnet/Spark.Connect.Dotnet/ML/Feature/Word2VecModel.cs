@@ -37,6 +37,41 @@ public class Word2VecModel(string uid, ObjectRef objRef, SparkSession sparkSessi
     public void SetVectorSize(int value) => ParamMap.Add("vectorSize", value);
 
     /// <summary>
+    /// Set the minimum number of times a token must appear.
+    /// </summary>
+    public void SetMinCount(int value) => ParamMap.Add("minCount", value);
+
+    /// <summary>
+    /// Set the number of partitions for training.
+    /// </summary>
+    public void SetNumPartitions(int value) => ParamMap.Add("numPartitions", value);
+
+    /// <summary>
+    /// Set the optimization step size.
+    /// </summary>
+    public void SetStepSize(double value) => ParamMap.Add("stepSize", value);
+
+    /// <summary>
+    /// Set the maximum number of iterations.
+    /// </summary>
+    public void SetMaxIter(int value) => ParamMap.Add("maxIter", value);
+
+    /// <summary>
+    /// Set the random seed.
+    /// </summary>
+    public void SetSeed(long? value) => ParamMap.Add("seed", value);
+
+    /// <summary>
+    /// Set the window size for context words.
+    /// </summary>
+    public void SetWindowSize(int value) => ParamMap.Add("windowSize", value);
+
+    /// <summary>
+    /// Set the maximum sentence length.
+    /// </summary>
+    public void SetMaxSentenceLength(int value) => ParamMap.Add("maxSentenceLength", value);
+
+    /// <summary>
     /// Get the input column name.
     /// </summary>
     public string GetInputCol() => ParamMap.Get("inputCol").Value;
@@ -50,4 +85,39 @@ public class Word2VecModel(string uid, ObjectRef objRef, SparkSession sparkSessi
     /// Get the vector size.
     /// </summary>
     public int GetVectorSize() => ParamMap.Get("vectorSize").Value;
+
+    /// <summary>
+    /// Get the minimum count for tokens.
+    /// </summary>
+    public int GetMinCount() => ParamMap.Get("minCount").Value;
+
+    /// <summary>
+    /// Get the number of partitions.
+    /// </summary>
+    public int GetNumPartitions() => ParamMap.Get("numPartitions").Value;
+
+    /// <summary>
+    /// Get the step size value.
+    /// </summary>
+    public double GetStepSize() => ParamMap.Get("stepSize").Value;
+
+    /// <summary>
+    /// Get the maximum iterations.
+    /// </summary>
+    public int GetMaxIter() => ParamMap.Get("maxIter").Value;
+
+    /// <summary>
+    /// Get the seed used.
+    /// </summary>
+    public long? GetSeed() => ParamMap.Get("seed").Value;
+
+    /// <summary>
+    /// Get the window size used for context words.
+    /// </summary>
+    public int GetWindowSize() => ParamMap.Get("windowSize").Value;
+
+    /// <summary>
+    /// Get the maximum sentence length.
+    /// </summary>
+    public int GetMaxSentenceLength() => ParamMap.Get("maxSentenceLength").Value;
 }
