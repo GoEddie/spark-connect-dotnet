@@ -69,6 +69,8 @@ public abstract class Estimator<T>(string uid, string className, ParamMap defaul
                return (T)(object)new StringIndexerModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
            case {} when typeof(T) == typeof(GBTClassifierModel):
                return (T)(object)new GBTClassifierModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
+           case {} when typeof(T) == typeof(Word2VecModel):
+               return (T)(object)new Word2VecModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, df.SparkSession, paramMap);
            default:
                 throw new NotImplementedException($"Unable to create a `Transformer` or `Model` for {typeof(T).Name}");
         }

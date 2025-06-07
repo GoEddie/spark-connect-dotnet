@@ -58,7 +58,7 @@ public class GBTClassifierTests(ITestOutputHelper logger) : E2ETestBase(logger)
         
         Logger.WriteLine($"treeWeights: {string.Join(",", gbtModel.TreeWeights())}");
         Logger.WriteLine($"trees: {string.Join(",", gbtModel.Trees())}");
-        Logger.WriteLine($"Predict: {gbtModel.Predict(new DenseVector([0.0, 1.1, 0.1]))}");
+        // Logger.WriteLine($"Predict: {gbtModel.Predict(new DenseVector([0.0, 1.1, 0.1]))}");
         
     }
     

@@ -23,6 +23,8 @@ public class DecisionTreeRegressionModel(string uid, ObjectRef objRef, SparkSess
 
 /// <summary>
 /// Gradient-Boosted Trees (GBTs) learning algorithm for classification. It supports binary labels, as well as both continuous and categorical features.
+///
+/// 
 /// </summary>
 public class GBTClassifierModel(string uid, ObjectRef objRef, SparkSession sparkSession, ParamMap paramMap)
     : Model(uid, ClassName, objRef, sparkSession, paramMap)
@@ -343,6 +345,7 @@ public class GBTClassifierModel(string uid, ObjectRef objRef, SparkSession spark
     
     public float Predict(Vector value)
     {
-        return Fetch("predict", value);
+     throw new NotImplementedException("Cannot pass a vector to predict"); //TODO: Get predict working
+        // return Fetch("predict", value);
     }
 }
