@@ -47,7 +47,32 @@ public class Word2VecTests(ITestOutputHelper logger) : E2ETestBase(logger)
         {
             (0, new[] { "ab", "bc", "cd" }),
             (1, new[] { "de", "ef", "fg" })
+        };
+
+        var schema = new StructType(new[]
+        {
+            new StructField("id", new IntegerType(), false),
+            new StructField("words", new ArrayType(new StringType(), true), false)
+        });
+
+        var documentDF = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
+
+        var word2Vec = new Word2Vec();
+        word2Vec.SetInputCol("words");
+        word2Vec.SetOutputCol("result");
+        word2Vec.SetVectorSize(2);
         word2Vec.SetMinCount(1);
+        
+
+        var model = word2Vec.Fit(documentDF);
+        model.Save("/tmp/transformers-word2vec");
+
+        var loaded = Word2VecModel.Load("/tmp/transformers-word2vec", Spark);
+        var result = loaded.Transform(documentDF);
+        result.Show(3, 1000);
+        result.PrintSchema();
+    }
+    
     [Trait("SparkMinVersion", "4")]
     public void Word2VecModel_Params_Test()
     {
@@ -94,33 +119,6 @@ public class Word2VecTests(ITestOutputHelper logger) : E2ETestBase(logger)
         Assert.Equal(500, model.GetMaxSentenceLength());
 
         var result = model.Transform(documentDF);
-        result.Show(3, 1000);
-        result.PrintSchema();
-    }
-            (0, new[] { "ab", "bc", "cd" }),
-            (1, new[] { "de", "ef", "fg" })
-        };
-
-        var schema = new StructType(new[]
-        {
-            new StructField("id", new IntegerType(), false),
-            new StructField("words", new ArrayType(new StringType(), true), false)
-        });
-
-        var documentDF = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
-
-        var word2Vec = new Word2Vec();
-        word2Vec.SetInputCol("words");
-        word2Vec.SetOutputCol("result");
-        word2Vec.SetVectorSize(2);
-        word2Vec.SetMinCount(1);
-        
-
-        var model = word2Vec.Fit(documentDF);
-        model.Save("/tmp/transformers-word2vec");
-
-        var loaded = Word2VecModel.Load("/tmp/transformers-word2vec", Spark);
-        var result = loaded.Transform(documentDF);
         result.Show(3, 1000);
         result.PrintSchema();
     }
