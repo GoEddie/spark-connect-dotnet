@@ -45,6 +45,56 @@ public class Word2VecTests(ITestOutputHelper logger) : E2ETestBase(logger)
     {
         var data = new List<(int id, string[] words)>()
         {
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void Word2VecModel_Params_Test()
+    {
+        var data = new List<(int id, string[] words)>()
+        {
+            (0, new[] { "a", "b", "c" }),
+            (1, new[] { "d", "e", "f" })
+        };
+
+        var schema = new StructType(new[]
+        {
+            new StructField("id", new IntegerType(), false),
+            new StructField("words", new ArrayType(new StringType(), true), false)
+        });
+
+        var documentDF = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
+
+        var word2Vec = new Word2Vec();
+        word2Vec.SetInputCol("words");
+        word2Vec.SetOutputCol("result");
+
+        var model = word2Vec.Fit(documentDF);
+
+        model.SetInputCol("words");
+        Assert.Equal("words", model.GetInputCol());
+        model.SetOutputCol("features");
+        Assert.Equal("features", model.GetOutputCol());
+        model.SetVectorSize(3);
+        Assert.Equal(3, model.GetVectorSize());
+        model.SetMinCount(2);
+        Assert.Equal(2, model.GetMinCount());
+        model.SetNumPartitions(2);
+        Assert.Equal(2, model.GetNumPartitions());
+        model.SetStepSize(0.2);
+        Assert.Equal(0.2, model.GetStepSize());
+        model.SetMaxIter(2);
+        Assert.Equal(2, model.GetMaxIter());
+        model.SetSeed(42L);
+        Assert.Equal(42L, model.GetSeed());
+        model.SetWindowSize(10);
+        Assert.Equal(10, model.GetWindowSize());
+        model.SetMaxSentenceLength(500);
+        Assert.Equal(500, model.GetMaxSentenceLength());
+
+        var result = model.Transform(documentDF);
+        result.Show(3, 1000);
+        result.PrintSchema();
+    }
             (0, new[] { "ab", "bc", "cd" }),
             (1, new[] { "de", "ef", "fg" })
         };
