@@ -3,7 +3,7 @@ using Spark.Connect.Dotnet.ML.Param;
 namespace Spark.Connect.Dotnet.ML.Feature;
 
 /// <summary>
-/// Word2Vec trains a model of Map(String, Vector), i.e. transforms a word into a vector.
+/// Word2Vec Transforms a word into a vector.
 /// </summary>
 public class Word2Vec : Estimator<Word2VecModel>
 {

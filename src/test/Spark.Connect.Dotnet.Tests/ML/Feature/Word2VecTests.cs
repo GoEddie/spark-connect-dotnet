@@ -13,8 +13,8 @@ public class Word2VecTests(ITestOutputHelper logger) : E2ETestBase(logger)
     {
         var data = new List<(int id, string[] words)>()
         {
-            (0, new[] { "a", "b", "c" }),
-            (1, new[] { "d", "e", "f" })
+            (0, new[] { "ab", "bc", "cd" }),
+            (1, new[] { "de", "ef", "fg" })
         };
 
         var schema = new StructType(new[]
@@ -30,8 +30,8 @@ public class Word2VecTests(ITestOutputHelper logger) : E2ETestBase(logger)
         word2Vec.SetOutputCol("result");
         word2Vec.SetVectorSize(2);
         word2Vec.SetStepSize(0.1);
-        word2Vec.SetMinCount(2);
-        Assert.Equal(2, word2Vec.GetMinCount());
+        word2Vec.SetMinCount(1);
+        Assert.Equal(1, word2Vec.GetMinCount());
 
         var model = word2Vec.Fit(documentDF);
         var result = model.Transform(documentDF);
@@ -45,8 +45,8 @@ public class Word2VecTests(ITestOutputHelper logger) : E2ETestBase(logger)
     {
         var data = new List<(int id, string[] words)>()
         {
-            (0, new[] { "a", "b", "c" }),
-            (1, new[] { "d", "e", "f" })
+            (0, new[] { "ab", "bc", "cd" }),
+            (1, new[] { "de", "ef", "fg" })
         };
 
         var schema = new StructType(new[]
@@ -61,6 +61,8 @@ public class Word2VecTests(ITestOutputHelper logger) : E2ETestBase(logger)
         word2Vec.SetInputCol("words");
         word2Vec.SetOutputCol("result");
         word2Vec.SetVectorSize(2);
+        word2Vec.SetMinCount(1);
+        
 
         var model = word2Vec.Fit(documentDF);
         model.Save("/tmp/transformers-word2vec");
