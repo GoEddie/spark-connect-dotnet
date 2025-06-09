@@ -57,7 +57,7 @@ Note that the current implementation is not complete and is subject to change.
 | Transformer | org.apache.spark.ml.clustering.DistributedLDAModel                         |             |
 | Transformer | org.apache.spark.ml.feature.NGram                                          |             |
 | Transformer | org.apache.spark.ml.feature.StringIndexerModel                             |             |
-| Transformer | org.apache.spark.ml.feature.HashingTF                                      |             |
+| Transformer | org.apache.spark.ml.feature.HashingTF                                      | Yes         |
 | Transformer | org.apache.spark.ml.feature.VectorIndexerModel                             |             |
 | Transformer | org.apache.spark.ml.feature.Tokenizer                                      | Yes         |
 | Transformer | org.apache.spark.ml.feature.MinHashLSHModel                                |             |
