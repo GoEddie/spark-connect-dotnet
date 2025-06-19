@@ -12,7 +12,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Spark.Connect.Dotnet.Delta\Spark.Connect.Dotnet.Delta.csproj" />
       <ProjectReference Include="..\..\Spark.Connect.Dotnet\Spark.Connect.Dotnet\Spark.Connect.Dotnet.csproj" />
     </ItemGroup>
 
