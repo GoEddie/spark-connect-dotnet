@@ -8,7 +8,6 @@
 
     <ItemGroup>
         <PackageReference Include="Apache.Arrow" Version="19.0.1" />
-        <PackageReference Include="GOEddie.Spark.Dotnet.GrpcClient" Version="4.0.0-build.39" />
         <PackageReference Include="Google.Protobuf" Version="3.27.2" />
         <PackageReference Include="Grpc.Core.Api" Version="2.63.0" />
         <PackageReference Include="Grpc.Net.Client" Version="2.63.0" />
@@ -90,6 +89,10 @@
         <None Include="LICENSE.txt" Pack="true" PackagePath="" />
         <None Include="README.md" Pack="true" PackagePath="" />
         <None Include="logo.png" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Spark.Connect.Dotnet.GrpcClient\Spark.Connect.Dotnet.GrpcClient.csproj" />
     </ItemGroup>
 
 </Project>
