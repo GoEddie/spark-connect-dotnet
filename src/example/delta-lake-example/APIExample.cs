@@ -12,7 +12,7 @@ public class APIExample
     public void Run(SparkSession spark, string deltaPath, string csvPath)
     {
         Console.WriteLine($"Is the path '{csvPath} as deltaTable? {DeltaTable.IsDeltaTable(spark, csvPath)}");
-        Console.WriteLine($"Is the path '{deltaPath} as deltaTable? {DeltaTable.IsDeltaTable(spark, csvPath)}");
+        Console.WriteLine($"Is the path '{deltaPath} as deltaTable? {DeltaTable.IsDeltaTable(spark, deltaPath)}");
         
         var deltaTable = DeltaTable.ForPath(spark, deltaPath);
         deltaTable.History().Show(10, 1000);
