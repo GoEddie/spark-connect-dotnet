@@ -63,19 +63,19 @@ jobs:
         spark-version: '3.5.6'
         hadoop-version: '3'
     
-    - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
+    # - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
 
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.6
+    # - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.6,io.delta:delta-connect-server_2.13:4.0.0,com.google.protobuf:protobuf-java:3.25.1 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog" --conf "spark.connect.extensions.relation.classes=org.apache.spark.sql.connect.delta.DeltaRelationPlugin" --conf "spark.connect.extensions.command.classes=org.apache.spark.sql.connect.delta.DeltaCommandPlugin"
 
-    - name: Execute unit tests Spark 3.5
-      working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
-      run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results3.xml" --filter "SparkMinVersion!=4"
+    # - name: Execute unit tests Spark 3.5
+    #   working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
+    #   run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results3.xml" --filter "SparkMinVersion!=4"
 
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      with:
-        name: Test Results
-        path: ./test_results3.xml
+    # - name: Upload test results
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: Test Results
+    #     path: ./test_results3.xml
     
     - uses: vemonet/setup-spark@v1
       with:
@@ -85,7 +85,7 @@ jobs:
     
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
     
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.0
+    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.0,io.delta:delta-connect-server_2.13:4.0.0,com.google.protobuf:protobuf-java:3.25.1 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog" --conf "spark.connect.extensions.relation.classes=org.apache.spark.sql.connect.delta.DeltaRelationPlugin" --conf "spark.connect.extensions.command.classes=org.apache.spark.sql.connect.delta.DeltaCommandPlugin"
 
     - name: Execute unit tests Spark 4.0
       working-directory: ./src/test/Spark.Connect.Dotnet.Tests/

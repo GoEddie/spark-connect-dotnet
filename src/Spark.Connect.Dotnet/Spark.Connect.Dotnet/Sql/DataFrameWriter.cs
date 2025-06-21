@@ -183,6 +183,11 @@ public class DataFrameWriter
                 }
             }
         };
+
+        if (!string.IsNullOrEmpty(format))
+        {
+            plan.Command.WriteOperation.Source = format;
+        }
         
         if (_bucketColumnNames.Any())
         {
