@@ -68,6 +68,8 @@ public class SparkSession
         Host = url.Replace("sc://", "http://");
         var channel = GrpcChannel.ForAddress(Host, new GrpcChannelOptions()
         {
+            MaxSendMessageSize = null,
+            MaxReceiveMessageSize = null,
             ServiceConfig = new ServiceConfig()
             {
                 MethodConfigs = { new MethodConfig()

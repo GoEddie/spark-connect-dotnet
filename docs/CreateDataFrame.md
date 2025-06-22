@@ -1,4 +1,4 @@
-## CreateDataFrame
+ ## CreateDataFrame
 
 There are various ways of passing data to `CreateDataFrame` they all convert the data to the Arrow format and upload the data but the preferred wway is to pass an enumerable of typed tuple:
 
