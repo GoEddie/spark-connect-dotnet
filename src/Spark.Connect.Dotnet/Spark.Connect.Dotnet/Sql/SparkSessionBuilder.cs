@@ -20,6 +20,7 @@ public class SparkSessionBuilder
     private SparkSession? _session;
     private string _userId = string.Empty;
     private string _userName = string.Empty;
+    
 
     public SparkSessionBuilder Remote(string address)
     {
@@ -128,8 +129,7 @@ public class SparkSessionBuilder
             return _session;
         }
 
-        _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(), _clientType,
-            _databricksConnectionVerification, _databricksConnectionMaxVerificationTime, _sparkConnectDotnetConf);
+        _session = new SparkSession(Guid.NewGuid().ToString(), _remote, BuildHeaders(), BuildUserContext(), _clientType, _databricksConnectionVerification, _databricksConnectionMaxVerificationTime, _sparkConnectDotnetConf);
         if (_conf.Any())
         {
             Task.Run(() => GrpcInternal.ExecSetConfigCommandResponse(_session, _conf)).Wait();
@@ -182,6 +182,7 @@ public class SparkSessionBuilder
 
 public static class SparkDotnetKnownConfigKeys
 {
+    public const string ShowPipelineLogs = RuntimeConf.SparkDotnetConfigKey + "showpipelinelogs";
     public const string GrpcLogging = RuntimeConf.SparkDotnetConfigKey + "grpclogging";
     public const string PrintMetrics = RuntimeConf.SparkDotnetConfigKey + "showmetrics";
     

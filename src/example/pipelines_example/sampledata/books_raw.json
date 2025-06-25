@@ -1,0 +1,64 @@
+{
+  "publishers": [
+    {
+      "id": "pub1",
+      "name": "Penguin Books",
+      "location": "New York",
+      "founded": 1935
+    },
+    {
+      "id": "pub2",
+      "name": "HarperCollins",
+      "location": "London",
+      "founded": 1989
+    }
+  ],
+  "authors": [
+    {
+      "id": "auth1",
+      "name": "Jane Smith",
+      "birth_year": 1975,
+      "nationality": "British",
+      "pub_id": "pub1"
+    },
+    {
+      "id": "auth2",
+      "name": "John Doe",
+      "birth_year": 1980,
+      "nationality": "American",
+      "pub_id": "pub2"
+    }
+  ],
+  "books": [
+    {
+      "id": "book1",
+      "title": "The Digital Age",
+      "publication_year": 2020,
+      "isbn": "978-0123456789",
+      "genre": "Technology",
+      "author_id": "auth1",
+      "pub_id": "pub1",
+      "price": 29.99
+    },
+    {
+      "id": "book2",
+      "title": "Modern Fiction",
+      "publication_year": 2021,
+      "isbn": "978-9876543210",
+      "genre": "Fiction",
+      "author_id": "auth2",
+      "pub_id": "pub2",
+      "price": 24.99
+    },
+    {
+      "id": "book3",
+      "title": "Modern Fiction",
+      "publication_year": 2024,
+      "isbn": "978-9876543219",
+      "genre": "Fiction",
+      "author_id": "auth2",
+      "pub_id": "pub2",
+      "price": 240.99
+    }
+  ]
+}

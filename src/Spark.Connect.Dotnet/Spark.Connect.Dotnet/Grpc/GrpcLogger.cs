@@ -17,7 +17,6 @@ public class GrpcLogger
     {
         _level = level;
         _console = console ?? new LocalConsole();
-        
     }
     
 
@@ -28,10 +27,20 @@ public class GrpcLogger
     /// <param name="message"></param>
     public virtual void Log(GrpcLoggingLevel level, string message)
     {
-        if (level >= _level)
+        if (level < _level)
         {
             _console.WriteLine(DateTime.Now + " :: " + message);
         }
+    }
+    
+    /// <summary>
+    /// Log
+    /// </summary>
+    /// <param name="level"></param>
+    /// <param name="message"></param>
+    public virtual void LogPipeline(string message)
+    { 
+        _console.WriteLine(DateTime.Now + " :: " + message);
     }
     
     /// <summary>
@@ -42,7 +51,7 @@ public class GrpcLogger
     /// <param name="args"></param>
     public virtual void Log(GrpcLoggingLevel level, string format, params object[] args)
     {
-        if (level >= _level)
+        if (level < _level)
         {
             _console.WriteLine( DateTime.Now + " :: " + string.Format(format, args));
         }

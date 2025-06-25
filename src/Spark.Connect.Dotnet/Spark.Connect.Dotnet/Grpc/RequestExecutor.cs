@@ -88,6 +88,12 @@ public class RequestExecutor : IDisposable
             {
                 return new GrpcLogger(GrpcLoggingLevel.Verbose, session.Console);
             }
+            
+            if (logging == "pipeline")
+            {
+                session.Conf.Set(SparkDotnetKnownConfigKeys.ShowPipelineLogs, "true");
+                return new GrpcLogger(GrpcLoggingLevel.None, session.Console);
+            }
         }
 
         return new GrpcNullLogger(GrpcLoggingLevel.None, null);
@@ -222,6 +228,21 @@ public class RequestExecutor : IDisposable
                     _streamingProgress = current.StreamingQueryCommandResult.RecentProgress;
                 }
 
+                if (current.PipelineCommandResult != null)
+                {
+                    _pipelineCommandResult = current.PipelineCommandResult;
+                }
+
+                if (current.PipelineEventResult != null)
+                {
+                    _pipelineEventResult = current.PipelineEventResult;
+
+                    if (_session.Conf.SparkDotnetConnectOptions[SparkDotnetKnownConfigKeys.ShowPipelineLogs] == "true")
+                    {
+                        _logger.LogPipeline( $"Pipeline Event: '{_pipelineEventResult.Event.Message}' at '{_pipelineEventResult.Event.Timestamp}'");   
+                    }
+                }
+                
                 //ResponseId always has to come last because it is the marker to tell the server
                 // where we are if we get disconnected, if we haven't finished reading the response 
                 // then we can ask for it again (_lastResponseId)
@@ -273,17 +294,21 @@ public class RequestExecutor : IDisposable
                 throw; 
             }
         }
-
+        
         return true;
     }
     
     private List<ExecutePlanResponse.Types.ArrowBatch> _arrowBatches = new();
-    
+    private PipelineCommandResult? _pipelineCommandResult;
+    private PipelineEventResult? _pipelineEventResult;
+
     private void HandleArrowResponse(ExecutePlanResponse.Types.ArrowBatch arrowBatch)
     {
         _arrowBatches.Add(arrowBatch);
     }
 
+    
+    
     private AsyncServerStreamingCall<ExecutePlanResponse> GetResponse()
     {
         if (_operationId == string.Empty)
@@ -500,5 +525,17 @@ public class RequestExecutor : IDisposable
     /// </summary>
     /// <returns></returns>
     public StreamingQueryCommandResult.Types.RecentProgressResult? GetStreamingRecentProgress() => _streamingProgress;
+    
+    /// <summary>
+    /// Get the pipeline command result
+    /// </summary>
+    /// <returns></returns>
+    public PipelineCommandResult? GetPipelineCommandResult() => _pipelineCommandResult!;
+
+    /// <summary>
+    /// Retrieves the result of a pipeline event.
+    /// </summary>
+    /// <returns>A PipelineEventResult instance representing the outcome of the pipeline event.</returns>
+    public PipelineEventResult? GetPipelineEventResult() => _pipelineEventResult!;
 }
 
