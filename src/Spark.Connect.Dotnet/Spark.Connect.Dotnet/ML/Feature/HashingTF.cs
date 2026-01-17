@@ -85,7 +85,7 @@ public class HashingTF(SparkSession sparkSession, ParamMap paramMap) : Transform
     /// <param name="spark">The <see cref="SparkSession"/> to use.</param>
     public static HashingTF Load(string path, SparkSession spark)
     {
-        var mlResult = Load(path, spark, ClassName);
+        var mlResult = Load(path, spark, ClassName, MlOperator.Types.OperatorType.Transformer);
         var paramMap = ParamMap.FromMLOperatorParams(mlResult.OperatorInfo.Params.Params, DefaultParams.Clone());
         return new HashingTF(spark, paramMap);
     }

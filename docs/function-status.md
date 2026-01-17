@@ -99,6 +99,7 @@
 | current_database            | CurrentDatabase           | 3.5.* |
 | current_date                | CurrentDate               | 3.5.* |
 | current_schema              | CurrentSchema             | 3.5.* |
+| current_time                | CurrentTime               | 4.1   |
 | current_timestamp           | CurrentTimestamp          | 3.5.* |
 | current_timezone            | CurrentTimezone           | 3.5.* |
 | current_user                | CurrentUser               | 3.5.* |
@@ -167,6 +168,7 @@
 | hours                       | Hours                     | 3.5.* |
 | hypot                       | Hypot                     | 3.5.* |
 | ifnull                      | Ifnull                    | 3.5.* |
+| ilike                       | ILike                     | 3.3.0 |
 | initcap                     | Initcap                   | 3.5.* |
 | inline                      | Inline                    | 3.5.* |
 | inline_outer                | InlineOuter               | 3.5.* |
@@ -178,6 +180,7 @@
 | isnan                       | Isnan                     | 3.5.* |
 | isnotnull                   | Isnotnull                 | 3.5.* |
 | isnull                      | Isnull                    | 3.5.* |
+| is_valid_utf8               | IsValidUtf8               | 4.0.0 |
 | json_array_length           | JsonArrayLength           | 3.5.* |
 | json_object_keys            | JsonObjectKeys            | 3.5.* |
 | json_tuple                  | JsonTuple                 | 3.5.* |
@@ -201,6 +204,7 @@
 | log1p                       | Log1p                     | 3.5.* |
 | log2                        | Log2                      | 3.5.* |
 | lower                       | Lower                     | 3.5.* |
+| luhn_check                  | LuhnCheck                 | 4.0.0 |
 | lpad                        | Lpad                      | 3.5.* |
 | ltrim                       | Ltrim                     | 3.5.* |
 | make_date                   | MakeDate                  | 3.5.* |
@@ -209,6 +213,8 @@
 | make_timestamp              | MakeTimestamp             | 3.5.* |
 | make_timestamp_ltz          | MakeTimestampLtz          | 3.5.* |
 | make_timestamp_ntz          | MakeTimestampNtz          | 3.5.* |
+| make_time                   | MakeTime                  | 4.1   |
+| make_valid_utf8             | MakeValidUtf8             | 4.0.0 |
 | make_ym_interval            | MakeYmInterval            | 3.5.* |
 | map                         | Map                       | 3.5.* |
 | map_concat                  | MapConcat                 | 3.5.* |
@@ -245,6 +251,7 @@
 | nullif                      | Nullif                    | 3.5.* |
 | nvl                         | Nvl                       | 3.5.* |
 | nvl2                        | Nvl2                      | 3.5.* |
+| nullifzero                  | Nullifzero                | 4.0.0 |
 | octet_length                | OctetLength               | 3.5.* |
 | overlay                     | Overlay                   | 3.5.* |
 | parse_json                  | ParseJson                 | 4.0.0 |
@@ -262,10 +269,12 @@
 | printf                      | Printf                    | 3.5.* |
 | product                     | Product                   | 3.5.* |
 | quarter                     | Quarter                   | 3.5.* |
+| quote                       | Quote                     | 4.0.0 |
 | radians                     | Radians                   | 3.5.* |
 | raise_error                 | RaiseError                | 3.5.* |
 | rand                        | Rand                      | 3.5.* |
 | randn                       | Randn                     | 3.5.* |
+| randstr                     | Randstr                   | 4.0.0 |
 | rank                        | Rank                      | 3.5.* |
 | reduce                      | Reduce                    | 3.5.* |
 | reflect                     | Reflect                   | 3.5.* |
@@ -327,6 +336,7 @@
 | some                        | Some                      | 3.5.* |
 | sort_array                  | SortArray                 | 3.5.* |
 | soundex                     | Soundex                   | 3.5.* |
+| space                       | Space                     | 4.0.0 |
 | spark_partition_id          | SparkPartitionId          | 3.5.* |
 | split                       | Split                     | 3.5.* |
 | split_part                  | SplitPart                 | 3.5.* |
@@ -345,6 +355,8 @@
 | sum                         | Sum                       | 3.5.* |
 | tan                         | Tan                       | 3.5.* |
 | tanh                        | Tanh                      | 3.5.* |
+| time_diff                   | TimeDiff                  | 4.1   |
+| time_trunc                  | TimeTrunc                 | 4.1   |
 | timestamp_micros            | TimestampMicros           | 3.5.* |
 | timestamp_millis            | TimestampMillis           | 3.5.* |
 | timestamp_seconds           | TimestampSeconds          | 3.5.* |
@@ -359,6 +371,7 @@
 | to_timestamp                | ToTimestamp               | 3.5.* |
 | to_timestamp_ltz            | ToTimestampLtz            | 3.5.* |
 | to_timestamp_ntz            | ToTimestampNtz            | 3.5.* |
+| to_time                     | ToTime                    | 4.1   |
 | to_unix_timestamp           | ToUnixTimestamp           | 3.5.* |
 | to_utc_timestamp            | ToUtcTimestamp            | 3.5.* |
 | to_varchar                  | ToVarchar                 | 3.5.* |
@@ -373,19 +386,29 @@
 | try_avg                     | TryAvg                    | 3.5.* |
 | try_divide                  | TryDivide                 | 3.5.* |
 | try_element_at              | TryElementAt              | 3.5.* |
+| try_make_interval           | TryMakeInterval           | 4.0.0 |
+| try_make_timestamp          | TryMakeTimestamp          | 4.0.0 |
+| try_make_timestamp_ltz      | TryMakeTimestampLtz       | 4.0.0 |
+| try_make_timestamp_ntz      | TryMakeTimestampNtz       | 4.0.0 |
 | try_mod                     | TryMod                    | 4.0.0 |
 | try_multiply                | TryMultiply               | 3.5.* |
 | try_parse_json              | TryParseJson              | 4.0.0 |
+| try_parse_url               | TryParseUrl               | 4.0.0 |
+| try_reflect                 | TryReflect                | 4.0.0 |
 | try_subtract                | TrySubtract               | 3.5.* |
 | try_sum                     | TrySum                    | 3.5.* |
 | try_to_binary               | TryToBinary               | 3.5.* |
 | try_to_number               | TryToNumber               | 3.5.* |
 | try_to_timestamp            | TryToTimestamp            | 3.5.* |
+| try_to_time                 | TryToTime                 | 4.1   |
+| try_url_decode              | TryUrlDecode              | 4.0.0 |
+| try_validate_utf8           | TryValidateUtf8           | 4.0.0 |
 | try_variant_get             | TryVariantGet             | 3.5.* |
 | typeof                      | Typeof                    | 3.5.* |
 | ucase                       | Ucase                     | 3.5.* |
 | unbase64                    | Unbase64                  | 3.5.* |
 | unhex                       | Unhex                     | 3.5.* |
+| uniform                     | Uniform                   | 4.0.0 |
 | unix_date                   | UnixDate                  | 3.5.* |
 | unix_micros                 | UnixMicros                | 3.5.* |
 | unix_millis                 | UnixMillis                | 3.5.* |
@@ -395,6 +418,8 @@
 | url_decode                  | UrlDecode                 | 3.5.* |
 | url_encode                  | UrlEncode                 | 3.5.* |
 | user                        | User                      | 3.5.* |
+| uuid                        | Uuid                      | 4.0.0 |
+| validate_utf8               | ValidateUtf8              | 4.0.0 |
 | var_pop                     | VarPop                    | 3.5.* |
 | var_samp                    | VarSamp                   | 3.5.* |
 | variance                    | Variance                  | 3.5.* |
@@ -419,4 +444,5 @@
 | year                        | Year                      | 3.5.* |
 | years                       | Years                     | 3.5.* |
 | zip_with                    | ZipWith                   | 3.5.* |
+| zeroifnull                  | Zeroifnull                | 4.0.0 |
 | ~                           | BitwiseNot                | 3.5.* |

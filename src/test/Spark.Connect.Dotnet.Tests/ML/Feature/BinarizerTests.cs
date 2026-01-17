@@ -54,6 +54,7 @@ public class BinarizerTests : E2ETestBase
        tokens.Show(3, 10000);
        tokens.PrintSchema();
     }
+    
     [Fact]
     [Trait("SparkMinVersion", "4")]
     public void Binarizer_Ctor_Test()

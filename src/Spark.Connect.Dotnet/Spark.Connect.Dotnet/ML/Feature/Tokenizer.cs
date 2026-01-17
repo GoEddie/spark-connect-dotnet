@@ -82,8 +82,8 @@ public class Tokenizer(SparkSession sparkSession, ParamMap parameters) : Transfo
     /// <returns></returns>
     public static Tokenizer Load(string path, SparkSession spark)
     {
-        var mlResult = Load(path, spark, ClassName);
-        
+        var mlResult = Load(path, spark, ClassName, MlOperator.Types.OperatorType.Transformer);
+
         var paramMap = ParamMap.FromMLOperatorParams(mlResult.OperatorInfo.Params.Params, DefaultParams.Clone());
         var tokenizer = new Tokenizer(spark, paramMap);
         return tokenizer;

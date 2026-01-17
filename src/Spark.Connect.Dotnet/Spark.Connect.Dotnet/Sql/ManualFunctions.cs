@@ -1604,6 +1604,35 @@ public partial class Functions : FunctionsWrapper
     }
 
     /// <summary>
+    /// Case-insensitive LIKE pattern matching.
+    /// </summary>
+    /// <param name="col">The column to match against.</param>
+    /// <param name="pattern">The pattern to match.</param>
+    /// <param name="escape">Optional escape character.</param>
+    /// <returns>Column with boolean result of the pattern match.</returns>
+    public static Column ILike(string col, string pattern, string? escape = null)
+    {
+        return ILike(Col(col), Lit(pattern), escape == null ? null : Lit(escape));
+    }
+
+    /// <summary>
+    /// Case-insensitive LIKE pattern matching.
+    /// </summary>
+    /// <param name="col">The column to match against.</param>
+    /// <param name="pattern">The pattern to match.</param>
+    /// <param name="escape">Optional escape character.</param>
+    /// <returns>Column with boolean result of the pattern match.</returns>
+    public static Column ILike(Column col, Column pattern, Column? escape = null)
+    {
+        if (Equals(null, escape))
+        {
+            return new Column(CreateExpression("ilike", false, col, pattern));
+        }
+
+        return new Column(CreateExpression("ilike", false, col, pattern, escape));
+    }
+
+    /// <summary>
     ///     Find the occurence of substr in col - the PySpark docs say that pos is 0-based but you need to use 1 for the first
     ///     char
     /// </summary>
@@ -3224,5 +3253,698 @@ public partial class Functions : FunctionsWrapper
     public static Column Collation(Column col)
     {
         return new Column(CreateExpression("collation", false, col));
+    }
+
+    // =====================================================
+    // Spark 4.1 Time Functions
+    // =====================================================
+
+    /// <summary>
+    /// Returns the current time at the start of query evaluation as a TIME value.
+    /// All calls of current_time within the same query return the same value.
+    /// </summary>
+    /// <returns>Column containing the current time.</returns>
+    public static Column CurrentTime()
+    {
+        return new Column(CreateExpression("current_time", false));
+    }
+
+    /// <summary>
+    /// Creates a TIME value from hour, minute, and second components.
+    /// </summary>
+    /// <param name="hour">The hour component (0-23).</param>
+    /// <param name="minute">The minute component (0-59).</param>
+    /// <param name="second">The second component (0-59).</param>
+    /// <returns>Column containing the TIME value.</returns>
+    public static Column MakeTime(string hour, string minute, string second) =>
+        MakeTime(Col(hour), Col(minute), Col(second));
+
+    /// <summary>
+    /// Creates a TIME value from hour, minute, and second components.
+    /// </summary>
+    /// <param name="hour">The hour component (0-23).</param>
+    /// <param name="minute">The minute component (0-59).</param>
+    /// <param name="second">The second component (0-59).</param>
+    /// <returns>Column containing the TIME value.</returns>
+    public static Column MakeTime(Column hour, Column minute, Column second)
+    {
+        return new Column(CreateExpression("make_time", false, hour, minute, second));
+    }
+
+    /// <summary>
+    /// Creates a TIME value from hour, minute, and second integer values.
+    /// </summary>
+    /// <param name="hour">The hour component (0-23).</param>
+    /// <param name="minute">The minute component (0-59).</param>
+    /// <param name="second">The second component (0-59).</param>
+    /// <returns>Column containing the TIME value.</returns>
+    public static Column MakeTime(int hour, int minute, int second)
+    {
+        return new Column(CreateExpression("make_time", false, Lit(hour), Lit(minute), Lit(second)));
+    }
+
+    /// <summary>
+    /// Converts a string to a TIME value using the default format.
+    /// </summary>
+    /// <param name="col">The column containing the string to convert.</param>
+    /// <returns>Column containing the TIME value.</returns>
+    public static Column ToTime(string col) => ToTime(Col(col));
+
+    /// <summary>
+    /// Converts a string to a TIME value using the default format.
+    /// </summary>
+    /// <param name="col">The column containing the string to convert.</param>
+    /// <returns>Column containing the TIME value.</returns>
+    public static Column ToTime(Column col)
+    {
+        return new Column(CreateExpression("to_time", false, col));
+    }
+
+    /// <summary>
+    /// Converts a string to a TIME value using the specified format.
+    /// </summary>
+    /// <param name="col">The column containing the string to convert.</param>
+    /// <param name="format">The format pattern to parse the time string.</param>
+    /// <returns>Column containing the TIME value.</returns>
+    public static Column ToTime(string col, string format) => ToTime(Col(col), Lit(format));
+
+    /// <summary>
+    /// Converts a string to a TIME value using the specified format.
+    /// </summary>
+    /// <param name="col">The column containing the string to convert.</param>
+    /// <param name="format">The format pattern to parse the time string.</param>
+    /// <returns>Column containing the TIME value.</returns>
+    public static Column ToTime(Column col, string format) => ToTime(col, Lit(format));
+
+    /// <summary>
+    /// Converts a string to a TIME value using the specified format.
+    /// </summary>
+    /// <param name="col">The column containing the string to convert.</param>
+    /// <param name="format">The format pattern to parse the time string.</param>
+    /// <returns>Column containing the TIME value.</returns>
+    public static Column ToTime(Column col, Column format)
+    {
+        return new Column(CreateExpression("to_time", false, col, format));
+    }
+
+    /// <summary>
+    /// Safely converts a string to a TIME value, returning null if the conversion fails.
+    /// </summary>
+    /// <param name="col">The column containing the string to convert.</param>
+    /// <returns>Column containing the TIME value or null.</returns>
+    public static Column TryToTime(string col) => TryToTime(Col(col));
+
+    /// <summary>
+    /// Safely converts a string to a TIME value, returning null if the conversion fails.
+    /// </summary>
+    /// <param name="col">The column containing the string to convert.</param>
+    /// <returns>Column containing the TIME value or null.</returns>
+    public static Column TryToTime(Column col)
+    {
+        return new Column(CreateExpression("try_to_time", false, col));
+    }
+
+    /// <summary>
+    /// Safely converts a string to a TIME value using the specified format, returning null if the conversion fails.
+    /// </summary>
+    /// <param name="col">The column containing the string to convert.</param>
+    /// <param name="format">The format pattern to parse the time string.</param>
+    /// <returns>Column containing the TIME value or null.</returns>
+    public static Column TryToTime(string col, string format) => TryToTime(Col(col), Lit(format));
+
+    /// <summary>
+    /// Safely converts a string to a TIME value using the specified format, returning null if the conversion fails.
+    /// </summary>
+    /// <param name="col">The column containing the string to convert.</param>
+    /// <param name="format">The format pattern to parse the time string.</param>
+    /// <returns>Column containing the TIME value or null.</returns>
+    public static Column TryToTime(Column col, string format) => TryToTime(col, Lit(format));
+
+    /// <summary>
+    /// Safely converts a string to a TIME value using the specified format, returning null if the conversion fails.
+    /// </summary>
+    /// <param name="col">The column containing the string to convert.</param>
+    /// <param name="format">The format pattern to parse the time string.</param>
+    /// <returns>Column containing the TIME value or null.</returns>
+    public static Column TryToTime(Column col, Column format)
+    {
+        return new Column(CreateExpression("try_to_time", false, col, format));
+    }
+
+    /// <summary>
+    /// Returns the difference between two TIME values in the specified unit.
+    /// </summary>
+    /// <param name="unit">The unit for the difference (e.g., "HOUR", "MINUTE", "SECOND").</param>
+    /// <param name="start">The start time.</param>
+    /// <param name="end">The end time.</param>
+    /// <returns>Column containing the difference as a long value.</returns>
+    public static Column TimeDiff(string unit, string start, string end) =>
+        TimeDiff(unit, Col(start), Col(end));
+
+    /// <summary>
+    /// Returns the difference between two TIME values in the specified unit.
+    /// </summary>
+    /// <param name="unit">The unit for the difference (e.g., "HOUR", "MINUTE", "SECOND").</param>
+    /// <param name="start">The start time.</param>
+    /// <param name="end">The end time.</param>
+    /// <returns>Column containing the difference as a long value.</returns>
+    public static Column TimeDiff(string unit, Column start, Column end)
+    {
+        return new Column(CreateExpression("time_diff", false, Lit(unit), start, end));
+    }
+
+    /// <summary>
+    /// Truncates a TIME value to the specified unit.
+    /// </summary>
+    /// <param name="unit">The unit to truncate to (e.g., "HOUR", "MINUTE", "SECOND").</param>
+    /// <param name="time">The TIME value to truncate.</param>
+    /// <returns>Column containing the truncated TIME value.</returns>
+    public static Column TimeTrunc(string unit, string time) => TimeTrunc(unit, Col(time));
+
+    /// <summary>
+    /// Truncates a TIME value to the specified unit.
+    /// </summary>
+    /// <param name="unit">The unit to truncate to (e.g., "HOUR", "MINUTE", "SECOND").</param>
+    /// <param name="time">The TIME value to truncate.</param>
+    /// <returns>Column containing the truncated TIME value.</returns>
+    public static Column TimeTrunc(string unit, Column time)
+    {
+        return new Column(CreateExpression("time_trunc", false, Lit(unit), time));
+    }
+
+    // =====================================================
+    // Spark 4.0 String Functions
+    // =====================================================
+
+    /// <summary>
+    /// Returns a string with the input string enclosed in single quotes, with any single quotes
+    /// in the input escaped by doubling them.
+    /// </summary>
+    /// <param name="col">The column containing the string to quote.</param>
+    /// <returns>Column containing the quoted string.</returns>
+    public static Column Quote(string col) => Quote(Col(col));
+
+    /// <summary>
+    /// Returns a string with the input string enclosed in single quotes, with any single quotes
+    /// in the input escaped by doubling them.
+    /// </summary>
+    /// <param name="col">The column containing the string to quote.</param>
+    /// <returns>Column containing the quoted string.</returns>
+    public static Column Quote(Column col)
+    {
+        return new Column(CreateExpression("quote", false, col));
+    }
+
+    /// <summary>
+    /// Returns a string consisting of n spaces.
+    /// </summary>
+    /// <param name="n">The number of spaces.</param>
+    /// <returns>Column containing a string of spaces.</returns>
+    public static Column Space(int n) => Space(Lit(n));
+
+    /// <summary>
+    /// Returns a string consisting of n spaces.
+    /// </summary>
+    /// <param name="n">The column containing the number of spaces.</param>
+    /// <returns>Column containing a string of spaces.</returns>
+    public static Column Space(string n) => Space(Col(n));
+
+    /// <summary>
+    /// Returns a string consisting of n spaces.
+    /// </summary>
+    /// <param name="n">The column containing the number of spaces.</param>
+    /// <returns>Column containing a string of spaces.</returns>
+    public static Column Space(Column n)
+    {
+        return new Column(CreateExpression("space", false, n));
+    }
+
+    /// <summary>
+    /// Returns a universally unique identifier (UUID) string. The value is returned as a
+    /// canonical UUID 36-character string.
+    /// </summary>
+    /// <returns>Column containing a UUID string.</returns>
+    public static Column Uuid()
+    {
+        return new Column(CreateExpression("uuid", false));
+    }
+
+    /// <summary>
+    /// Returns a random string of the specified length using alphanumeric characters.
+    /// </summary>
+    /// <param name="length">The length of the random string.</param>
+    /// <returns>Column containing a random string.</returns>
+    public static Column Randstr(int length) => Randstr(Lit(length));
+    
+    /// <summary>
+    /// Returns a random string of the specified length using alphanumeric characters.
+    /// </summary>
+    /// <param name="length">The column containing the length of the random string.</param>
+    /// <returns>Column containing a random string.</returns>
+    public static Column Randstr(Column length)
+    {
+        return new Column(CreateExpression("randstr", false, length));
+    }
+
+    /// <summary>
+    /// Returns a random string of the specified length using alphanumeric characters with a seed.
+    /// </summary>
+    /// <param name="length">The length of the random string.</param>
+    /// <param name="seed">The seed for the random generator.</param>
+    /// <returns>Column containing a random string.</returns>
+    public static Column Randstr(int length, int seed)
+    {
+        return new Column(CreateExpression("randstr", false, Lit(length), Lit(seed)));
+    }
+
+    /// <summary>
+    /// Returns a random string of the specified length using alphanumeric characters with a seed.
+    /// </summary>
+    /// <param name="length">The column containing the length.</param>
+    /// <param name="seed">The column containing the seed.</param>
+    /// <returns>Column containing a random string.</returns>
+    public static Column Randstr(Column length, Column seed)
+    {
+        return new Column(CreateExpression("randstr", false, length, seed));
+    }
+
+    // =====================================================
+    // Spark 4.0 Null Handling Functions
+    // =====================================================
+
+    /// <summary>
+    /// Returns NULL if the expression equals zero, otherwise returns the expression.
+    /// </summary>
+    /// <param name="col">The column to check.</param>
+    /// <returns>Column containing NULL if zero, otherwise the original value.</returns>
+    public static Column Nullifzero(string col) => Nullifzero(Col(col));
+
+    /// <summary>
+    /// Returns NULL if the expression equals zero, otherwise returns the expression.
+    /// </summary>
+    /// <param name="col">The column to check.</param>
+    /// <returns>Column containing NULL if zero, otherwise the original value.</returns>
+    public static Column Nullifzero(Column col)
+    {
+        return new Column(CreateExpression("nullifzero", false, col));
+    }
+
+    /// <summary>
+    /// Returns zero if the expression is NULL, otherwise returns the expression.
+    /// </summary>
+    /// <param name="col">The column to check.</param>
+    /// <returns>Column containing 0 if NULL, otherwise the original value.</returns>
+    public static Column Zeroifnull(string col) => Zeroifnull(Col(col));
+
+    /// <summary>
+    /// Returns zero if the expression is NULL, otherwise returns the expression.
+    /// </summary>
+    /// <param name="col">The column to check.</param>
+    /// <returns>Column containing 0 if NULL, otherwise the original value.</returns>
+    public static Column Zeroifnull(Column col)
+    {
+        return new Column(CreateExpression("zeroifnull", false, col));
+    }
+
+    // =====================================================
+    // Spark 4.0 UTF-8 Validation Functions
+    // =====================================================
+
+    /// <summary>
+    /// Returns true if the input string is valid UTF-8, false otherwise.
+    /// </summary>
+    /// <param name="col">The column containing the string to validate.</param>
+    /// <returns>Column containing a boolean result.</returns>
+    public static Column IsValidUtf8(string col) => IsValidUtf8(Col(col));
+
+    /// <summary>
+    /// Returns true if the input string is valid UTF-8, false otherwise.
+    /// </summary>
+    /// <param name="col">The column containing the string to validate.</param>
+    /// <returns>Column containing a boolean result.</returns>
+    public static Column IsValidUtf8(Column col)
+    {
+        return new Column(CreateExpression("is_valid_utf8", false, col));
+    }
+
+    /// <summary>
+    /// Returns the input string if it is valid UTF-8, otherwise throws an exception.
+    /// </summary>
+    /// <param name="col">The column containing the string to validate.</param>
+    /// <returns>Column containing the validated string.</returns>
+    public static Column ValidateUtf8(string col) => ValidateUtf8(Col(col));
+
+    /// <summary>
+    /// Returns the input string if it is valid UTF-8, otherwise throws an exception.
+    /// </summary>
+    /// <param name="col">The column containing the string to validate.</param>
+    /// <returns>Column containing the validated string.</returns>
+    public static Column ValidateUtf8(Column col)
+    {
+        return new Column(CreateExpression("validate_utf8", false, col));
+    }
+
+    /// <summary>
+    /// Returns the input string with any invalid UTF-8 byte sequences replaced with the
+    /// Unicode replacement character (U+FFFD).
+    /// </summary>
+    /// <param name="col">The column containing the string to fix.</param>
+    /// <returns>Column containing the valid UTF-8 string.</returns>
+    public static Column MakeValidUtf8(string col) => MakeValidUtf8(Col(col));
+
+    /// <summary>
+    /// Returns the input string with any invalid UTF-8 byte sequences replaced with the
+    /// Unicode replacement character (U+FFFD).
+    /// </summary>
+    /// <param name="col">The column containing the string to fix.</param>
+    /// <returns>Column containing the valid UTF-8 string.</returns>
+    public static Column MakeValidUtf8(Column col)
+    {
+        return new Column(CreateExpression("make_valid_utf8", false, col));
+    }
+
+    /// <summary>
+    /// Returns the input string if it is valid UTF-8, otherwise returns NULL.
+    /// </summary>
+    /// <param name="col">The column containing the string to validate.</param>
+    /// <returns>Column containing the string or NULL.</returns>
+    public static Column TryValidateUtf8(string col) => TryValidateUtf8(Col(col));
+
+    /// <summary>
+    /// Returns the input string if it is valid UTF-8, otherwise returns NULL.
+    /// </summary>
+    /// <param name="col">The column containing the string to validate.</param>
+    /// <returns>Column containing the string or NULL.</returns>
+    public static Column TryValidateUtf8(Column col)
+    {
+        return new Column(CreateExpression("try_validate_utf8", false, col));
+    }
+
+    // =====================================================
+    // Spark 4.0 Regex Functions
+    // =====================================================
+
+    /// <summary>
+    /// Returns the position of the first substring in str that matches the regex pattern.
+    /// Returns 0 if no match is found.
+    /// </summary>
+    /// <param name="str">The string to search.</param>
+    /// <param name="regexp">The regular expression pattern.</param>
+    /// <returns>Column containing the position (1-indexed) or 0.</returns>
+    public static Column RegexpInstr(string str, string regexp) =>
+        RegexpInstr(Col(str), Lit(regexp));
+
+    /// <summary>
+    /// Returns the position of the first substring in str that matches the regex pattern.
+    /// Returns 0 if no match is found.
+    /// </summary>
+    /// <param name="str">The column containing the string to search.</param>
+    /// <param name="regexp">The regular expression pattern.</param>
+    /// <returns>Column containing the position (1-indexed) or 0.</returns>
+    public static Column RegexpInstr(Column str, string regexp) =>
+        RegexpInstr(str, Lit(regexp));
+
+    /// <summary>
+    /// Returns the position of the first substring in str that matches the regex pattern.
+    /// Returns 0 if no match is found.
+    /// </summary>
+    /// <param name="str">The column containing the string to search.</param>
+    /// <param name="regexp">The column containing the regular expression pattern.</param>
+    /// <returns>Column containing the position (1-indexed) or 0.</returns>
+    public static Column RegexpInstr(Column str, Column regexp)
+    {
+        return new Column(CreateExpression("regexp_instr", false, str, regexp));
+    }
+
+    // =====================================================
+    // Spark 4.0 Random Functions
+    // =====================================================
+
+    /// <summary>
+    /// Returns a random value with independent and identically distributed (i.i.d.)
+    /// uniformly distributed values in [min, max).
+    /// </summary>
+    /// <param name="min">The minimum value (inclusive).</param>
+    /// <param name="max">The maximum value (exclusive).</param>
+    /// <returns>Column containing a random value.</returns>
+    public static Column Uniform(double min, double max) =>
+        Uniform(Lit(min), Lit(max));
+
+    /// <summary>
+    /// Returns a random value with independent and identically distributed (i.i.d.)
+    /// uniformly distributed values in [min, max).
+    /// </summary>
+    /// <param name="min">The column containing the minimum value (inclusive).</param>
+    /// <param name="max">The column containing the maximum value (exclusive).</param>
+    /// <returns>Column containing a random value.</returns>
+    public static Column Uniform(Column min, Column max)
+    {
+        return new Column(CreateExpression("uniform", false, min, max));
+    }
+
+    /// <summary>
+    /// Returns a random value with independent and identically distributed (i.i.d.)
+    /// uniformly distributed values in [min, max) with a seed.
+    /// </summary>
+    /// <param name="min">The minimum value (inclusive).</param>
+    /// <param name="max">The maximum value (exclusive).</param>
+    /// <param name="seed">The random seed.</param>
+    /// <returns>Column containing a random value.</returns>
+    public static Column Uniform(double min, double max, long seed) =>
+        Uniform(Lit(min), Lit(max), Lit(seed));
+
+    /// <summary>
+    /// Returns a random value with independent and identically distributed (i.i.d.)
+    /// uniformly distributed values in [min, max) with a seed.
+    /// </summary>
+    /// <param name="min">The column containing the minimum value (inclusive).</param>
+    /// <param name="max">The column containing the maximum value (exclusive).</param>
+    /// <param name="seed">The column containing the random seed.</param>
+    /// <returns>Column containing a random value.</returns>
+    public static Column Uniform(Column min, Column max, Column seed)
+    {
+        return new Column(CreateExpression("uniform", false, min, max, seed));
+    }
+
+    // =====================================================
+    // Spark 4.0 Luhn Check Function
+    // =====================================================
+
+    /// <summary>
+    /// Checks if the input string passes the Luhn algorithm check.
+    /// The Luhn algorithm is used to validate identification numbers like credit card numbers.
+    /// </summary>
+    /// <param name="col">The column containing the string to validate.</param>
+    /// <returns>Column containing a boolean result.</returns>
+    public static Column LuhnCheck(string col) => LuhnCheck(Col(col));
+
+    /// <summary>
+    /// Checks if the input string passes the Luhn algorithm check.
+    /// The Luhn algorithm is used to validate identification numbers like credit card numbers.
+    /// </summary>
+    /// <param name="col">The column containing the string to validate.</param>
+    /// <returns>Column containing a boolean result.</returns>
+    public static Column LuhnCheck(Column col)
+    {
+        return new Column(CreateExpression("luhn_check", false, col));
+    }
+
+    // =====================================================
+    // Spark 4.0 Try/Safe Functions
+    // =====================================================
+
+    /// <summary>
+    /// Safely extracts a part of a URL. Returns NULL if the URL is invalid instead of throwing an error.
+    /// </summary>
+    /// <param name="url">The URL string to parse.</param>
+    /// <param name="partToExtract">The part to extract (e.g., "HOST", "PATH", "QUERY", "PROTOCOL").</param>
+    /// <param name="key">Optional key for extracting query parameters.</param>
+    /// <returns>Column containing the extracted part or NULL.</returns>
+    public static Column TryParseUrl(string url, string partToExtract, string? key = null) =>
+        TryParseUrl(Col(url), Lit(partToExtract), key == null ? null : Lit(key));
+
+    /// <summary>
+    /// Safely extracts a part of a URL. Returns NULL if the URL is invalid instead of throwing an error.
+    /// </summary>
+    /// <param name="url">The column containing the URL string.</param>
+    /// <param name="partToExtract">The part to extract.</param>
+    /// <param name="key">Optional key for extracting query parameters.</param>
+    /// <returns>Column containing the extracted part or NULL.</returns>
+    public static Column TryParseUrl(Column url, Column partToExtract, Column? key = null)
+    {
+        if (Equals(null, key))
+        {
+            return new Column(CreateExpression("try_parse_url", false, url, partToExtract));
+        }
+
+        return new Column(CreateExpression("try_parse_url", false, url, partToExtract, key));
+    }
+
+    /// <summary>
+    /// Safely decodes a URL-encoded string. Returns NULL if decoding fails instead of throwing an error.
+    /// </summary>
+    /// <param name="col">The column containing the URL-encoded string.</param>
+    /// <returns>Column containing the decoded string or NULL.</returns>
+    public static Column TryUrlDecode(string col) => TryUrlDecode(Col(col));
+
+    /// <summary>
+    /// Safely decodes a URL-encoded string. Returns NULL if decoding fails instead of throwing an error.
+    /// </summary>
+    /// <param name="col">The column containing the URL-encoded string.</param>
+    /// <returns>Column containing the decoded string or NULL.</returns>
+    public static Column TryUrlDecode(Column col)
+    {
+        return new Column(CreateExpression("try_url_decode", false, col));
+    }
+
+    /// <summary>
+    /// Safely creates an interval from the given components. Returns NULL if the interval is invalid.
+    /// </summary>
+    /// <param name="years">Years component.</param>
+    /// <param name="months">Months component.</param>
+    /// <param name="weeks">Weeks component.</param>
+    /// <param name="days">Days component.</param>
+    /// <param name="hours">Hours component.</param>
+    /// <param name="mins">Minutes component.</param>
+    /// <param name="secs">Seconds component.</param>
+    /// <returns>Column containing the interval or NULL.</returns>
+    public static Column TryMakeInterval(Column? years = null, Column? months = null, Column? weeks = null,
+        Column? days = null, Column? hours = null, Column? mins = null, Column? secs = null)
+    {
+        years ??= Lit(0);
+        months ??= Lit(0);
+        weeks ??= Lit(0);
+        days ??= Lit(0);
+        hours ??= Lit(0);
+        mins ??= Lit(0);
+        secs ??= Lit(0);
+
+        return new Column(CreateExpression("try_make_interval", false, years, months, weeks, days, hours, mins, secs));
+    }
+
+    /// <summary>
+    /// Safely creates a timestamp from the given components. Returns NULL if the timestamp is invalid.
+    /// </summary>
+    /// <param name="years">Years component.</param>
+    /// <param name="months">Months component.</param>
+    /// <param name="days">Days component.</param>
+    /// <param name="hours">Hours component.</param>
+    /// <param name="mins">Minutes component.</param>
+    /// <param name="secs">Seconds component.</param>
+    /// <param name="timezone">Optional timezone.</param>
+    /// <returns>Column containing the timestamp or NULL.</returns>
+    public static Column TryMakeTimestamp(string years, string months, string days, string hours, string mins,
+        string secs, string? timezone = null) =>
+        TryMakeTimestamp(Col(years), Col(months), Col(days), Col(hours), Col(mins), Col(secs),
+            timezone == null ? null : Lit(timezone));
+
+    /// <summary>
+    /// Safely creates a timestamp from the given components. Returns NULL if the timestamp is invalid.
+    /// </summary>
+    /// <param name="years">Years component.</param>
+    /// <param name="months">Months component.</param>
+    /// <param name="days">Days component.</param>
+    /// <param name="hours">Hours component.</param>
+    /// <param name="mins">Minutes component.</param>
+    /// <param name="secs">Seconds component.</param>
+    /// <param name="timezone">Optional timezone.</param>
+    /// <returns>Column containing the timestamp or NULL.</returns>
+    public static Column TryMakeTimestamp(Column years, Column months, Column days, Column hours, Column mins,
+        Column secs, Column? timezone = null)
+    {
+        if (Equals(null, timezone))
+        {
+            return new Column(CreateExpression("try_make_timestamp", false, years, months, days, hours, mins, secs));
+        }
+
+        return new Column(CreateExpression("try_make_timestamp", false, years, months, days, hours, mins, secs, timezone));
+    }
+
+    /// <summary>
+    /// Safely creates a timestamp with local time zone from the given components. Returns NULL if invalid.
+    /// </summary>
+    /// <param name="years">Years component.</param>
+    /// <param name="months">Months component.</param>
+    /// <param name="days">Days component.</param>
+    /// <param name="hours">Hours component.</param>
+    /// <param name="mins">Minutes component.</param>
+    /// <param name="secs">Seconds component.</param>
+    /// <param name="timezone">Optional timezone.</param>
+    /// <returns>Column containing the timestamp or NULL.</returns>
+    public static Column TryMakeTimestampLtz(string years, string months, string days, string hours, string mins,
+        string secs, string? timezone = null) =>
+        TryMakeTimestampLtz(Col(years), Col(months), Col(days), Col(hours), Col(mins), Col(secs),
+            timezone == null ? null : Lit(timezone));
+
+    /// <summary>
+    /// Safely creates a timestamp with local time zone from the given components. Returns NULL if invalid.
+    /// </summary>
+    /// <param name="years">Years component.</param>
+    /// <param name="months">Months component.</param>
+    /// <param name="days">Days component.</param>
+    /// <param name="hours">Hours component.</param>
+    /// <param name="mins">Minutes component.</param>
+    /// <param name="secs">Seconds component.</param>
+    /// <param name="timezone">Optional timezone.</param>
+    /// <returns>Column containing the timestamp or NULL.</returns>
+    public static Column TryMakeTimestampLtz(Column years, Column months, Column days, Column hours, Column mins,
+        Column secs, Column? timezone = null)
+    {
+        if (Equals(null, timezone))
+        {
+            return new Column(CreateExpression("try_make_timestamp_ltz", false, years, months, days, hours, mins, secs));
+        }
+
+        return new Column(CreateExpression("try_make_timestamp_ltz", false, years, months, days, hours, mins, secs, timezone));
+    }
+
+    /// <summary>
+    /// Safely creates a timestamp without time zone from the given components. Returns NULL if invalid.
+    /// </summary>
+    /// <param name="years">Years component.</param>
+    /// <param name="months">Months component.</param>
+    /// <param name="days">Days component.</param>
+    /// <param name="hours">Hours component.</param>
+    /// <param name="mins">Minutes component.</param>
+    /// <param name="secs">Seconds component.</param>
+    /// <returns>Column containing the timestamp or NULL.</returns>
+    public static Column TryMakeTimestampNtz(string years, string months, string days, string hours, string mins,
+        string secs) =>
+        TryMakeTimestampNtz(Col(years), Col(months), Col(days), Col(hours), Col(mins), Col(secs));
+
+    /// <summary>
+    /// Safely creates a timestamp without time zone from the given components. Returns NULL if invalid.
+    /// </summary>
+    /// <param name="years">Years component.</param>
+    /// <param name="months">Months component.</param>
+    /// <param name="days">Days component.</param>
+    /// <param name="hours">Hours component.</param>
+    /// <param name="mins">Minutes component.</param>
+    /// <param name="secs">Seconds component.</param>
+    /// <returns>Column containing the timestamp or NULL.</returns>
+    public static Column TryMakeTimestampNtz(Column years, Column months, Column days, Column hours, Column mins,
+        Column secs)
+    {
+        return new Column(CreateExpression("try_make_timestamp_ntz", false, years, months, days, hours, mins, secs));
+    }
+
+    /// <summary>
+    /// Safely invokes a Java method using reflection. Returns NULL if the invocation fails.
+    /// </summary>
+    /// <param name="cols">The class name, method name, and arguments.</param>
+    /// <returns>Column containing the result or NULL.</returns>
+    public static Column TryReflect(params Column[] cols)
+    {
+        return new Column(CreateExpression("try_reflect", false, cols));
+    }
+
+    /// <summary>
+    /// Safely invokes a Java method using reflection. Returns NULL if the invocation fails.
+    /// </summary>
+    /// <param name="cols">The class name, method name, and arguments as strings.</param>
+    /// <returns>Column containing the result or NULL.</returns>
+    public static Column TryReflect(params string[] cols)
+    {
+        return new Column(CreateExpression("try_reflect", false, cols.Select(Col).ToArray()));
     }
 }

@@ -19,7 +19,7 @@ syntax = 'proto3';
 
 import "google/protobuf/any.proto";
 import "spark/connect/common.proto";
-  import "spark/connect/expressions.proto";
+import "spark/connect/expressions.proto";
 import "spark/connect/relations.proto";
 import "spark/connect/ml.proto";
 import "spark/connect/pipelines.proto";
@@ -232,6 +232,7 @@ message WriteStreamOperationStart {
     bool available_now = 6;
     bool once = 7;
     string continuous_checkpoint_interval = 8;
+    string real_time_batch_duration = 100;
   }
 
   string output_mode = 9;

@@ -3,31 +3,28 @@ using Spark.Connect.Dotnet.Sql;
 
 namespace Spark.Connect.Dotnet.Tests.Pipelines;
 
-[DeclarativePipeline]
+[DeclarativePipeline(Storage = "file:///tmp/spark-pipelines-test")]
 public class SimplestDeclarativePipeline()
 {
-    [PipelineMaterializedView(Name = "GoldOutputTable")]
+    [MaterializedView(Name = "GoldOutputTable")]
     public Dotnet.Sql.DataFrame Gold(SparkSession spark)
     {
-        var df = spark.Read.Table("Silver");
+        var df = spark.Range(100).WithColumn("metrics", Functions.Col("id") * 123.12);
         df = df.Select(Functions.Sum(Functions.Col("metrics")));
         return df;
     }
     
-    [PipelineTable]
+    [StreamingTable]
     public Dotnet.Sql.DataFrame Bronze(SparkSession spark)
     {
-        var df = spark.Range(100).WithColumn("metrics", Functions.Rand());
-        df.PrintSchema();
-        df.Show();
+        var df = spark.ReadStream().Format("rate").Load().WithColumn("source", Functions.Lit("StreamingTable::Bronze"));
         return df;
     }
     
-    [PipelineTable]
+    [StreamingTable]
     public Dotnet.Sql.DataFrame Silver(SparkSession spark)
     {
-        var df = spark.Read.Table("Bronze");
-        df = df.WithColumn("load_time", Functions.CurrentTimestamp());
+        var df = spark.ReadStream().Format("rate").Load().WithColumn("source", Functions.Lit("StreamingTable::Silver"));
         return df;
     }
 }

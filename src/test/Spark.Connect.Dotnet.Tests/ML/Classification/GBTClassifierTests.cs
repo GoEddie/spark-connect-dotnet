@@ -58,44 +58,98 @@ public class GBTClassifierTests(ITestOutputHelper logger) : E2ETestBase(logger)
         
         Logger.WriteLine($"treeWeights: {string.Join(",", gbtModel.TreeWeights())}");
         Logger.WriteLine($"trees: {string.Join(",", gbtModel.Trees())}");
-        // Logger.WriteLine($"Predict: {gbtModel.Predict(new DenseVector([0.0, 1.1, 0.1]))}");
-        
+        Logger.WriteLine($"Predict: {gbtModel.Predict(new DenseVector([0.0, 1.1, 0.1]))}");
+
     }
-    
-    
+
     [Fact]
+    [Trait("Category", "ML")]
     [Trait("SparkMinVersion", "4")]
-    public void NaiveBayes_ReadWrite_Test()
+    public void GBTClassifier_Predict_SingleVector_Test()
     {
-        var data = new List<(double f, DenseVector Vector, float)>()
+        var data = new List<(double, IUserDefinedType)>()
         {
-            (1.0, new DenseVector([0.0, 1.1, 0.1]), 0.1F), 
-            (0.0, new DenseVector([2.0, 1.0, 1.0]), 0.5F), 
-            (0.0, new DenseVector([2.0, 1.3, 1.0]), 1.0F), 
-            (1.0, new DenseVector([0.0, 1.2, 0.5]), 1.0F)
+            (1.0, new DenseVector([0.0, 1.1, 0.1])),
+            (0.0, Vectors.Sparse(3, [], []))
         };
 
-        var schema = new  StructType(new[]
+        var schema = new StructType(new[]
         {
             new StructField("label", new DoubleType(), false),
-            new StructField("features", new VectorUDT(), false),
-            new StructField("weight", new FloatType(), false),
+            new StructField("features", new VectorUDT(), false)
         });
 
         var training = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
-        training.Show();
 
-        var nb = new NaiveBayes();
-        nb.SetFeaturesCol("features");
-        nb.SetThresholds([0.01F, 10.0F]);
-        
-        var model = nb.Fit(training);   
-        
-        model.Save("/tmp/nb-model");
-        var modelFromDisk = NaiveBayesModel.Load("/tmp/nb-model", Spark);
-        
-        var dfOutput = modelFromDisk.Transform(training);
-        dfOutput.Show(3, 10000);
-        dfOutput.PrintSchema();
+        var stringIndexer = new StringIndexer(new Dictionary<string, dynamic>()
+        {
+            {"inputCol", "label"}
+        });
+        stringIndexer.SetOutputCol("indexed");
+
+        var siModel = stringIndexer.Fit(training);
+        var dataToTransform = siModel.Transform(training);
+
+        var gbt = new GBTClassifier(new Dictionary<string, dynamic>()
+        {
+            {"maxIter", 5}, {"maxDepth", 2}, {"labelCol", "indexed"}
+        });
+
+        var gbtModel = gbt.Fit(dataToTransform);
+
+        // Test single vector prediction
+        var testVector = new DenseVector([0.0, 1.1, 0.1]);
+        var prediction = gbtModel.Predict(testVector);
+
+        Logger.WriteLine($"Predict result: {prediction}");
+
+        // Prediction should be either 0.0 or 1.0 for binary classification
+        Assert.True(prediction == 0.0 || prediction == 1.0);
+    }
+    
+    
+    [Fact(Skip = "Spark Connect does not support loading GBTClassifierModel")]
+    [Trait("Category", "ML")]
+    [Trait("SparkMinVersion", "4")]
+    public void GBTClassifier_ReadWrite_Test()
+    {
+        var data = new List<(double, IUserDefinedType)>()
+        {
+            (1.0, new DenseVector([0.0, 1.1, 0.1])),
+            (0.0, Vectors.Sparse(3, [], []))
+        };
+
+        var schema = new StructType(new[]
+        {
+            new StructField("label", new DoubleType(), false),
+            new StructField("features", new VectorUDT(), false)
+        });
+
+        var training = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
+
+        var stringIndexer = new StringIndexer(new Dictionary<string, dynamic>()
+        {
+            {"inputCol", "label"}
+        });
+        stringIndexer.SetOutputCol("indexed");
+
+        var siModel = stringIndexer.Fit(training);
+        var dataToTransform = siModel.Transform(training);
+
+        var gbt = new GBTClassifier(new Dictionary<string, dynamic>()
+        {
+            {"maxIter", 5}, {"maxDepth", 2}, {"labelCol", "indexed"}
+        });
+
+        var model = gbt.Fit(dataToTransform);
+
+        var savePath = $"/tmp/gbt-classifier-model-{Guid.NewGuid()}";
+        model.Save(savePath);
+
+        var loadedModel = GBTClassifierModel.Load(savePath, Spark);
+
+        var prediction = loadedModel.Transform(dataToTransform);
+        prediction.Show(3, 1000);
+        prediction.PrintSchema();
     }
 }

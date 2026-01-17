@@ -4,7 +4,7 @@ using Spark.Connect.Dotnet.Sql.Types;
 
 namespace Spark.Connect.Dotnet.Tests.Pipelines;
 
-[DeclarativePipeline(DefaultDatabase = "dltfun")]
+[DeclarativePipeline(DefaultDatabase = "dltfun", Storage = "file:///tmp/spark-pipelines-test")]
 public class ExampleDeclarativePipeline()
 {
     [SqlConfFor(Name = "MyPipelineDefinedWithAttributes")]
@@ -16,7 +16,7 @@ public class ExampleDeclarativePipeline()
         };
     }
     
-    [PipelineTable(Format = "json")]
+    [MaterializedView(Format = "json")]
     public Dotnet.Sql.DataFrame ADifferentHiveFromat(SparkSession spark)
     {
         var df = spark.Range(100).WithColumn("table", Functions.Lit("I AM IN A DIFFERENT SCHEMA")).WithColumnRenamed("id", "ABC");
@@ -24,7 +24,7 @@ public class ExampleDeclarativePipeline()
         return df;
     }
 
-    [PipelineTable(Name = "ADifferentStructSchema", Comment = "a schema defined in code")]
+    [MaterializedView(Name = "ADifferentStructSchema", Comment = "a schema defined in code")]
     public Dotnet.Sql.DataFrame MyFirstTable(SparkSession spark)
     {
         var df = spark.Range(100).WithColumn("table", Functions.Lit("one")).WithColumnRenamed("id", "ABC");
@@ -60,7 +60,7 @@ public class ExampleDeclarativePipeline()
     }
     
     
-    [PipelineTable()]
+    [MaterializedView()]
     public Dotnet.Sql.DataFrame MyPartitionedTable(SparkSession spark)
     {
         var df = spark.Range(100).WithColumn("year", Functions.Lit(1980) + Functions.Col("id")).WithColumn("NewCol", Functions.Rand()).Repartition(Column.Col("year"));
@@ -69,7 +69,7 @@ public class ExampleDeclarativePipeline()
     }
     
     
-    [PipelineTable(Comment = "This is a comment on a table")]
+    [MaterializedView(Comment = "This is a comment on a table")]
     public Dotnet.Sql.DataFrame AnotherTable(SparkSession spark)
     {
         var df = spark.Range(100).WithColumn("AnotherTable", Functions.Lit("one")).WithColumnRenamed("id", "ABC");
@@ -77,13 +77,13 @@ public class ExampleDeclarativePipeline()
         return df;
     }
     
-    [PipelineTable()]
+    [MaterializedView()]
     public Dotnet.Sql.DataFrame MySecondTable(SparkSession spark)
     {
         return spark.Range(100).WithColumn("table", Functions.Lit("two"));
     }
     
-    [PipelineTable(Name = "ThirdTable")]
+    [MaterializedView(Name = "ThirdTable")]
     public Dotnet.Sql.DataFrame MyThirdTable(SparkSession spark)
     {
         var dfOne = spark.Read.Table("ADifferentStructSchema");
@@ -92,10 +92,9 @@ public class ExampleDeclarativePipeline()
         return dfOne.Union(dfTwo).Filter(Functions.Col("ABC") > 10).GroupBy(Functions.Col("table")).Agg(Functions.Count(Functions.Col("ABC")));
     }
     
-    [PipelineMaterializedView(Name = "MatViewOne")]
+    [MaterializedView(Name = "MatViewOne")]
     public Dotnet.Sql.DataFrame MyMatViewOne(SparkSession spark)
     {
-        
         var df = spark.Range(10000);
         df = df.WithColumn("ABC", Functions.Lit("ABC"));
         df = df.Select(Functions.Col("ABC")).Distinct();
@@ -103,7 +102,7 @@ public class ExampleDeclarativePipeline()
         return df.Limit(1);
     }
     
-    [PipelineMaterializedView(Name = "TempViewOne")]
+    [MaterializedView(Name = "TempViewOne")]
     public Dotnet.Sql.DataFrame T1(SparkSession spark)
     {
         return spark.Read.Table("ADifferentStructSchema");

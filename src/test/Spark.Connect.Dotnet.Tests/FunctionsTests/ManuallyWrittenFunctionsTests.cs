@@ -727,6 +727,33 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
 
     [Fact]
+    public void ILike_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("Kitten", "%IT%"),
+                ToRow("KITTEN", "%it%")
+            ), "l", "r");
+
+        // Test case-insensitive matching - should match regardless of case
+        df.Select(ILike("l", "%IT%").Alias("d")).Show();
+        df.Select(ILike("l", "%IT%").Alias("d")).Collect();
+
+        df.Select(ILike(Col("l"), Lit("%it%")).Alias("d")).Show();
+        df.Select(ILike(Col("l"), Lit("%it%")).Alias("d")).Collect();
+
+        df.Select(ILike(Col("l"), Col("r")).Alias("d")).Show();
+        df.Select(ILike(Col("l"), Col("r")).Alias("d")).Collect();
+
+        // Test with escape character
+        df.Select(ILike("l", "%IT%", "\\").Alias("d")).Show();
+        df.Select(ILike("l", "%IT%", "\\").Alias("d")).Collect();
+
+        df.Select(ILike(Col("l"), Lit("%it%"), Lit("\\")).Alias("d")).Show();
+        df.Select(ILike(Col("l"), Lit("%it%"), Lit("\\")).Alias("d")).Collect();
+    }
+
+    [Fact]
     public void Locate_Test()
     {
         var df = Spark.CreateDataFrame(
@@ -1758,5 +1785,464 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     {
         DateOnly dateOnly = new DateOnly(1980, 04, 01);
         Source.Select(Lit(dateOnly)).Show();
+    }
+
+    // =====================================================
+    // Spark 4.1 Time Function Tests
+    // =====================================================
+
+    // NOTE: TIME type tests use Show() only because Spark Connect doesn't yet support
+    // serializing the TIME data type over gRPC for Collect(). The functions work correctly
+    // in Spark SQL execution, but TIME values cannot be collected back to the client.
+
+    [Fact(Skip = "Spark Connect does not yet support TIME type")]
+    [Trait("SparkMinVersion", "4.1")]
+    public void CurrentTime_Test()
+    {
+        Spark.Range(1).Select(CurrentTime().Alias("current_time")).Show();
+    }
+
+    [Fact(Skip = "Spark Connect does not yet support TIME type")]
+    [Trait("SparkMinVersion", "4.1")]
+    public void MakeTime_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(10, 30, 45),
+                ToRow(23, 59, 59)
+            ), "hour", "minute", "second");
+
+        // Test with column references
+        df.Select(MakeTime("hour", "minute", "second").Alias("time")).Show();
+        df.Select(MakeTime(Col("hour"), Col("minute"), Col("second")).Alias("time")).Show();
+
+        // Test with literal integer values
+        Spark.Range(1).Select(MakeTime(14, 30, 0).Alias("time")).Show();
+    }
+
+    [Fact(Skip = "Spark Connect does not yet support TIME type")]
+    [Trait("SparkMinVersion", "4.1")]
+    public void ToTime_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("10:30:45"),
+                ToRow("23:59:59")
+            ), "time_str");
+
+        // Test without format
+        df.Select(ToTime("time_str").Alias("time")).Show();
+        df.Select(ToTime(Col("time_str")).Alias("time")).Show();
+
+        // Test with format
+        var df2 = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("10-30-45"),
+                ToRow("23-59-59")
+            ), "time_str");
+
+        df2.Select(ToTime("time_str", "HH-mm-ss").Alias("time")).Show();
+        df2.Select(ToTime(Col("time_str"), "HH-mm-ss").Alias("time")).Show();
+        df2.Select(ToTime(Col("time_str"), Lit("HH-mm-ss")).Alias("time")).Show();
+    }
+
+    [Fact(Skip = "Spark Connect does not yet support TIME type")]
+    [Trait("SparkMinVersion", "4.1")]
+    public void TryToTime_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("10:30:45"),
+                ToRow("invalid"),
+                ToRow("23:59:59")
+            ), "time_str");
+
+        // Test without format - invalid should return null
+        df.Select(TryToTime("time_str").Alias("time")).Show();
+        df.Select(TryToTime(Col("time_str")).Alias("time")).Show();
+
+        // Test with format
+        df.Select(TryToTime("time_str", "HH:mm:ss").Alias("time")).Show();
+        df.Select(TryToTime(Col("time_str"), "HH:mm:ss").Alias("time")).Show();
+        df.Select(TryToTime(Col("time_str"), Lit("HH:mm:ss")).Alias("time")).Show();
+    }
+
+    [Fact(Skip = "Spark Connect does not yet support TIME type")]
+    [Trait("SparkMinVersion", "4.1")]
+    public void TimeDiff_Test()
+    {
+        // Create times using make_time - TimeDiff returns LONG, which CAN be collected
+        var df = Spark.Range(1)
+            .WithColumn("start_time", MakeTime(10, 0, 0))
+            .WithColumn("end_time", MakeTime(14, 30, 45));
+
+        // Test difference in hours
+        df.Select(TimeDiff("HOUR", "start_time", "end_time").Alias("hour_diff")).Show();
+        df.Select(TimeDiff("HOUR", "start_time", "end_time").Alias("hour_diff")).Collect();
+
+        // Test difference in minutes
+        df.Select(TimeDiff("MINUTE", Col("start_time"), Col("end_time")).Alias("minute_diff")).Show();
+        df.Select(TimeDiff("MINUTE", Col("start_time"), Col("end_time")).Alias("minute_diff")).Collect();
+
+        // Test difference in seconds
+        df.Select(TimeDiff("SECOND", Col("start_time"), Col("end_time")).Alias("second_diff")).Show();
+        df.Select(TimeDiff("SECOND", Col("start_time"), Col("end_time")).Alias("second_diff")).Collect();
+    }
+
+    [Fact(Skip = "Spark Connect does not yet support TIME type")]
+    [Trait("SparkMinVersion", "4.1")]
+    public void TimeTrunc_Test()
+    {
+        // Create a time value
+        var df = Spark.Range(1)
+            .WithColumn("time_val", MakeTime(14, 37, 45));
+
+        // Truncate to hour - returns TIME type, use Show() only
+        df.Select(TimeTrunc("HOUR", "time_val").Alias("truncated")).Show();
+        df.Select(TimeTrunc("MINUTE", Col("time_val")).Alias("truncated")).Show();
+    }
+
+    // =====================================================
+    // Spark 4.0 String Function Tests
+    // =====================================================
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void Quote_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("hello"),
+                ToRow("it's"),
+                ToRow("world")
+            ), "str");
+
+        df.Select(Quote("str").Alias("quoted")).Show();
+        df.Select(Quote("str").Alias("quoted")).Collect();
+
+        df.Select(Quote(Col("str")).Alias("quoted")).Show();
+        df.Select(Quote(Col("str")).Alias("quoted")).Collect();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void Space_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(5),
+                ToRow(10),
+                ToRow(0)
+            ), "n");
+
+        // Test with int literal
+        Spark.Range(1).Select(Space(5).Alias("spaces")).Show();
+        Spark.Range(1).Select(Space(5).Alias("spaces")).Collect();
+
+        // Test with column reference
+        df.Select(Space("n").Alias("spaces")).Show();
+        df.Select(Space(Col("n")).Alias("spaces")).Collect();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void Uuid_Test()
+    {
+        Spark.Range(5).Select(Uuid().Alias("uuid")).Show();
+        var result = Spark.Range(1).Select(Uuid().Alias("uuid")).Collect();
+        // UUID should be 36 characters (8-4-4-4-12 format)
+        Assert.Equal(36, ((string)result[0][0]).Length);
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void Randstr_Test()
+    {
+        // Test with int length
+        Spark.Range(5).Select(Randstr(10).Alias("random")).Show();
+        Spark.Range(5).Select(Randstr(10).Alias("random")).Collect();
+
+        // Test with seed for reproducibility
+        Spark.Range(5).Select(Randstr(10, 42).Alias("random")).Show();
+        Spark.Range(5).Select(Randstr(10, 42).Alias("random")).Collect();
+
+        // Test with column
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(5),
+                ToRow(10)
+            ), "len");
+        df.Select(Randstr(5).Alias("random")).Show();
+    }
+
+    // =====================================================
+    // Spark 4.0 Null Handling Function Tests
+    // =====================================================
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void Nullifzero_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(0),
+                ToRow(5),
+                ToRow(0),
+                ToRow(-3)
+            ), "num");
+
+        df.Select(Col("num"), Nullifzero("num").Alias("result")).Show();
+        df.Select(Col("num"), Nullifzero(Col("num")).Alias("result")).Collect();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void Zeroifnull_Test()
+    {
+        var df = Spark.Sql("SELECT * FROM VALUES (1), (NULL), (3), (NULL) AS t(num)");
+
+        df.Select(Col("num"), Zeroifnull("num").Alias("result")).Show();
+        df.Select(Col("num"), Zeroifnull(Col("num")).Alias("result")).Collect();
+    }
+
+    // =====================================================
+    // Spark 4.0 UTF-8 Validation Function Tests
+    // =====================================================
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void IsValidUtf8_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("hello"),
+                ToRow("world"),
+                ToRow("UTF-8 \u00e9")
+            ), "str");
+
+        df.Select(Col("str"), IsValidUtf8("str").Alias("is_valid")).Show();
+        df.Select(Col("str"), IsValidUtf8(Col("str")).Alias("is_valid")).Collect();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void ValidateUtf8_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("hello"),
+                ToRow("world")
+            ), "str");
+
+        df.Select(ValidateUtf8("str").Alias("validated")).Show();
+        df.Select(ValidateUtf8(Col("str")).Alias("validated")).Collect();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void MakeValidUtf8_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("hello"),
+                ToRow("world")
+            ), "str");
+
+        df.Select(MakeValidUtf8("str").Alias("valid")).Show();
+        df.Select(MakeValidUtf8(Col("str")).Alias("valid")).Collect();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void TryValidateUtf8_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("hello"),
+                ToRow("world")
+            ), "str");
+
+        df.Select(TryValidateUtf8("str").Alias("validated")).Show();
+        df.Select(TryValidateUtf8(Col("str")).Alias("validated")).Collect();
+    }
+
+    // =====================================================
+    // Spark 4.0 Regex Function Tests
+    // =====================================================
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void RegexpInstr_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("hello world"),
+                ToRow("foo bar baz"),
+                ToRow("no match here")
+            ), "str");
+
+        // Find position of "world"
+        df.Select(Col("str"), RegexpInstr("str", "world").Alias("pos")).Show();
+        df.Select(Col("str"), RegexpInstr(Col("str"), "bar").Alias("pos")).Collect();
+
+        // With regex pattern
+        df.Select(Col("str"), RegexpInstr(Col("str"), Lit("[aeiou]+")).Alias("pos")).Show();
+    }
+
+    // =====================================================
+    // Spark 4.0 Random Function Tests
+    // =====================================================
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void Uniform_Test()
+    {
+        // Test with double literals
+        Spark.Range(5).Select(Uniform(0.0, 10.0).Alias("random")).Show();
+        Spark.Range(5).Select(Uniform(0.0, 10.0).Alias("random")).Collect();
+
+        // Test with seed for reproducibility
+        Spark.Range(5).Select(Uniform(0.0, 100.0, 42L).Alias("random")).Show();
+        Spark.Range(5).Select(Uniform(0.0, 100.0, 42L).Alias("random")).Collect();
+
+        // Test with column
+        Spark.Range(5).Select(Uniform(Lit(0.0), Lit(1.0)).Alias("random")).Show();
+    }
+
+    // =====================================================
+    // Spark 4.0 Luhn Check Function Tests
+    // =====================================================
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void LuhnCheck_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("79927398713"),  // Valid Luhn
+                ToRow("79927398710"),  // Invalid
+                ToRow("4532015112830366")  // Valid credit card format
+            ), "num");
+
+        df.Select(Col("num"), LuhnCheck("num").Alias("is_valid")).Show();
+        df.Select(Col("num"), LuhnCheck(Col("num")).Alias("is_valid")).Collect();
+    }
+
+    // =====================================================
+    // Spark 4.0 Try/Safe Function Tests
+    // =====================================================
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void TryParseUrl_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("https://example.com/path?foo=bar"),
+                ToRow("invalid-url"),
+                ToRow("http://test.org:8080/page")
+            ), "url");
+
+        // Test extracting HOST - invalid URL should return NULL
+        df.Select(Col("url"), TryParseUrl("url", "HOST").Alias("host")).Show();
+        df.Select(Col("url"), TryParseUrl(Col("url"), Lit("HOST")).Alias("host")).Collect();
+
+        // Test extracting PATH
+        df.Select(Col("url"), TryParseUrl("url", "PATH").Alias("path")).Show();
+
+        // Test extracting QUERY with key
+        df.Select(Col("url"), TryParseUrl("url", "QUERY", "foo").Alias("query_param")).Show();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void TryUrlDecode_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow("hello%20world"),
+                ToRow("foo%3Dbar"),
+                ToRow("normal text")
+            ), "encoded");
+
+        df.Select(Col("encoded"), TryUrlDecode("encoded").Alias("decoded")).Show();
+        df.Select(Col("encoded"), TryUrlDecode(Col("encoded")).Alias("decoded")).Collect();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void TryMakeInterval_Test()
+    {
+        // Test with valid interval - only use Show() as CalendarInterval type isn't supported for Collect()
+        Spark.Range(1).Select(TryMakeInterval(days: Lit(5), hours: Lit(3)).Alias("interval")).Show();
+
+        // Test with all components
+        Spark.Range(1).Select(TryMakeInterval(
+            years: Lit(1), months: Lit(2), weeks: Lit(1),
+            days: Lit(3), hours: Lit(4), mins: Lit(30), secs: Lit(15)
+        ).Alias("interval")).Show();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void TryMakeTimestamp_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(2024, 1, 15, 10, 30, 45),
+                ToRow(2024, 13, 1, 0, 0, 0),  // Invalid month - should return NULL
+                ToRow(2024, 6, 31, 12, 0, 0)  // Invalid day for June - should return NULL
+            ), "y", "m", "d", "h", "mi", "s");
+
+        df.Select(TryMakeTimestamp("y", "m", "d", "h", "mi", "s").Alias("ts")).Show();
+        df.Select(TryMakeTimestamp(Col("y"), Col("m"), Col("d"), Col("h"), Col("mi"), Col("s")).Alias("ts")).Collect();
+
+        // Test with timezone
+        Spark.Range(1).Select(TryMakeTimestamp(
+            Lit(2024), Lit(1), Lit(15), Lit(10), Lit(30), Lit(0), Lit("America/New_York")
+        ).Alias("ts")).Show();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void TryMakeTimestampLtz_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(2024, 1, 15, 10, 30, 45),
+                ToRow(2024, 13, 1, 0, 0, 0)  // Invalid - should return NULL
+            ), "y", "m", "d", "h", "mi", "s");
+
+        df.Select(TryMakeTimestampLtz("y", "m", "d", "h", "mi", "s").Alias("ts")).Show();
+        df.Select(TryMakeTimestampLtz(Col("y"), Col("m"), Col("d"), Col("h"), Col("mi"), Col("s")).Alias("ts")).Collect();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void TryMakeTimestampNtz_Test()
+    {
+        var df = Spark.CreateDataFrame(
+            ToRows(
+                ToRow(2024, 1, 15, 10, 30, 45),
+                ToRow(2024, 13, 1, 0, 0, 0)  // Invalid - should return NULL
+            ), "y", "m", "d", "h", "mi", "s");
+
+        df.Select(TryMakeTimestampNtz("y", "m", "d", "h", "mi", "s").Alias("ts")).Show();
+        df.Select(TryMakeTimestampNtz(Col("y"), Col("m"), Col("d"), Col("h"), Col("mi"), Col("s")).Alias("ts")).Collect();
+    }
+
+    [Fact]
+    [Trait("SparkMinVersion", "4")]
+    public void TryReflect_Test()
+    {
+        // Test valid reflection call
+        Source.Select(TryReflect(Lit("java.util.UUID"), Lit("fromString"), Lit("60edd1e0-0c85-418f-af6c-3e4e5b1328f2")))
+            .Show();
+        Source.Select(TryReflect(Lit("java.util.UUID"), Lit("fromString"), Lit("60edd1e0-0c85-418f-af6c-3e4e5b1328f2")))
+            .Collect();
+
+        // Test with a valid static method that can return different results
+        Source.Select(TryReflect(Lit("java.lang.Math"), Lit("abs"), Lit(-42)))
+            .Show();
     }
 }

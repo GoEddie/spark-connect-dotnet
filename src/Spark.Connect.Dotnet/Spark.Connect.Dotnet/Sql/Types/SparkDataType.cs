@@ -163,6 +163,11 @@ public abstract class SparkDataType
         return new NullType();
     }
 
+    public static TimeType TimeType()
+    {
+        return new TimeType();
+    }
+    
     public static DecimalType DecimalType()
     {
         return new DecimalType();
@@ -231,6 +236,9 @@ public abstract class SparkDataType
             
             case "variant":
                 return new VariantType();
+            
+            case "time":
+                return new TimeType();
         }
 
         if (lower.StartsWith("array"))
@@ -290,7 +298,6 @@ public abstract class SparkDataType
         , TypeCode.DateTime => DateType()
         , TypeCode.String => StringType()
         ,TypeCode.Single => FloatType()
-        
         , _ => throw new ArgumentOutOfRangeException($"Unknown Type Code '{GetTypeCode(type)}' for type '{type}'")
     };
     
@@ -303,6 +310,7 @@ public abstract class SparkDataType
         short => ShortType(),
         char => StringType(),
         string => StringType(),
+        TimeOnly => TimeType(),
         Guid => StringType(),
         DateTime => TimestampType(),
         DateTimeOffset => TimestampNtzType(),
@@ -406,6 +414,11 @@ public abstract class SparkDataType
         if (type.Byte != null)
         {
             return new ByteType();
+        }
+
+        if (type.Time != null)
+        {
+            return new TimeType();
         }
 
         if (type.YearMonthInterval != null)

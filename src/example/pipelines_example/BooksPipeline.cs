@@ -15,7 +15,7 @@ public class BooksPipeline
     }
     
     //BRONZE
-    [PipelineTable(Format = "parquet")]
+    [MaterializedView]
     public DataFrame BooksRaw(SparkSession spark)
     {
         return spark
@@ -30,7 +30,7 @@ public class BooksPipeline
                 );
     }
     
-    [PipelineTable(Format = "parquet")]
+    [MaterializedView]
     public DataFrame AuthorsRaw(SparkSession spark)
     {
         return spark
@@ -45,8 +45,7 @@ public class BooksPipeline
             );
     }
     
-    
-    [PipelineTable(Format = "parquet")]
+  [MaterializedView]
     public DataFrame PublishersRaw(SparkSession spark)
     {
         return spark
@@ -75,7 +74,7 @@ public class BooksSilverPipeline
         };
     }
     
-     [PipelineMaterializedView(Format = "parquet")]
+     [MaterializedView(Format = "parquet")]
      public DataFrame BookDetails(SparkSession spark)
      {
          var books = spark.Read.Table("Bronze.BooksRaw").Alias("books").WithColumnRenamed("id", "book_id");
@@ -119,7 +118,7 @@ public class BooksGoldPipeline
         };
     }
 
-    [PipelineMaterializedView(Format = "parquet")]
+    [MaterializedView(Format = "parquet")]
     public DataFrame BookAveragePricePerLocation(SparkSession spark)
     {
         var books = spark.Read.Table("Silver.BookDetails");
@@ -127,7 +126,7 @@ public class BooksGoldPipeline
         return averages;
     }
     
-    [PipelineMaterializedView(Format = "parquet")]
+    [MaterializedView(Format = "parquet")]
     public DataFrame BookAveragePricePerAuthor(SparkSession spark)
     {
         var books = spark.Read.Table("Silver.BookDetails");
@@ -135,7 +134,7 @@ public class BooksGoldPipeline
         return averages;
     }
     
-    [PipelineMaterializedView(Format = "parquet")]
+    [MaterializedView(Format = "parquet")]
     public DataFrame BooksPerAuthorPerYear(SparkSession spark)
     {
         var books = spark.Read.Table("Silver.BookDetails");

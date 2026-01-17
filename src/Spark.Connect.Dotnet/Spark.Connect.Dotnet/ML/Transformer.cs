@@ -135,8 +135,9 @@ public class Transformer : Params, Identifiable
     /// <param name="path">The path to read the object from</param>
     /// <param name="sparkSession">The current `SparkSession`</param>
     /// <param name="className">The scala class name of the object to load</param>
+    /// <param name="operatorType">The type of operator (Model or Transformer), defaults to Model for backwards compatibility</param>
     /// <returns>`MLCommandResult` with the Spark Connect server reference</returns>
-    protected static MlCommandResult Load(string path, SparkSession sparkSession, string className)
+    protected static MlCommandResult Load(string path, SparkSession sparkSession, string className, MlOperator.Types.OperatorType operatorType = MlOperator.Types.OperatorType.Model)
     {
         var plan = new Plan()
         {
@@ -146,11 +147,11 @@ public class Transformer : Params, Identifiable
                 {
                     Read = new MlCommand.Types.Read()
                     {
-                        Path = path, 
+                        Path = path,
                         Operator = new MlOperator()
                         {
                             Name = className,
-                            Type = MlOperator.Types.OperatorType.Model
+                            Type = operatorType
                         }
                     }
                 }

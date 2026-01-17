@@ -16,7 +16,7 @@ public class PipelineRunner
         var assembly = Assembly.GetExecutingAssembly();
         return Run(assembly, spark);
     }
-    
+
     public IList<PipelineGraph> Run(Assembly assembly, SparkSession spark)
     {
         var classes = assembly
@@ -93,62 +93,122 @@ public class PipelineRunner
     public IList<PipelineGraph> Run(List<Type> classes, SparkSession spark)
     {
         var graphs = new List<PipelineGraph>();
-        
+
         foreach (var type in classes)
         {
             var declarativePipelineAttribute = type.GetCustomAttribute<DeclarativePipelineAttribute>();
             var sqlConfsForPipeline = GetSqlConfForName(type.Name, type);
-            
+
             var graph = new PipelineGraph(spark, declarativePipelineAttribute.DefaultCatalog, declarativePipelineAttribute.DefaultDatabase, sqlConfsForPipeline);
-            var tables = type.GetMethods().Where(method => method.GetCustomAttribute<PipelineTableAttribute>() != null);
-            
+            var tables = type.GetMethods().Where(method => method.GetCustomAttribute<StreamingTableAttribute>() != null);
+
             foreach (var table in tables)
             {
-                var tableAttribute = table.GetCustomAttribute<PipelineTableAttribute>();
-                var schema = GetSchemaForName(tableAttribute.Name ?? table.Name, type);
-               
-                var properties = GetPropertiesForName(tableAttribute.Name ?? table.Name, type);
-                var sqlConfs = GetSqlConfForName(tableAttribute.Name ?? table.Name, type);
-                
-                graph.AddTable(tableAttribute.Name ?? table.Name, table.Invoke(Activator.CreateInstance(type), [spark]) as Dotnet.Sql.DataFrame, schema, properties, sqlConfs, tableAttribute.Once, tableAttribute.Format, tableAttribute.Comment, tableAttribute.PartitionCols);
+                var tableAttribute = table.GetCustomAttribute<StreamingTableAttribute>();
+                var tableName = tableAttribute.Name ?? table.Name;
+                var schema = GetSchemaForName(tableName, type);
+                var properties = GetPropertiesForName(tableName, type);
+                var sqlConfs = GetSqlConfForName(tableName, type);
+
+                // Get source code location from the method
+                var sourceFileName = table.DeclaringType?.Assembly.Location;
+                var sourceDefinitionPath = table.DeclaringType?.FullName;
+
+                graph.AddTable(
+                    tableName: tableName,
+                    source: table.Invoke(Activator.CreateInstance(type), [spark]) as Dotnet.Sql.DataFrame,
+                    schema: schema,
+                    options: properties,
+                    sqlConfs: sqlConfs,
+                    format: tableAttribute.Format,
+                    comment: tableAttribute.Comment,
+                    partitionCols: tableAttribute.PartitionCols,
+                    clusteringColumns: tableAttribute.ClusteringColumns,
+                    once: tableAttribute.Once ? true : null,
+                    sourceCodeFileName: sourceFileName,
+                    sourceCodeDefinitionPath: sourceDefinitionPath);
             }
-            
-            
-            var matViews = type.GetMethods().Where(method => method.GetCustomAttribute<PipelineMaterializedViewAttribute>() != null);
-            
+
+            var matViews = type.GetMethods().Where(method => method.GetCustomAttribute<MaterializedViewAttribute>() != null);
+
             foreach (var view in matViews)
             {
-                var tableAttribute = view.GetCustomAttribute<PipelineMaterializedViewAttribute>();
-                var schema = GetSchemaForName(tableAttribute.Name ?? view.Name, type);
-                
-                
-                var properties = GetPropertiesForName(tableAttribute.Name ?? view.Name, type);
-                var sqlConfs = GetSqlConfForName(tableAttribute.Name ?? view.Name, type);
+                var viewAttribute = view.GetCustomAttribute<MaterializedViewAttribute>();
+                var viewName = viewAttribute.Name ?? view.Name;
+                var schema = GetSchemaForName(viewName, type);
+                var properties = GetPropertiesForName(viewName, type);
+                var sqlConfs = GetSqlConfForName(viewName, type);
 
-                graph.AddMaterializedView(tableAttribute.Name ?? view.Name, view.Invoke(Activator.CreateInstance(type), [spark]) as Dotnet.Sql.DataFrame, schema, properties, sqlConfs, tableAttribute.Once, tableAttribute.Format, tableAttribute.Comment, tableAttribute.PartitionCols);
+                // Get source code location from the method
+                var sourceFileName = view.DeclaringType?.Assembly.Location;
+                var sourceDefinitionPath = view.DeclaringType?.FullName;
+
+                graph.AddMaterializedView(
+                    viewName: viewName,
+                    source: view.Invoke(Activator.CreateInstance(type), [spark]) as Dotnet.Sql.DataFrame,
+                    schema: schema,
+                    options: properties,
+                    sqlConfs: sqlConfs,
+                    format: viewAttribute.Format,
+                    comment: viewAttribute.Comment,
+                    partitionCols: viewAttribute.PartitionCols,
+                    clusteringColumns: viewAttribute.ClusteringColumns,
+                    once: viewAttribute.Once ? true : null,
+                    sourceCodeFileName: sourceFileName,
+                    sourceCodeDefinitionPath: sourceDefinitionPath);
             }
-            
-            
-            var tempViews = type.GetMethods().Where(method => method.GetCustomAttribute<PipelineTemporaryViewAttribute>() != null);
-            
+
+            var tempViews = type.GetMethods().Where(method => method.GetCustomAttribute<TemporaryViewAttribute>() != null);
+
             foreach (var view in tempViews)
             {
-                var tableAttribute = view.GetCustomAttribute<PipelineTemporaryViewAttribute>();
-                var schema = GetSchemaForName(tableAttribute.Name ?? view.Name, type);
-                
-                var properties = GetPropertiesForName(tableAttribute.Name ?? view.Name, type);
-                var sqlConfs = GetSqlConfForName(tableAttribute.Name ?? view.Name, type);
-                
-                graph.AddTemporaryView(tableAttribute.Name ?? view.Name, view.Invoke(Activator.CreateInstance(type), [spark]) as Dotnet.Sql.DataFrame, schema, properties, sqlConfs, tableAttribute.Once, tableAttribute.Format, tableAttribute.Comment, tableAttribute.PartitionCols);
+                var viewAttribute = view.GetCustomAttribute<TemporaryViewAttribute>();
+                var viewName = viewAttribute.Name ?? view.Name;
+                var sqlConfs = GetSqlConfForName(viewName, type);
+
+                // Get source code location from the method
+                var sourceFileName = view.DeclaringType?.Assembly.Location;
+                var sourceDefinitionPath = view.DeclaringType?.FullName;
+
+                graph.AddTemporaryView(
+                    viewName,
+                    view.Invoke(Activator.CreateInstance(type), [spark]) as Dotnet.Sql.DataFrame,
+                    comment: viewAttribute.Comment,
+                    sqlConfs: sqlConfs,
+                    once: viewAttribute.Once ? true : null,
+                    sourceCodeFileName: sourceFileName,
+                    sourceCodeDefinitionPath: sourceDefinitionPath);
             }
-            
-            graph.StartRun();
+
+            var sinks = type.GetMethods().Where(method => method.GetCustomAttribute<SinkAttribute>() != null);
+
+            foreach (var sink in sinks)
+            {
+                var sinkAttribute = sink.GetCustomAttribute<SinkAttribute>();
+                var sinkName = sinkAttribute.Name ?? sink.Name;
+                var properties = GetPropertiesForName(sinkName, type);
+                var sqlConfs = GetSqlConfForName(sinkName, type);
+
+                // Get source code location from the method
+                var sourceFileName = sink.DeclaringType?.Assembly.Location;
+                var sourceDefinitionPath = sink.DeclaringType?.FullName;
+
+                graph.AddSink(
+                    sinkName,
+                    sink.Invoke(Activator.CreateInstance(type), [spark]) as Dotnet.Sql.DataFrame,
+                    options: properties,
+                    sqlConfs: sqlConfs,
+                    format: sinkAttribute.Format,
+                    comment: sinkAttribute.Comment,
+                    once: sinkAttribute.Once ? true : null,
+                    sourceCodeFileName: sourceFileName,
+                    sourceCodeDefinitionPath: sourceDefinitionPath);
+            }
+
+            graph.StartRun(storage: declarativePipelineAttribute?.Storage);
             graphs.Add(graph);
         }
-        
-        
+
         return graphs;
     }
-
-    
 }
