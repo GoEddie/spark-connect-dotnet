@@ -153,7 +153,7 @@ public class GBTClassifierTests(ITestOutputHelper logger) : E2ETestBase(logger)
         prediction.PrintSchema();
     }
 
-    [Fact]
+    [Fact(Skip = "Spark Connect does not allow accessing numTrees, totalNumNodes, featureImportances on GBTClassificationModel")]
     [Trait("Category", "ML")]
     [Trait("SparkMinVersion", "4")]
     public void GBTClassifier_ModelProperties_Test()
