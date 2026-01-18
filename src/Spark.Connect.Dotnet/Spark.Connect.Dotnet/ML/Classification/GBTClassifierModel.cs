@@ -1,6 +1,8 @@
+using System.Runtime.CompilerServices;
 using Spark.Connect.Dotnet.ML.LinAlg;
 using Spark.Connect.Dotnet.ML.Param;
 using Spark.Connect.Dotnet.Sql;
+using Spark.Connect.Dotnet.Sql.Types;
 
 namespace Spark.Connect.Dotnet.ML.Classification;
 
@@ -46,8 +48,29 @@ public class GBTClassifierModel(string uid, ObjectRef objRef, SparkSession spark
 
         return loadedModel;
     }
-    
-    
+
+    /// <summary>
+    /// Gets the number of trees in the ensemble.
+    /// </summary>
+    public int NumTrees => Fetch("numTrees");
+
+    /// <summary>
+    /// Gets the total number of nodes in all trees.
+    /// </summary>
+    public int TotalNumNodes => Fetch("totalNumNodes");
+
+    /// <summary>
+    /// Gets the number of features the model was trained on.
+    /// </summary>
+    public int NumFeatures => Fetch("numFeatures");
+
+    /// <summary>
+    /// Gets the importance of each feature in the model.
+    /// Values are normalized to sum to 1.
+    /// </summary>
+    public List<double> FeatureImportances => Fetch("featureImportances");
+
+
     /// <summary>
     /// Sets the name of the column containing feature vectors for the model
     /// </summary>
@@ -343,9 +366,33 @@ public class GBTClassifierModel(string uid, ObjectRef objRef, SparkSession spark
     }
     
     
-    public float Predict(Vector value)
+    /// <summary>
+    /// Predict the label for the given feature vector.
+    /// Note: For batch predictions, use Transform() directly for better performance.
+    /// </summary>
+    /// <param name="value">A feature vector (DenseVector or SparseVector)</param>
+    /// <returns>The predicted label as a double</returns>
+    public double Predict(Vector value)
     {
-     throw new NotImplementedException("Cannot pass a vector to predict"); //TODO: Get predict working
-        // return Fetch("predict", value);
+        if (value is not IUserDefinedType udt)
+        {
+            throw new ArgumentException("Vector must be a DenseVector or SparseVector", nameof(value));
+        }
+
+        var featuresCol = ParamMap.Get("featuresCol")?.Value as string ?? "features";
+        var predictionCol = ParamMap.Get("predictionCol")?.Value as string ?? "prediction";
+
+        var schema = new StructType(new[]
+        {
+            new StructField(featuresCol, new VectorUDT(), false)
+        });
+
+        var data = new List<ValueTuple<IUserDefinedType>> { new ValueTuple<IUserDefinedType>(udt) };
+        var df = SparkSession.CreateDataFrame(data.Cast<ITuple>(), schema);
+
+        var result = Transform(df);
+        var row = result.First();
+
+        return Convert.ToDouble(row.Get(predictionCol));
     }
 }

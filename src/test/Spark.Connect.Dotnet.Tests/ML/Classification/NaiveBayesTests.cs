@@ -76,4 +76,55 @@ public class NaiveBayesTests(ITestOutputHelper logger) : E2ETestBase(logger)
         dfOutput.Show(3, 10000);
         dfOutput.PrintSchema();
     }
+
+    [Fact]
+    [Trait("Category", "ML")]
+    [Trait("SparkMinVersion", "4")]
+    public void NaiveBayes_ModelProperties_Test()
+    {
+        var data = new List<(double f, DenseVector Vector, float)>()
+        {
+            (1.0, new DenseVector([0.0, 1.1, 0.1]), 0.1F),
+            (0.0, new DenseVector([2.0, 1.0, 1.0]), 0.5F),
+            (0.0, new DenseVector([2.0, 1.3, 1.0]), 1.0F),
+            (1.0, new DenseVector([0.0, 1.2, 0.5]), 1.0F)
+        };
+
+        var schema = new StructType(new[]
+        {
+            new StructField("label", new DoubleType(), false),
+            new StructField("features", new VectorUDT(), false),
+            new StructField("weight", new FloatType(), false),
+        });
+
+        var training = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
+
+        var nb = new NaiveBayes();
+        nb.SetFeaturesCol("features");
+
+        var model = nb.Fit(training);
+
+        // Test model properties
+        var pi = model.Pi;
+        var theta = model.Theta;
+        var numClasses = model.NumClasses;
+        var numFeatures = model.NumFeatures;
+
+        Logger.WriteLine($"Pi: [{string.Join(", ", pi)}]");
+        Logger.WriteLine($"Theta:");
+        foreach (var row in theta)
+        {
+            Logger.WriteLine($"  [{string.Join(", ", row)}]");
+        }
+        Logger.WriteLine($"NumClasses: {numClasses}");
+        Logger.WriteLine($"NumFeatures: {numFeatures}");
+
+        Assert.NotNull(pi);
+        Assert.Equal(2, pi.Count); // 2 classes
+        Assert.NotNull(theta);
+        Assert.Equal(2, theta.Count); // 2 classes
+        Assert.Equal(3, theta[0].Count); // 3 features per class
+        Assert.Equal(2, numClasses);
+        Assert.Equal(3, numFeatures);
+    }
 }

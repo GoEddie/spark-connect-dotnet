@@ -129,10 +129,10 @@ public class Binarizer(SparkSession sparkSession, ParamMap parameters) : Transfo
     /// <returns></returns>
     public static Binarizer Load(string path, SparkSession spark)
     {
-        var mlResult = Load(path, spark, ClassName);
-        
+        var mlResult = Load(path, spark, ClassName, MlOperator.Types.OperatorType.Transformer);
+
         var paramMap = ParamMap.FromMLOperatorParams(mlResult.OperatorInfo.Params.Params, DefaultParams.Clone());
-        var tokenizer = new Binarizer(spark, paramMap);
-        return tokenizer;
+        var binarizer = new Binarizer(spark, paramMap);
+        return binarizer;
     }
 }

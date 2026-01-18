@@ -14,7 +14,7 @@ public class StringIndexerModel(string uid, ObjectRef objRef, SparkSession spark
     /// <summary>
     /// Load a `StringIndexerModel` that was previously saved to disk on the Spark Connect server
     /// </summary>
-    /// <param name="path">Where to read the `GBTClassifierModel` from</param>
+    /// <param name="path">Where to read the `StringIndexerModel` from</param>
     /// <param name="sparkSession">A `SparkSession` to read the model through</param>
     /// <returns>`StringIndexerModel`</returns>
     public static StringIndexerModel Load(string path, SparkSession sparkSession)
@@ -26,6 +26,18 @@ public class StringIndexerModel(string uid, ObjectRef objRef, SparkSession spark
 
         return loadedModel;
     }
+
+    /// <summary>
+    /// Gets the ordered list of labels for the single input column.
+    /// Index i in the array corresponds to the string value that maps to index i.
+    /// </summary>
+    public string[] Labels => Fetch("labels");
+
+    /// <summary>
+    /// Gets the ordered list of labels for each input column (for multi-column indexing).
+    /// Each inner array corresponds to one input column.
+    /// </summary>
+    public string[][] LabelsArray => Fetch("labelsArray");
 }
 
 /// <summary>

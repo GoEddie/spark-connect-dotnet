@@ -105,4 +105,43 @@ public class StringIndexer_Tests(ITestOutputHelper logger) : E2ETestBase(logger)
         dfOutput.Show(3, 10000);
         dfOutput.PrintSchema();
     }
+
+    [Fact]
+    [Trait("Category", "ML")]
+    [Trait("SparkMinVersion", "4")]
+    public void StringIndexer_Labels_Test()
+    {
+        var data = new List<(double, string)>()
+        {
+            (1.0, "apple"),
+            (0.0, "banana"),
+            (1.0, "apple"),
+            (0.0, "cherry")
+        };
+
+        var schema = new StructType(new[]
+        {
+            new StructField("label", new DoubleType(), false),
+            new StructField("fruit", new StringType(), false)
+        });
+
+        var training = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
+
+        var indexer = new StringIndexer();
+        indexer.SetInputCol("fruit");
+        indexer.SetOutputCol("indexed");
+
+        var model = indexer.Fit(training);
+
+        // Test labels property
+        var labels = model.Labels;
+
+        Logger.WriteLine($"Labels: [{string.Join(", ", labels)}]");
+
+        Assert.NotNull(labels);
+        Assert.Equal(3, labels.Length); // 3 unique labels: apple, banana, cherry
+        Assert.Contains("apple", labels);
+        Assert.Contains("banana", labels);
+        Assert.Contains("cherry", labels);
+    }
 }

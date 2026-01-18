@@ -317,9 +317,78 @@ public class ParamMap
                     return literal.Map;
                     
                 case Expression.Types.Literal.LiteralTypeOneofCase.Struct:
+                    // Check if this is a VectorUDT (ML Vector)
+                    if (literal.Struct.StructType?.Udt != null &&
+                        literal.Struct.StructType.Udt.JvmClass == "org.apache.spark.ml.linalg.VectorUDT")
+                    {
+                        // Vector format: [type byte, size (sparse only), indices (sparse only), values]
+                        // type=0 for sparse, type=1 for dense
+                        var elements = literal.Struct.Elements;
+                        if (elements.Count >= 4)
+                        {
+                            var valuesLiteral = elements[3]; // The values array
+                            if (valuesLiteral.LiteralTypeCase == Expression.Types.Literal.LiteralTypeOneofCase.SpecializedArray)
+                            {
+                                return valuesLiteral.SpecializedArray.Doubles.Values.ToList();
+                            }
+                        }
+                    }
+                    // Check if this is a DenseMatrix UDT
+                    if (literal.Struct.StructType?.Udt != null &&
+                        literal.Struct.StructType.Udt.JvmClass == "org.apache.spark.ml.linalg.MatrixUDT")
+                    {
+                        // Matrix format: [type byte, numRows, numCols, colPtrs (sparse), rowIndices (sparse), values, isTransposed]
+                        var elements = literal.Struct.Elements;
+                        if (elements.Count >= 6)
+                        {
+                            var numRows = GetValueFromLiteral(elements[1]);
+                            var numCols = GetValueFromLiteral(elements[2]);
+                            var valuesLiteral = elements[5];
+
+                            List<double> flatValues;
+                            if (valuesLiteral.LiteralTypeCase == Expression.Types.Literal.LiteralTypeOneofCase.SpecializedArray)
+                            {
+                                flatValues = valuesLiteral.SpecializedArray.Doubles.Values.ToList();
+                            }
+                            else
+                            {
+                                return literal.Struct;
+                            }
+
+                            // Convert flat array to 2D list (column-major order)
+                            var matrix = new List<List<double>>();
+                            for (int row = 0; row < numRows; row++)
+                            {
+                                var rowList = new List<double>();
+                                for (int col = 0; col < numCols; col++)
+                                {
+                                    rowList.Add(flatValues[col * numRows + row]);
+                                }
+                                matrix.Add(rowList);
+                            }
+                            return matrix;
+                        }
+                    }
                     return literal.Struct;
                 case Expression.Types.Literal.LiteralTypeOneofCase.SpecializedArray:
-                    return literal.SpecializedArray;
+                    // Handle specialized arrays (doubles, ints, etc.) - use ValueTypeCase for oneof
+                    switch (literal.SpecializedArray.ValueTypeCase)
+                    {
+                        case Expression.Types.Literal.Types.SpecializedArray.ValueTypeOneofCase.Doubles:
+                            return literal.SpecializedArray.Doubles.Values.ToList();
+                        case Expression.Types.Literal.Types.SpecializedArray.ValueTypeOneofCase.Ints:
+                            return literal.SpecializedArray.Ints.Values.ToList();
+                        case Expression.Types.Literal.Types.SpecializedArray.ValueTypeOneofCase.Longs:
+                            return literal.SpecializedArray.Longs.Values.ToList();
+                        case Expression.Types.Literal.Types.SpecializedArray.ValueTypeOneofCase.Floats:
+                            return literal.SpecializedArray.Floats.Values.ToList();
+                        case Expression.Types.Literal.Types.SpecializedArray.ValueTypeOneofCase.Bools:
+                            return literal.SpecializedArray.Bools.Values.ToList();
+                        case Expression.Types.Literal.Types.SpecializedArray.ValueTypeOneofCase.Strings:
+                            return literal.SpecializedArray.Strings.Values.ToList();
+                        default:
+                            return literal.SpecializedArray;
+                    }
                 default:
                     return $"Unknown - do not understand the literal type {literal.LiteralTypeCase} - this is a dotnet client lib issue not a spark issue";
             }

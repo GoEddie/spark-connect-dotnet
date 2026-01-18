@@ -141,10 +141,10 @@ public class Bucketizer(SparkSession sparkSession, ParamMap parameters) : Transf
     /// <returns></returns>
     public static Bucketizer Load(string path, SparkSession spark)
     {
-        var mlResult = Load(path, spark, ClassName);
-        
+        var mlResult = Load(path, spark, ClassName, MlOperator.Types.OperatorType.Transformer);
+
         var paramMap = ParamMap.FromMLOperatorParams(mlResult.OperatorInfo.Params.Params, DefaultParams.Clone());
-        var tokenizer = new Bucketizer(spark, paramMap);
-        return tokenizer;
+        var bucketizer = new Bucketizer(spark, paramMap);
+        return bucketizer;
     }
 }

@@ -163,6 +163,11 @@ public abstract class SparkDataType
         return new NullType();
     }
 
+    public static TimeType TimeType()
+    {
+        return new TimeType();
+    }
+    
     public static DecimalType DecimalType()
     {
         return new DecimalType();
@@ -231,6 +236,9 @@ public abstract class SparkDataType
             
             case "variant":
                 return new VariantType();
+            
+            case "time":
+                return new TimeType();
         }
 
         if (lower.StartsWith("array"))
@@ -290,7 +298,6 @@ public abstract class SparkDataType
         , TypeCode.DateTime => DateType()
         , TypeCode.String => StringType()
         ,TypeCode.Single => FloatType()
-        
         , _ => throw new ArgumentOutOfRangeException($"Unknown Type Code '{GetTypeCode(type)}' for type '{type}'")
     };
     
@@ -303,6 +310,7 @@ public abstract class SparkDataType
         short => ShortType(),
         char => StringType(),
         string => StringType(),
+        TimeOnly => TimeType(),
         Guid => StringType(),
         DateTime => TimestampType(),
         DateTimeOffset => TimestampNtzType(),
@@ -408,6 +416,11 @@ public abstract class SparkDataType
             return new ByteType();
         }
 
+        if (type.Time != null)
+        {
+            return new TimeType();
+        }
+
         if (type.YearMonthInterval != null)
         {
             return new YearMonthIntervalType(type.YearMonthInterval.StartField, type.YearMonthInterval.EndField);
@@ -436,6 +449,23 @@ public abstract class SparkDataType
         if(type.Short != null)
         {
             return new ShortType();
+        }
+
+        if (type.Udt != null)
+        {
+            // Check for known UDT types
+            if (type.Udt.JvmClass == "org.apache.spark.ml.linalg.VectorUDT")
+            {
+                return new ML.LinAlg.VectorUDT();
+            }
+
+            // For unknown UDTs, fallback to the sql_type if available
+            if (type.Udt.SqlType != null)
+            {
+                return FromSparkConnectType(type.Udt.SqlType);
+            }
+
+            throw new NotImplementedException($"Unknown UDT type: {type.Udt.JvmClass}");
         }
 
         throw new NotImplementedException($"Need Type For '{type.KindCase}'");

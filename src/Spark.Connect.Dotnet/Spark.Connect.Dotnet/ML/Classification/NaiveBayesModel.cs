@@ -140,4 +140,31 @@ public class NaiveBayesModel(string uid, ObjectRef objRef, SparkSession sparkSes
     /// </summary>
     /// <returns>The name of the weight column.</returns>
     public string GetWeightCol() => ParamMap.Get("weightCol").Value;
+
+    /// <summary>
+    /// Gets the log of class priors (for multinomial/Bernoulli NB).
+    /// </summary>
+    public List<double> Pi => Fetch("pi");
+
+    /// <summary>
+    /// Gets the log of class conditional probabilities (for multinomial/Bernoulli NB).
+    /// Each row corresponds to a class, each column to a feature.
+    /// </summary>
+    public List<List<double>> Theta => Fetch("theta");
+
+    /// <summary>
+    /// Gets the variance of each feature for each class (for Gaussian NB).
+    /// Each row corresponds to a class, each column to a feature.
+    /// </summary>
+    public List<List<double>> Sigma => Fetch("sigma");
+
+    /// <summary>
+    /// Gets the number of classes.
+    /// </summary>
+    public int NumClasses => Fetch("numClasses");
+
+    /// <summary>
+    /// Gets the number of features the model was trained on.
+    /// </summary>
+    public int NumFeatures => Fetch("numFeatures");
 }

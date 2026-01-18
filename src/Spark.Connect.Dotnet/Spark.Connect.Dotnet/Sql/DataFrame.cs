@@ -324,9 +324,11 @@ public class DataFrame
             }
         };
 
-        RunAnalyze(relation);
-
-        return new DataFrame(SparkSession, relation, _schema);
+        // TODO - this is breaking pipelines but I don't remember why I did it in the first place?
+        // RunAnalyze(relation);
+        //
+        // return new DataFrame(SparkSession, relation, _schema);
+        return new DataFrame(SparkSession, relation);
     }
 
     private void RunAnalyze(Relation relation)
