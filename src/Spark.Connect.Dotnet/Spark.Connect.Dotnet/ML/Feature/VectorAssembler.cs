@@ -66,8 +66,8 @@ public class VectorAssembler(SparkSession sparkSession, ParamMap parameters) : T
     /// <summary>
     /// Gets the outputCol parameter
     /// </summary>
-    /// <param name="val">Name of the column to place the output data</param>
-    public void GetOutputCol() => this.ParamMap.Get("outputCol").Value.ToString();
+    /// <returns>Name of the column to place the output data</returns>
+    public string GetOutputCol() => this.ParamMap.Get("outputCol").Value.ToString();
 
     /// <summary>
     ///  Gets the value of handleInvalid or its default value.

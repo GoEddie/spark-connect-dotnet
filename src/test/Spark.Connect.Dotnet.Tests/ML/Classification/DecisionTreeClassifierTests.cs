@@ -97,4 +97,55 @@ public class DecisionTreeClassifierTests(ITestOutputHelper logger) : E2ETestBase
         result.PrintSchema();
         result.Show(4, 1000);
     }
+
+    [Fact]
+    [Trait("Category", "ML")]
+    [Trait("SparkMinVersion", "4")]
+    public void DecisionTreeClassifier_ModelProperties_Test()
+    {
+        var data = new List<(double label, DenseVector features)>()
+        {
+            (1.0, new DenseVector([0.0, 1.1, 0.1])),
+            (0.0, new DenseVector([2.0, 1.0, -1.0])),
+            (0.0, new DenseVector([2.0, 1.3, 1.0])),
+            (1.0, new DenseVector([0.0, 1.2, -0.5]))
+        };
+
+        var schema = new StructType(new[]
+        {
+            new StructField("label", new DoubleType(), false),
+            new StructField("features", new VectorUDT(), false)
+        });
+
+        var training = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
+
+        var dt = new DecisionTreeClassifier();
+        dt.SetMaxDepth(5);
+
+        var model = dt.Fit(training);
+
+        // Test model properties
+        var depth = model.Depth;
+        var numNodes = model.NumNodes;
+        var numFeatures = model.NumFeatures;
+        var numClasses = model.NumClasses;
+        var featureImportances = model.FeatureImportances;
+        var toDebugString = model.ToDebugString;
+
+        Logger.WriteLine($"Depth: {depth}");
+        Logger.WriteLine($"NumNodes: {numNodes}");
+        Logger.WriteLine($"NumFeatures: {numFeatures}");
+        Logger.WriteLine($"NumClasses: {numClasses}");
+        Logger.WriteLine($"FeatureImportances: [{string.Join(", ", featureImportances)}]");
+        Logger.WriteLine($"ToDebugString: {toDebugString}");
+
+        Assert.True(depth >= 0);
+        Assert.True(numNodes > 0);
+        Assert.Equal(3, numFeatures);
+        Assert.Equal(2, numClasses);
+        Assert.NotNull(featureImportances);
+        Assert.Equal(3, featureImportances.Count);
+        Assert.NotNull(toDebugString);
+        Assert.NotEmpty(toDebugString);
+    }
 }

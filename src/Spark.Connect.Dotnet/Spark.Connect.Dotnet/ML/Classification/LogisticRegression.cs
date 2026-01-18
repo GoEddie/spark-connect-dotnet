@@ -38,21 +38,23 @@ public class LogisticRegression : Estimator<LogisticRegressionModel>
     
     public static readonly ParamMap DefaultParams = new(
     [
-            new("aggregationDepth", 2), 
-            new("elasticNetParam", 0.0), 
-            new("family", "auto"), 
-            new("featuresCol", "features"), 
-            new("fitIntercept", true), 
-            new("labelCol", "label"), 
-            new("maxBlockSizeInMB", 0.0), 
-            new("maxIter", 100), 
-            new("predictionCol", "prediction"), 
-            new("probabilityCol", "probability"), 
-            new("rawPredictionCol", "rawPrediction"), 
-            new("regParam", 0.0), 
-            new("standardization", true), 
-            new("threshold", 0.5), 
-            new("tol", 1.0E-6)
+            new("aggregationDepth", 2),
+            new("elasticNetParam", 0.0),
+            new("family", "auto"),
+            new("featuresCol", "features"),
+            new("fitIntercept", true),
+            new("labelCol", "label"),
+            new("maxBlockSizeInMB", 0.0),
+            new("maxIter", 100),
+            new("predictionCol", "prediction"),
+            new("probabilityCol", "probability"),
+            new("rawPredictionCol", "rawPrediction"),
+            new("regParam", 0.0),
+            new("standardization", true),
+            new("threshold", 0.5),
+            new("thresholds", null),
+            new("tol", 1.0E-6),
+            new("weightCol", "")
     ]);
 
     /// <summary>
@@ -245,4 +247,28 @@ public class LogisticRegression : Estimator<LogisticRegressionModel>
     /// </summary>
     /// <returns>The convergence tolerance as a `double`.</returns>
     public double GetTol() => ParamMap.Get("tol").Value;
+
+    /// <summary>
+    /// Sets the thresholds for multi-class classification to adjust the probability of predicting each class.
+    /// </summary>
+    /// <param name="thresholds">An array of threshold values, one for each class.</param>
+    public void SetThresholds(double[] thresholds) => ParamMap.Add("thresholds", thresholds);
+
+    /// <summary>
+    /// Gets the thresholds used for multi-class classification.
+    /// </summary>
+    /// <returns>An array of threshold values, or null if not set.</returns>
+    public double[]? GetThresholds() => ParamMap.Get("thresholds").Value;
+
+    /// <summary>
+    /// Sets the name of the column containing instance weights.
+    /// </summary>
+    /// <param name="weightCol">The name of the weight column.</param>
+    public void SetWeightCol(string weightCol) => ParamMap.Add("weightCol", weightCol);
+
+    /// <summary>
+    /// Gets the name of the column containing instance weights.
+    /// </summary>
+    /// <returns>The name of the weight column.</returns>
+    public string GetWeightCol() => ParamMap.Get("weightCol").Value;
 }

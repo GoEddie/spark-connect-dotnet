@@ -117,6 +117,17 @@ public class DecisionTreeClassifierModel : Model
     public int NumFeatures => Fetch("numFeatures");
     public int NumClasses => Fetch("numClasses");
 
+    /// <summary>
+    /// Gets the importance of each feature in the model.
+    /// Values are normalized to sum to 1.
+    /// </summary>
+    public List<double> FeatureImportances => Fetch("featureImportances");
+
+    /// <summary>
+    /// Gets a human-readable description of the decision tree model.
+    /// </summary>
+    public string ToDebugString => Fetch("toDebugString");
+
     public void SetFeaturesCol(string featuresCol) => ParamMap.Add("featuresCol", featuresCol);
     public void SetPredictionCol(string predictionCol) => ParamMap.Add("predictionCol", predictionCol);
     public void SetProbabilityCol(string probabilityCol) => ParamMap.Add("probabilityCol", probabilityCol);

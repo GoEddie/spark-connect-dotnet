@@ -101,4 +101,44 @@ public class LinearRegressionTests(ITestOutputHelper logger) : E2ETestBase(logge
 
         prediction.Show(4, 1000);
     }
+
+    [Fact]
+    [Trait("Category", "ML")]
+    [Trait("SparkMinVersion", "4")]
+    public void LinearRegression_ModelProperties_Test()
+    {
+        var data = new List<(double label, DenseVector features)>()
+        {
+            (1.0, new DenseVector([0.0, 1.1, 0.1])),
+            (0.0, new DenseVector([2.0, 1.0, -1.0])),
+            (0.0, new DenseVector([2.0, 1.3, 1.0])),
+            (1.0, new DenseVector([0.0, 1.2, -0.5]))
+        };
+
+        var schema = new StructType(new[]
+        {
+            new StructField("label", new DoubleType(), false),
+            new StructField("features", new VectorUDT(), false)
+        });
+
+        var training = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
+
+        var lr = new LinearRegression();
+        lr.SetMaxIter(10);
+
+        var model = lr.Fit(training);
+
+        // Test model properties
+        var coefficients = model.Coefficients;
+        var intercept = model.Intercept;
+        var numFeatures = model.NumFeatures;
+
+        Logger.WriteLine($"Coefficients: [{string.Join(", ", coefficients)}]");
+        Logger.WriteLine($"Intercept: {intercept}");
+        Logger.WriteLine($"NumFeatures: {numFeatures}");
+
+        Assert.NotNull(coefficients);
+        Assert.Equal(3, coefficients.Count); // 3 features
+        Assert.Equal(3, numFeatures);
+    }
 }

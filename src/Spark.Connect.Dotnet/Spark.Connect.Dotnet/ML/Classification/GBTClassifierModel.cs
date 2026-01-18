@@ -48,8 +48,29 @@ public class GBTClassifierModel(string uid, ObjectRef objRef, SparkSession spark
 
         return loadedModel;
     }
-    
-    
+
+    /// <summary>
+    /// Gets the number of trees in the ensemble.
+    /// </summary>
+    public int NumTrees => Fetch("numTrees");
+
+    /// <summary>
+    /// Gets the total number of nodes in all trees.
+    /// </summary>
+    public int TotalNumNodes => Fetch("totalNumNodes");
+
+    /// <summary>
+    /// Gets the number of features the model was trained on.
+    /// </summary>
+    public int NumFeatures => Fetch("numFeatures");
+
+    /// <summary>
+    /// Gets the importance of each feature in the model.
+    /// Values are normalized to sum to 1.
+    /// </summary>
+    public List<double> FeatureImportances => Fetch("featureImportances");
+
+
     /// <summary>
     /// Sets the name of the column containing feature vectors for the model
     /// </summary>

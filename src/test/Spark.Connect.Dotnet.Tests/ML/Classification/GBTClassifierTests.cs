@@ -152,4 +152,59 @@ public class GBTClassifierTests(ITestOutputHelper logger) : E2ETestBase(logger)
         prediction.Show(3, 1000);
         prediction.PrintSchema();
     }
+
+    [Fact]
+    [Trait("Category", "ML")]
+    [Trait("SparkMinVersion", "4")]
+    public void GBTClassifier_ModelProperties_Test()
+    {
+        var data = new List<(double, IUserDefinedType)>()
+        {
+            (1.0, new DenseVector([0.0, 1.1, 0.1])),
+            (0.0, new DenseVector([2.0, 1.0, -1.0])),
+            (0.0, new DenseVector([2.0, 1.3, 1.0])),
+            (1.0, new DenseVector([0.0, 1.2, -0.5]))
+        };
+
+        var schema = new StructType(new[]
+        {
+            new StructField("label", new DoubleType(), false),
+            new StructField("features", new VectorUDT(), false)
+        });
+
+        var training = Spark.CreateDataFrame(data.Cast<ITuple>(), schema);
+
+        var stringIndexer = new StringIndexer(new Dictionary<string, dynamic>()
+        {
+            {"inputCol", "label"}
+        });
+        stringIndexer.SetOutputCol("indexed");
+
+        var siModel = stringIndexer.Fit(training);
+        var dataToTransform = siModel.Transform(training);
+
+        var gbt = new GBTClassifier(new Dictionary<string, dynamic>()
+        {
+            {"maxIter", 5}, {"maxDepth", 2}, {"labelCol", "indexed"}
+        });
+
+        var model = gbt.Fit(dataToTransform);
+
+        // Test model properties
+        var numTrees = model.NumTrees;
+        var totalNumNodes = model.TotalNumNodes;
+        var numFeatures = model.NumFeatures;
+        var featureImportances = model.FeatureImportances;
+
+        Logger.WriteLine($"NumTrees: {numTrees}");
+        Logger.WriteLine($"TotalNumNodes: {totalNumNodes}");
+        Logger.WriteLine($"NumFeatures: {numFeatures}");
+        Logger.WriteLine($"FeatureImportances: [{string.Join(", ", featureImportances)}]");
+
+        Assert.True(numTrees > 0);
+        Assert.True(totalNumNodes > 0);
+        Assert.Equal(3, numFeatures);
+        Assert.NotNull(featureImportances);
+        Assert.Equal(3, featureImportances.Count);
+    }
 }

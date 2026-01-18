@@ -38,6 +38,12 @@ public class LinearRegressionModel : Model
     public int NumFeatures => Fetch("numFeatures");
 
     /// <summary>
+    /// Gets the scale of the residuals (root mean squared error).
+    /// This is only available when using the "huber" solver.
+    /// </summary>
+    public double Scale => Fetch("scale");
+
+    /// <summary>
     /// Sets the name of the column containing feature vectors.
     /// </summary>
     public void SetFeaturesCol(string featuresCol) => ParamMap.Add("featuresCol", featuresCol);

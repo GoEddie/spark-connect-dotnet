@@ -1,5 +1,8 @@
+using System.Runtime.CompilerServices;
+using Spark.Connect.Dotnet.ML.LinAlg;
 using Spark.Connect.Dotnet.ML.Param;
 using Spark.Connect.Dotnet.Sql;
+using Spark.Connect.Dotnet.Sql.Types;
 
 namespace Spark.Connect.Dotnet.ML.Clustering;
 
@@ -125,5 +128,35 @@ public class KMeansModel : Model
         var mlResult = Transformer.Load(path, spark, ClassName);
         var paramMap = ParamMap.FromMLOperatorParams(mlResult.OperatorInfo.Params.Params, KMeans.DefaultParams.Clone());
         return new KMeansModel(mlResult.OperatorInfo.Uid, mlResult.OperatorInfo.ObjRef, spark, paramMap);
+    }
+
+    /// <summary>
+    /// Predict the cluster index for the given feature vector.
+    /// Note: For batch predictions, use Transform() directly for better performance.
+    /// </summary>
+    /// <param name="value">A feature vector (DenseVector or SparseVector)</param>
+    /// <returns>The predicted cluster index as an int</returns>
+    public int Predict(Vector value)
+    {
+        if (value is not IUserDefinedType udt)
+        {
+            throw new ArgumentException("Vector must be a DenseVector or SparseVector", nameof(value));
+        }
+
+        var featuresCol = ParamMap.Get("featuresCol")?.Value as string ?? "features";
+        var predictionCol = ParamMap.Get("predictionCol")?.Value as string ?? "prediction";
+
+        var schema = new StructType(new[]
+        {
+            new StructField(featuresCol, new VectorUDT(), false)
+        });
+
+        var data = new List<ValueTuple<IUserDefinedType>> { new ValueTuple<IUserDefinedType>(udt) };
+        var df = SparkSession.CreateDataFrame(data.Cast<ITuple>(), schema);
+
+        var result = Transform(df);
+        var row = result.First();
+
+        return Convert.ToInt32(row.Get(predictionCol));
     }
 }

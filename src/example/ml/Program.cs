@@ -31,6 +31,10 @@ Console.WriteLine("\n" + new string('─', 60) + "\n");
 
 // 5. Random Forest example (ensemble classification)
 RandomForestExample.Run(spark);
+Console.WriteLine("\n" + new string('─', 60) + "\n");
+
+// 6. ML Model Properties example (accessing model attributes)
+MLModelPropertiesExample.Run(spark);
 
 Console.WriteLine("\n╔══════════════════════════════════════════════════════════╗");
 Console.WriteLine("║            All ML Examples Completed!                    ║");
@@ -41,4 +45,5 @@ Console.WriteLine("║  2. Logistic Regression (Binary Classification)          
 Console.WriteLine("║  3. K-Means (Clustering)                                 ║");
 Console.WriteLine("║  4. Linear Regression (Regression)                       ║");
 Console.WriteLine("║  5. Random Forest (Ensemble Classification)              ║");
+Console.WriteLine("║  6. ML Model Properties (Accessing Model Attributes)     ║");
 Console.WriteLine("╚══════════════════════════════════════════════════════════╝");
