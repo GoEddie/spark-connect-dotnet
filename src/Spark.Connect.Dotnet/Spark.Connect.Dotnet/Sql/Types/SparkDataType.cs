@@ -451,6 +451,23 @@ public abstract class SparkDataType
             return new ShortType();
         }
 
+        if (type.Udt != null)
+        {
+            // Check for known UDT types
+            if (type.Udt.JvmClass == "org.apache.spark.ml.linalg.VectorUDT")
+            {
+                return new ML.LinAlg.VectorUDT();
+            }
+
+            // For unknown UDTs, fallback to the sql_type if available
+            if (type.Udt.SqlType != null)
+            {
+                return FromSparkConnectType(type.Udt.SqlType);
+            }
+
+            throw new NotImplementedException($"Unknown UDT type: {type.Udt.JvmClass}");
+        }
+
         throw new NotImplementedException($"Need Type For '{type.KindCase}'");
     }
 }

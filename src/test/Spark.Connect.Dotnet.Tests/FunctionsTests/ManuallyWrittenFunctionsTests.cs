@@ -1907,7 +1907,7 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     // =====================================================
 
     [Fact]
-    [Trait("SparkMinVersion", "4")]
+    [Trait("SparkMinVersion", "4.1")]
     public void Quote_Test()
     {
         var df = Spark.CreateDataFrame(
