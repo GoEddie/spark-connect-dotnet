@@ -139,7 +139,27 @@ public class Column
             Alias = new Expression.Types.Alias
             {
                 Expr = Expression,
-                Name = { name }
+                Name = { name }                
+            }
+        };
+
+        return new Column(expression);
+    }
+
+    /// <summary>
+    /// Alias the column to another name
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns>Column</returns>
+    public Column Alias(string name, Dictionary<string,object>? metadata)
+    {
+        var expression = new Expression
+        {
+            Alias = new Expression.Types.Alias
+            {
+                Expr = Expression,
+                Name = { name },
+                Metadata = JsonHelpers.DictionaryToJson(metadata)
             }
         };
 

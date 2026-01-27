@@ -15,7 +15,7 @@ public class StructType : SparkDataType
         Fields = new List<StructField>();
         foreach (var field in source.Fields)
         {
-            Fields.Add(new StructField(field.Name, field.DataType, field.Nullable));
+            Fields.Add(new StructField(field.Name, field.DataType, field.Nullable, JsonHelpers.JsonMapToDictionary(field.Metadata)));
         }
     }
 
@@ -24,7 +24,7 @@ public class StructType : SparkDataType
         Fields = new List<StructField>();
         foreach (var field in source)
         {
-            Fields.Add(new StructField(field.Name, field.DataType, field.Nullable));
+            Fields.Add(new StructField(field.Name, field.DataType, field.Nullable, JsonHelpers.JsonMapToDictionary(field.Metadata)));
         }
     }
 
