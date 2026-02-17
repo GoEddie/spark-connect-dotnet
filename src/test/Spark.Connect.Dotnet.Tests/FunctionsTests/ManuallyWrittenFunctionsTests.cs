@@ -1759,4 +1759,17 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         DateOnly dateOnly = new DateOnly(1980, 04, 01);
         Source.Select(Lit(dateOnly)).Show();
     }
+
+    [Fact]
+    public void ColumnMetaData_Test()
+    {
+        var metadata = new Dictionary<string, object>();
+        metadata.Add("test", "test column comment");
+
+        var df = Source.Select(Col("str").Alias("newname", metadata));
+      
+        Assert.True(df.Schema.Fields[0].Metadata.ContainsKey("test"));
+        Assert.True(df.Schema.Fields[0].Metadata["test"].ToString() == "test column comment");
+     
+    }
 }
