@@ -1,5 +1,9 @@
+using System.ComponentModel;
 using Google.Protobuf;
+using Google.Protobuf.Collections;
 using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.ML.LinAlg;
+using Spark.Connect.Dotnet.Sql.Types;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using TernaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column,
     Spark.Connect.Dotnet.Sql.Column, Spark.Connect.Dotnet.Sql.Column>>;
@@ -9,6 +13,18 @@ using UnaryFunction = System.Linq.Expressions.Expression<System.Func<Spark.Conne
 
 
 namespace Spark.Connect.Dotnet.Sql;
+
+public class MLFunctions : FunctionsWrapper
+{
+    public static Column TreeWeights() => new(
+        new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "treeWeights", IsDistinct = false, Arguments = { }
+            }
+        });
+}
 
 public partial class Functions : FunctionsWrapper
 {
@@ -204,6 +220,59 @@ public partial class Functions : FunctionsWrapper
         return new Column(functionCall);
     }
 
+    public static Column Lit(IUserDefinedType udt)
+    {
+        var dataType = udt.GetDataType() as StructType;
+        
+        
+        var elements = new RepeatedField<Expression.Types.Literal>();// { udt.GetDataForDataframe().Select(p => Lit(p).Expression.Literal).ToList() };
+        
+        foreach (var value in udt.GetDataForDataframe())
+        {
+            switch (value)
+            {
+                case sbyte val:
+                    elements.Add(Lit(val).Expression.Literal);
+                    break;
+                case int val:
+                    elements.Add(Lit(val).Expression.Literal);
+                    break;
+                case string val:
+                    elements.Add(Lit(val).Expression.Literal);
+                    break;
+                case double[] val:
+                    elements.Add(Lit(val).Expression.Literal);
+                    break;
+                case List<double> val:
+                    elements.Add(Lit(val.ToArray()).Expression.Literal);
+                    break;
+                case null:
+                    elements.Add(Lit(null as object).Expression.Literal);
+                    break;
+                default:
+                    Console.WriteLine(value);
+                    break;
+            }
+            
+        }
+        
+        var col = new Column(
+            new Expression
+            {
+                Literal = new Expression.Types.Literal
+                {
+                    Struct = new Expression.Types.Literal.Types.Struct()
+                    {
+                        StructType = udt.GetDataType().ToDataType(),
+                        Elements = { elements }
+                    }
+                }
+            }
+        );
+        
+        return col;
+    }
+
     public static Column Lit(object o)
     {
         if (o is null)
@@ -218,6 +287,11 @@ public partial class Functions : FunctionsWrapper
                     }
                 }
             });
+        }
+
+        if (o is IUserDefinedType udt)
+        {
+            return Lit(udt);
         }
 
         if (o.GetType().IsArray)
@@ -393,6 +467,45 @@ public partial class Functions : FunctionsWrapper
             }
         });
     }
+    
+    public static Column Lit(double[] values)
+    {
+        var elements = values.Select(value => new Expression.Types.Literal { Double = value });
+
+        return new Column(new Expression()
+        {
+            Literal = new Expression.Types.Literal()
+            {
+                Array = new Expression.Types.Literal.Types.Array()
+                {
+                    ElementType = new DataType()
+                    {
+                        Double = new DataType.Types.Double()
+                    }
+                    , Elements = { elements.ToArray() }
+                }
+            }
+        });
+    }
+    
+    public static Column Lit(float[] values)
+    {
+        var elements = values.Select(value => new Expression
+        {
+            Literal = new Expression.Types.Literal { Float = value }
+        }).ToList();
+
+        return new Column(new Expression
+        {
+            UnresolvedFunction = new Expression.Types.UnresolvedFunction
+            {
+                FunctionName = "array", IsDistinct = false, Arguments =
+                {
+                    elements
+                }
+            }
+        });
+    }
 
     public static Column Lit(bool[] values)
     {
@@ -442,6 +555,17 @@ public partial class Functions : FunctionsWrapper
             }
         });
     }
+    
+    public static Column Lit(sbyte value)
+    {
+        return new Column(new Expression
+        {
+            Literal = new Expression.Types.Literal
+            {
+                Byte = value
+            }
+        });
+    }
 
     public static Column Lit(int? value)
     {
@@ -478,6 +602,7 @@ public partial class Functions : FunctionsWrapper
             }
         });
     }
+    
 
     public static Column Col(string name)
     {

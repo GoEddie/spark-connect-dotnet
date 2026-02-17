@@ -25,6 +25,6 @@ public class TimestampNtzType : SparkDataType
 
     public override string SimpleString()
     {
-        return "timestampntz";
+        return "timestamp_ntz";
     }
 }

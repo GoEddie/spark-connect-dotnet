@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Apache.Arrow" Version="16.1.0"/>
+        <PackageReference Include="Apache.Arrow" Version="19.0.1" />
         <PackageReference Include="Google.Protobuf" Version="3.27.2"/>
         <PackageReference Include="Grpc.Core.Api" Version="2.63.0"/>
         <PackageReference Include="Grpc.Net.Client" Version="2.63.0"/>
@@ -19,52 +19,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Update="spark\connect\catalog.proto">
-            <Link>connect\catalog.proto</Link>
-        </Content>
-        <Content Update="spark\connect\commands.proto">
-            <Link>connect\commands.proto</Link>
-        </Content>
-        <Content Update="spark\connect\common.proto">
-            <Link>connect\common.proto</Link>
-        </Content>
-        <Content Update="spark\connect\example_plugins.proto">
-            <Link>connect\example_plugins.proto</Link>
-        </Content>
-        <Content Update="spark\connect\expressions.proto">
-            <Link>connect\expressions.proto</Link>
-        </Content>
-        <Content Update="spark\connect\relations.proto">
-            <Link>connect\relations.proto</Link>
-        </Content>
-        <Content Update="spark\connect\types.proto">
-            <Link>connect\types.proto</Link>
-        </Content>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Protobuf Include="spark\connect\base.proto">
-            <GrpcServices>Both</GrpcServices>
-            <Access>Public</Access>
-            <ProtoCompile>True</ProtoCompile>
-            <CompileOutputs>True</CompileOutputs>
-            <OutputDir>obj\Debug/net8.0/</OutputDir>
-            <Link>connect\base.proto</Link>
-        </Protobuf>
-        <None Remove="spark\connect\catalog.proto"/>
-        <Protobuf Include="spark\connect\catalog.proto"/>
-        <None Remove="spark\connect\commands.proto"/>
-        <Protobuf Include="spark\connect\commands.proto"/>
-        <None Remove="spark\connect\common.proto"/>
-        <Protobuf Include="spark\connect\common.proto"/>
-        <None Remove="spark\connect\example_plugins.proto"/>
-        <Protobuf Include="spark\connect\example_plugins.proto"/>
-        <None Remove="spark\connect\expressions.proto"/>
-        <Protobuf Include="spark\connect\expressions.proto"/>
-        <None Remove="spark\connect\relations.proto"/>
-        <Protobuf Include="spark\connect\relations.proto"/>
-        <None Remove="spark\connect\types.proto"/>
-        <Protobuf Include="spark\connect\types.proto"/>
+        <Protobuf Include="Protos/**/*.proto" ProtoRoot="Protos" />
+        <!-- Reference the proto files from the other project for imports -->
+        <Protobuf Include="\Protos\**\*.proto" ProtoRoot="Protos" Link="ProtoImports\%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -82,8 +39,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
-        <None Include="README.md" Pack="true" PackagePath=""/>
-        <None Include="logo.png" Pack="true" PackagePath=""/>
+        <None Include="LICENSE.txt" Pack="true" PackagePath="" />
+        <None Include="README.md" Pack="true" PackagePath="" />
+        <None Include="logo.png" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Update="..\..\Spark.Connect.Dotnet.Delta\delta\connect" />
     </ItemGroup>
 </Project>

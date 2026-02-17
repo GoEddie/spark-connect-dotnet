@@ -572,9 +572,11 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         var data = ToRow(1, "{\"a\": 123}");
         var schema = StructType(StructField("a", IntegerType()));
         var df = Spark.CreateDataFrame(ToRows(data), "key", "value");
-
+        df.Show(1, 10000);
         df.Select(FromJson(df["value"], schema).Alias("json")).Show();
+        
         var rows = df.Select(FromJson(df["value"], schema).Alias("json")).Collect();
+        
         Assert.Equal(123, (rows[0][0] as object[])[0]);
 
         rows = df.Select(FromJson(df["value"], "a INT").Alias("json")).Collect();

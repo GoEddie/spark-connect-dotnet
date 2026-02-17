@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
@@ -8,16 +10,19 @@ using Grpc.Net.Client;
 using Grpc.Net.Client.Configuration;
 using Spark.Connect.Dotnet.Databricks;
 using Spark.Connect.Dotnet.Grpc;
+using Spark.Connect.Dotnet.ML.LinAlg;
 using Spark.Connect.Dotnet.Sql.Streaming;
 using Spark.Connect.Dotnet.Sql.Types;
 using BinaryType = Apache.Arrow.Types.BinaryType;
 using BooleanType = Apache.Arrow.Types.BooleanType;
 using DoubleType = Apache.Arrow.Types.DoubleType;
+using Field = Apache.Arrow.Field;
 using FloatType = Apache.Arrow.Types.FloatType;
 using MapType = Apache.Arrow.Types.MapType;
 using StringType = Apache.Arrow.Types.StringType;
 using StructType = Spark.Connect.Dotnet.Sql.Types.StructType;
 using TimestampType = Apache.Arrow.Types.TimestampType;
+using Type = System.Type;
 
 namespace Spark.Connect.Dotnet.Sql;
 
@@ -362,6 +367,285 @@ public class SparkSession
         return Sql(sql, dict);
     }
 
+    ///  <summary>
+    ///  This is the preferred way of calling `CreateDataFrame` and it has the best chance of being able to create the data for you.
+    ///  </summary>
+    ///  <param name="list">A list of tuples containing the data</param>
+    ///  <param name="dataFrameSchema">If you don't specify a schema then we attempt to create it for you with default names</param>
+    ///  <returns>DataFrame</returns>
+    ///  <exception cref="NullReferenceException"></exception>
+    ///  <example>
+    /// var rawData = new List&lt;(int Id, int? abc, DenseVector Vector)&gt;()
+    ///     {
+    ///         (1, 3, new DenseVector([0.0, 1.1, 0.1])),
+    ///         (2, null, new DenseVector([2.0, 1.0, -1.0])),
+    ///         (3, 99, new DenseVector([2.0, 1.3, 1.0])),
+    ///         (4, null, new DenseVector([0.0, 1.2, -0.5]))
+    ///     };
+    /// 
+    /// var df = Spark.CreateDataFrame(rawData.Cast&lt;ITuple&gt;());
+    /// df.Show();
+    ///  </example>
+    public DataFrame CreateDataFrame(IEnumerable<ITuple> list, StructType? dataFrameSchema = null) => CreateDataFrame(list.ToList(), dataFrameSchema);
+    
+    private static LinkedList<IArrowArrayBuilder> CreateBuildersForSchema(StructType schema)
+    {
+        var builders = new List<IArrowArrayBuilder>();
+        foreach (var field in schema.Fields)
+        {
+            if (field.DataType.CanCreateArrowBuilder)
+            {
+                builders.AddRange(field.DataType.GetArrowArrayBuilders());    
+            }
+            else
+            {
+                builders.AddRange( CreateBuildersForField(field)); 
+            }
+        }
+        
+        var linkedList = new LinkedList<IArrowArrayBuilder>();
+        foreach (var builder in builders)
+        {
+            linkedList.AddLast(builder);
+        }
+        return linkedList;
+    }
+
+    private static IList<IArrowArrayBuilder> CreateBuildersForField(StructField field)
+    {
+        switch (field.DataType)
+        {
+            case StructType type:
+            {
+                var childBuilders = new List<IArrowArrayBuilder>();
+                foreach (var childField in type.Fields)
+                {
+                    if (childField.DataType is StructType)
+                    {
+                        childBuilders.AddRange(CreateBuildersForField(childField));
+                    }
+                    else
+                    {
+                        var childBuilder = ArrowHelpers.GetArrowBuilderForArrowType(childField.DataType.ToArrowType());
+                        childBuilders.Add(childBuilder);    
+                    }
+                
+                }
+                return childBuilders;
+            }
+            case ArrayType:
+            {
+                var listBuilder = new ListArray.Builder(field.DataType.ToArrowType());
+                var childBuilder = listBuilder.ValueBuilder;
+                return [childBuilder];
+            }
+        }
+
+        var builder = ArrowHelpers.GetArrowBuilderForArrowType(field.DataType.ToArrowType());
+        return [builder];
+    }
+    
+    
+    ///  <summary>
+    ///  This is the preferred way of calling `CreateDataFrame` and it has the best chance of being able to create the data for you.
+    ///
+    ///  For examples please see "src/test/Spark.Connect.Dotnet.Tests/SparkSession_CreateDataFrame_Tests.cs"
+    ///  </summary>
+    ///  <param name="list">A list of tuples containing the data</param>
+    ///  <param name="dataFrameSchema">If you don't specify a schema then we attempt to create it for you with default names</param>
+    ///  <returns>DataFrame</returns>
+    ///  <exception cref="NullReferenceException"></exception>
+    ///  <example>
+    /// var rawData = new List&lt;(int Id, int? abc, DenseVector Vector)&gt;()
+    ///     {
+    ///         (1, 3, new DenseVector([0.0, 1.1, 0.1])),
+    ///         (2, null, new DenseVector([2.0, 1.0, -1.0])),
+    ///         (3, 99, new DenseVector([2.0, 1.3, 1.0])),
+    ///         (4, null, new DenseVector([0.0, 1.2, -0.5]))
+    ///     };
+    /// 
+    /// var df = Spark.CreateDataFrame(rawData.Cast&lt;ITuple&gt;());
+    /// df.Show();
+    ///  </example>
+    public DataFrame CreateDataFrame(IList<ITuple> list, StructType? dataFrameSchema = null) 
+    {
+        /*
+         *  We have a list of tuples which are typed but here we don't know what those types are so we need
+         *   to take the first row and use that to work out the types of each column. I suppose we could use 
+         *   the struct type but think we should respect the actual type.
+         *
+         *  The way arrow works is that we create an array for each column (arrow is columnar) but we have a
+         *   list of rows. The Arrow Arrays are created using `Builders` each data type has its own builder
+         *   so we figure out the types and then we can create the correct type of builder and then use that
+         *   builder to create the array (`Builder.Build()`).
+         *
+         *  There are a couple of slightly harder cases such as List's which create a new item in the column
+         *   array for the list and then there is a separate builder for the child objects. 
+         * 
+         */
+        var firstItem = list.First();
+     
+        if (dataFrameSchema == null)
+        {
+            var fields = new List<StructField>();
+            for (int i = 0; i < firstItem.Length; i++)
+            {
+                var field = new StructField($"_c{i}", SparkDataType.FromDotNetObject(firstItem[i]), true);
+                fields.Add(field);
+            }
+
+            dataFrameSchema = new StructType(fields.ToArray());
+        }
+        
+        var builders = CreateBuildersForSchema(dataFrameSchema); 
+        
+        foreach (var row in list)
+        {
+            var currentBuilder = builders.First;
+
+            for (var i = 0; i < row.Length; i++)
+            {
+                var data = row[i];
+                currentBuilder = AddDataToBuilder(currentBuilder, data);
+            }
+        }
+        
+        List<IArrowArray> builtArrays = BuildersToArrays(builders.First, dataFrameSchema, list.Count);
+        
+        var metaData = new List<KeyValuePair<string, string>>(){{new("test", "metadata")}};
+        var arrowFields = dataFrameSchema.Fields.Select(p => new Field(p.Name, p.DataType.ToArrowType(), p.Nullable)).ToList();    
+        
+        var schema = new Schema(arrowFields, metaData);
+        var batch = new RecordBatch(schema, builtArrays, list.Count);
+        var df = CreateDataFrame(batch, schema, dataFrameSchema.Json());
+        return df;
+    }
+
+    private List<IArrowArray> BuildersToArrays(LinkedListNode<IArrowArrayBuilder> nextBuilder, StructType dataFrameSchema, int rowCount)
+    {
+        var builtArrays = new List<IArrowArray>();
+        
+        foreach (var field in dataFrameSchema.Fields)
+        {
+            if (field.DataType is StructType structType)
+            {
+                var childArrays = BuildersToArrays(nextBuilder, structType, rowCount);
+                var structArray = new StructArray(structType.ToArrowType(), rowCount, childArrays.ToArray(), ArrowBuffer.Empty, 0);
+                builtArrays.Add(structArray);
+                continue;
+            }
+
+            if (field.DataType is UserDefinedType udt)
+            {
+                var childArrays = BuildersToArrays(nextBuilder, udt.GetStructType(), rowCount);
+                var structArray = new StructArray(udt.GetStructType().ToArrowType(), rowCount, childArrays.ToArray(), ArrowBuffer.Empty, 0);
+                builtArrays.Add(structArray);
+                continue;
+            }
+            
+            switch (nextBuilder.Value)
+            {
+                case BooleanArray.Builder booleanArrayBuilder:
+                    builtArrays.Add(booleanArrayBuilder.Build());
+                    break;
+                case StringArray.Builder stringArrayBuilder:
+                    builtArrays.Add(stringArrayBuilder.Build());
+                    break;
+                case Int8Array.Builder int8ArrayBuilder:
+                    builtArrays.Add(int8ArrayBuilder.Build());
+                    break;
+                case Int16Array.Builder int16ArrayBuilder:
+                    builtArrays.Add(int16ArrayBuilder.Build());
+                    break;
+                case Int32Array.Builder integerArrayBuilder:
+                    builtArrays.Add(integerArrayBuilder.Build());
+                    break;
+                case Int64Array.Builder integer64ArrayBuilder:
+                    builtArrays.Add(integer64ArrayBuilder.Build());
+                    break;
+                case Decimal32Array.Builder decimalArrayBuilder:
+                    builtArrays.Add(decimalArrayBuilder.Build());
+                    break;
+                case Decimal64Array.Builder decimal64ArrayBuilder:
+                    builtArrays.Add(decimal64ArrayBuilder.Build());
+                    break;
+                case DoubleArray.Builder doubleArrayBuilder:
+                    builtArrays.Add(doubleArrayBuilder.Build());
+                    break;
+                case Date32Array.Builder date32ArrayBuilder:
+                    builtArrays.Add(date32ArrayBuilder.Build());
+                    break;
+                case Date64Array.Builder date64ArrayBuilder:
+                    builtArrays.Add(date64ArrayBuilder.Build());
+                    break;
+                case Decimal128Array.Builder decimal128ArrayBuilder:
+                    builtArrays.Add(decimal128ArrayBuilder.Build());
+                    break;
+                case TimestampArray.Builder timestampArrayBuilder:
+                    builtArrays.Add(timestampArrayBuilder.Build());
+                    break;
+                case FloatArray.Builder floatArrayBuilder:
+                    builtArrays.Add(floatArrayBuilder.Build());
+                    break;
+                
+                case ListArray.Builder listArrayBuilder:
+                    builtArrays.Add(listArrayBuilder.Build());
+                    break;
+                default:
+                    throw new NotImplementedException($"Unknown field type: {nextBuilder.Value}");
+                    
+            }
+            
+            nextBuilder = nextBuilder.Next!;
+        }
+        
+        return builtArrays;
+    }
+
+    private LinkedListNode<IArrowArrayBuilder>? AddDataToBuilder(LinkedListNode<IArrowArrayBuilder> currentBuilder, object? data)
+    {
+        if (data is ITuple tuple)
+        {
+            for (var i = 0; i < tuple.Length; i++)
+            {
+                var childData = tuple[i];
+                currentBuilder = AddDataToBuilder(currentBuilder, childData);
+            }
+            
+            return currentBuilder;
+        }
+
+        if (data is IUserDefinedType udt)
+        {
+            var childData = udt.GetDataForDataframe();
+            foreach (var t in childData)
+            {
+                currentBuilder = AddDataToBuilder(currentBuilder, t);
+            }
+            return currentBuilder;
+        }
+        
+        if (currentBuilder.Value is ListArray.Builder listBuilder)
+        {
+            if (data is null)
+            {
+                listBuilder.AppendNull();
+            }
+            else
+            {
+                listBuilder.Append();
+                ArrowHelpers.WriteToBuilder(listBuilder.ValueBuilder, data);    
+            }
+        }
+        else
+        {
+            ArrowHelpers. WriteToBuilder(currentBuilder.Value, data);    
+        }
+        
+        return  currentBuilder.Next;
+    }
+
+    
     /// <summary>
     ///     Pass in a list of tuples, schema is guessed by the type of the first tuple's child types:
     ///     CreateDataFrame(new List
@@ -495,7 +779,7 @@ public class SparkSession
         var usedColNumbers = 0;
         for (var i = 0; i < row.Count; i++)
         {
-            var type = SparkDataType.FromDotNetType(row[i]);
+            var type = SparkDataType.FromDotNetObject(row[i]);
             var colName = colNames.Length > i ? colNames[i] : $"_{usedColNumbers++}";
 
             fields.Add(new StructField(colName, type, true));
@@ -556,6 +840,81 @@ public class SparkSession
 
         var batchBuilder = new RecordBatch.Builder();
 
+        batchBuilder = ConvertToArrow(schemaFields, columns, batchBuilder);
+
+        var batch = batchBuilder.Build();
+
+        writer.WriteStart();
+        writer.WriteRecordBatch(batch);
+        writer.WriteEnd();
+
+        stream.Position = 0;
+
+        var createdRelation = new LocalRelation
+        {
+            Data = ByteString.FromStream(stream)
+        };
+
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                LocalRelation = createdRelation
+            }
+        };
+
+        var executor = new RequestExecutor(this, plan);
+        Task.Run(() => executor.ExecAsync()).Wait();
+        return new DataFrame(this, executor.GetRelation());
+    }
+
+    /// <summary>
+    /// This version of `CreateDataFrame` allows the caller to create the Apache Arrow RecordBatch themselves and have a `DataFrame`
+    ///  created. This means that you could read Apache Arrow data from a different source and turn it into something that Spark can
+    ///  work with, or maybe you have a use that that isn't supported by the spark connect lib and this means that you cannot get blocked.
+    ///
+    /// For examples please see src/example/RawArrowExamples/Program.cs 
+    /// </summary>
+    /// <param name="batch">The Apache Arrow RecordBatch</param>
+    /// <param name="schema">The Apache Arrow Schema (note not the Spark Schema)</param>
+    /// <param name="jsonSparkSchema">An optional json schema for Spark, this is required for Spark to convert native types to UDTs</param>
+    /// <returns>DataFrame</returns>
+    public DataFrame CreateDataFrame(RecordBatch batch, Schema schema, string jsonSparkSchema = "")
+    {
+        var stream = new MemoryStream();
+        var writer = new ArrowStreamWriter(stream, schema);
+        
+        writer.WriteStart();
+        writer.WriteRecordBatch(batch);
+        writer.WriteEnd();
+        
+        stream.Position = 0;
+        
+        var createdRelation = new LocalRelation
+        {
+            Data = ByteString.FromStream(stream)
+        };
+
+        if (!string.IsNullOrEmpty(jsonSparkSchema))
+        {
+            createdRelation.Schema = jsonSparkSchema;
+        }
+        
+        var plan = new Plan
+        {
+            Root = new Relation
+            {
+                LocalRelation = createdRelation
+            }
+        };
+
+        var executor = new RequestExecutor(this, plan);
+        Task.Run(() => executor.ExecAsync()).Wait();
+        return new DataFrame(this, executor.GetRelation());
+    }
+
+    private static RecordBatch.Builder ConvertToArrow(List<Field> schemaFields, dynamic columns, RecordBatch.Builder batchBuilder)
+    {
         var i = 0;
         foreach (var schemaCol in schemaFields)
         {
@@ -567,8 +926,8 @@ public class SparkSession
             switch (schemaCol.DataType)
             {
                 case StringType:
-                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
-                        arrayBuilder => arrayBuilder.String(builder => builder.AppendRange(column)));
+                    batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable, 
+                        arrayBuilder => arrayBuilder.String(builder => AppendString(column, builder)));
                     break;
                 case Int32Type:
                     batchBuilder = batchBuilder.Append(schemaCol.Name, schemaCol.IsNullable,
@@ -612,49 +971,79 @@ public class SparkSession
                         arrayBuilder => arrayBuilder.Int64(builder => AppendTimestamp(column, builder)));
                     break;
 
-                case ListType:
-                    throw new NotImplementedException(
-                        "Currently you can't pass a complex type to CreateDataFrame - use Spark.Sql array, map, etc i.e. spark.Range(1).Select(Map(...)) will do the same thing as CreateDataFrame or WithColumn etc");
+                case ListType lt:
+                    
+                    var batchBuilder3 = new RecordBatch.Builder();
+                    var column3 = columns[i-1];
 
+                    // var data = DataToColumns(new List<IEnumerable<object>>() { column2 });
+
+                    foreach (var item in column3)
+                    {
+                        batchBuilder3 = ConvertToArrow(lt.Fields.ToList(), new List<dynamic>(){item}, batchBuilder3);  
+                    }
+                      
+                    
+                    
+                    batchBuilder.Append(schemaCol.Name, false, batchBuilder3.Build());
+                    // throw new NotImplementedException(
+                    //     "Currently you can't pass a complex type to CreateDataFrame - use Spark.Sql array, map, etc i.e. spark.Range(1).Select(Map(...)) will do the same thing as CreateDataFrame or WithColumn etc");
+                    break;
                 case MapType:
                     throw new NotImplementedException(
                         "Currently you can't pass a complex type to CreateDataFrame - use Spark.Sql array, map, etc i.e. spark.Range(1).Select(Map(...)) will do the same thing as CreateDataFrame or WithColumn etc");
+                
+                case Apache.Arrow.Types.StructType st:
+                    var batchBuilder2 = new RecordBatch.Builder();
+                    var column2 = columns[i-1];
 
+                    // var data = DataToColumns(new List<IEnumerable<object>>() { column2 });
+                    
+                    batchBuilder2 = ConvertToArrow(st.Fields.ToList(), column2[0], batchBuilder2);    
+                    
+                    
+                    batchBuilder.Append(schemaCol.Name, false, batchBuilder2.Build());
+                    
+                    break;
                 default:
                     throw new SparkException($"Need Arrow Type for Builder: {schemaCol.DataType}");
             }
         }
 
-        var batch = batchBuilder.Build();
-
-        writer.WriteStart();
-        writer.WriteRecordBatch(batch);
-        writer.WriteEnd();
-
-        stream.Position = 0;
-
-        var createdRelation = new LocalRelation
-        {
-            Data = ByteString.FromStream(stream)
-        };
-
-        var plan = new Plan
-        {
-            Root = new Relation
-            {
-                LocalRelation = createdRelation
-            }
-        };
-
-        var executor = new RequestExecutor(this, plan);
-        Task.Run(() => executor.ExecAsync()).Wait();
-        return new DataFrame(this, executor.GetRelation());
+        return batchBuilder;
     }
 
     private static IEnumerable<Int32Array.Builder> AppendInt(dynamic? column, Int32Array.Builder builder)
     {
-        var list = (List<int?>)column;
         var retList = new List<Int32Array.Builder>();
+
+        if (column is int)
+        {
+            retList.Add(builder.Append((int)column));
+            return retList;
+        }
+        
+        var list = (List<int?>)column;
+
+        foreach (var i in list)
+        {
+            retList.Add(builder.Append(i));
+        }
+
+        return retList;
+    }
+    private static IEnumerable<StringArray.Builder> AppendString(dynamic? column, StringArray.Builder builder)
+    {
+        var retList = new List<StringArray.Builder>();
+
+        if (column is string)
+        {
+            retList.Add(builder.Append((string)column));
+            return retList;
+        }
+        
+        var list = (List<string?>)column;
+
         foreach (var i in list)
         {
             retList.Add(builder.Append(i));
@@ -803,8 +1192,16 @@ public class SparkSession
 
     private static IEnumerable<DoubleArray.Builder> AppendDouble(dynamic? column, DoubleArray.Builder builder)
     {
-        var list = (List<double?>)column;
         var retList = new List<DoubleArray.Builder>();
+        
+        if (column is double)
+        {
+            retList.Add(builder.Append((double)column));
+            return retList;
+        }
+        
+        var list = (List<double?>)column;
+        
         foreach (var i in list)
         {
             retList.Add(builder.Append(i));
@@ -814,7 +1211,7 @@ public class SparkSession
     }
 
 
-    private dynamic DataToColumns(IEnumerable<IEnumerable<object>> data)
+    private static dynamic DataToColumns(IEnumerable<IEnumerable<object>> data)
     {
         if (!data.Any())
         {
@@ -844,10 +1241,10 @@ public class SparkSession
         return columns;
     }
 
-    private static IList CreateGenericList(Type elementType)
+    public static IList CreateGenericList(Type elementType)
     {
         if (elementType == typeof(IDictionary<string, object>) || elementType == typeof(Dictionary<string, object>) ||
-            elementType == typeof(string) || elementType == typeof(string[]))
+            elementType == typeof(string) || elementType == typeof(string[]) || elementType == typeof(object[]))
         {
             var listType = typeof(List<>);
 
@@ -909,4 +1306,5 @@ public class SparkSession
     {
         return Read.Table(name);
     }
+    
 }

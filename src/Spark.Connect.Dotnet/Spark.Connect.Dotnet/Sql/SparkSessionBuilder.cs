@@ -184,7 +184,16 @@ public static class SparkDotnetKnownConfigKeys
 {
     public const string GrpcLogging = RuntimeConf.SparkDotnetConfigKey + "grpclogging";
     public const string PrintMetrics = RuntimeConf.SparkDotnetConfigKey + "showmetrics";
+    
+    /// <summary>
+    /// This is no longer used
+    /// </summary>
     public const string DontDecodeArrow = RuntimeConf.SparkDotnetConfigKey + "dontdecodearrow";
+    
+    /// <summary>
+    /// This is no longer used. Either call `Collect` or `CollectAsRecordBatch` on a `DataFrame`
+    /// </summary>
+    public const string DecodeArrowType = RuntimeConf.SparkDotnetConfigKey + "decodearrowtype";
     public const string RequestExecutorCancelTimeout = RuntimeConf.SparkDotnetConfigKey + "requestretrytimelimit";
     public const string ConnectTimeLimit = RuntimeConf.SparkDotnetConfigKey + "connecttimelimit";
 }

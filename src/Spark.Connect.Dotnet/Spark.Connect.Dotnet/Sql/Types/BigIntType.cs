@@ -20,4 +20,9 @@ public class BigIntType : SparkDataType
     {
         return new Int64Type();
     }
+
+    public override string SimpleString()
+    {
+        return "long";
+    }
 }

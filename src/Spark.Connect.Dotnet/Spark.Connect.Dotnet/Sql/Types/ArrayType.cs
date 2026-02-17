@@ -21,7 +21,7 @@ public class ArrayType : SparkDataType
         {
             Array = new DataType.Types.Array
             {
-                ElementType = ElementType.ToDataType()
+                ElementType = ElementType.ToDataType(), ContainsNull = NullableValues
             }
         };
     }

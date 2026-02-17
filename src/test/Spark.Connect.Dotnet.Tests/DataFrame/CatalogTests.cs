@@ -70,9 +70,9 @@ public class CatalogTests : E2ETestBase
     [Fact]
     public void ListColumnsTest()
     {
-        Spark.Sql("SELECT 1 as i, 2.0 as f, 'test' as str, current_timestamp() as now").Write().SaveAsTable("columns_test", null, "overwrite");
+        Spark.Sql("SELECT 1 as i, 2.0 as f, 'test' as str, current_timestamp() as now").Write().SaveAsTable("columns_testABCD", null, "overwrite");
         
-        var columns = Spark.Catalog.ListColumns("columns_test");
+        var columns = Spark.Catalog.ListColumns("columns_testABCD");
         Assert.Contains(columns, f => f.name == "i");
         Assert.Contains(columns, f => f.name == "f");
             
@@ -82,9 +82,9 @@ public class CatalogTests : E2ETestBase
     [Fact]
     public void GetTableTest()
     {
-        Spark.Range(100).Write().SaveAsTable("my_table", "parquet", "overwrite");
-        var table = Spark.Catalog.GetTable("my_table");
-        Assert.Equal("my_table", table.name);
+        Spark.Range(100).Write().SaveAsTable("my_tableABCD", "parquet", "overwrite");
+        var table = Spark.Catalog.GetTable("my_tableABCD");
+        Assert.Equal("my_tableABCD", table.name);
         Assert.Equal(new[]{"default"}, table.nameSpace);
     }
 
@@ -92,15 +92,15 @@ public class CatalogTests : E2ETestBase
     [Fact]
     public void ListTablesTest()
     {
-        Spark.Range(100).Write().SaveAsTable("my_table1", "parquet", "overwrite");
-        Spark.Range(100).Write().SaveAsTable("my_table2", "parquet", "overwrite");
-        Spark.Range(100).Write().SaveAsTable("my_table3", "csv", "overwrite");
+        Spark.Range(100).Write().SaveAsTable("my_table1ABCD", "parquet", "overwrite");
+        Spark.Range(100).Write().SaveAsTable("my_table2ABCD", "parquet", "overwrite");
+        Spark.Range(100).Write().SaveAsTable("my_table3ABCD", "csv", "overwrite");
         
         var table = Spark.Catalog.ListTables(Spark.Catalog.CurrentDatabase());
         
-        Assert.Contains(table, p => p.name == "my_table1");
-        Assert.Contains(table, p => p.name == "my_table2");
-        Assert.Contains(table, p => p.name == "my_table3");
+        Assert.Contains(table, p => p.name == "my_table1abcd");
+        Assert.Contains(table, p => p.name == "my_table2abcd");
+        Assert.Contains(table, p => p.name == "my_table3abcd");
     }
 
  
@@ -108,9 +108,9 @@ public class CatalogTests : E2ETestBase
     [Fact]
     public void TableExistsTest()
     {
-        Spark.Range(100).Write().SaveAsTable("my_table1", "parquet", "overwrite");
+        Spark.Range(100).Write().SaveAsTable("my_table1999ABC", "parquet", "overwrite");
         
-        var exists = Spark.Catalog.TableExists("my_table1");
+        var exists = Spark.Catalog.TableExists("my_table1999ABC");
         Assert.True(exists);
         
         exists = Spark.Catalog.TableExists("IDONTEXIST");
