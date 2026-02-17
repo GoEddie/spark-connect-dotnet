@@ -445,6 +445,7 @@ public class ArrowVisitor :
             , Date32Array date32Array => date32Array.Values.ToArray(), Date64Array date64Array => date64Array.Values.ToArray(), Int8Array int8Array => int8Array.Values.ToArray()
             , UInt16Array uint6Array => uint6Array.Values.ToArray(), UInt8Array uInt8Array => uInt8Array.Values.ToArray(), UInt64Array uInt64Array => uInt64Array.Values.ToArray()
             , ListArray listArray => GetArrayData(listArray.Values), StructArray structArray => structArray.Fields.Select(p => GetArrayData(p)).ToList()
+            , BinaryArray binaryArray => binaryArray.Data, TimestampArray timestampArray => timestampArray.Values.ToArray()
             , Decimal128Array decimal128Array => decimal128Array.ValueBuffer
             , _ => throw new NotImplementedException()
         };
