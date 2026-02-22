@@ -58,10 +58,10 @@ jobs:
       working-directory: ./src
       run: dotnet build --configuration Release --no-restore
 
-    - uses: vemonet/setup-spark@v1
-      with:
-        spark-version: '3.5.6'
-        hadoop-version: '3'
+    # - uses: vemonet/setup-spark@v1
+    #   with:
+    #     spark-version: '3.5.6'
+    #     hadoop-version: '3'
     
     # - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
 
@@ -77,15 +77,16 @@ jobs:
     #     name: Test Results
     #     path: ./test_results3.xml
     
-    - uses: vemonet/setup-spark@v1
-      with:
-        spark-url: https://dlcdn.apache.org/spark/spark-4.0.0/spark-4.0.0-bin-hadoop3.tgz
-        spark-version: '4.0.0'
-        hadoop-version: '3'
+    - name: Setup Spark Connect
+      run: |
+        wget -q https://dlcdn.apache.org/spark/spark-4.0.2/spark-4.0.2-bin-hadoop3-connect.tgz
+        tar xzf spark-4.0.2-bin-hadoop3-connect.tgz
+        echo "SPARK_HOME=$(pwd)/spark-4.0.2-bin-hadoop3-connect" >> $GITHUB_ENV
+        echo "$(pwd)/spark-4.0.2-bin-hadoop3-connect/sbin" >> $GITHUB_PATH
     
     - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
     
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.0,io.delta:delta-connect-server_2.13:4.0.0,com.google.protobuf:protobuf-java:3.25.1 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog" --conf "spark.connect.extensions.relation.classes=org.apache.spark.sql.connect.delta.DeltaRelationPlugin" --conf "spark.connect.extensions.command.classes=org.apache.spark.sql.connect.delta.DeltaCommandPlugin"
+    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.2,io.delta:delta-connect-server_2.13:4.0.2,com.google.protobuf:protobuf-java:3.25.1 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog" --conf "spark.connect.extensions.relation.classes=org.apache.spark.sql.connect.delta.DeltaRelationPlugin" --conf "spark.connect.extensions.command.classes=org.apache.spark.sql.connect.delta.DeltaCommandPlugin"
 
     - name: Execute unit tests Spark 4.0
       working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
