@@ -1,13 +1,20 @@
 # Supported Spark Versions
 
-This project relies on Spark Connect which was first released in Apache Spark 3.4.0, the gRPC interface is backwards compatible so you can use any higher version.
+The client targets .NET 8 and uses Spark Connect. CI is configured for:
 
-Different versions of Spark include new functions, in 3.5.1 quite a lot of new functions were created. We do no checks in this project as to whether the function you are trying to call is available in the version of Spark you are connected to. You are responsible for knowing if a function is available, if it is not available then you will get an error from Spark.
+| Server | Coverage |
+|--------|----------|
+| Spark 4.0.0 with Delta Lake 4.0.0 | Full test suite, including core DataFrame, SQL, Arrow, ML, streaming, and Delta tests; explicitly skipped tests remain excluded |
+| Spark 3.5.6 | Smoke tests for DataFrame creation, SQL and `IsIn`, and JSON read/write |
 
-If you try calling a function that is only available in a higher version of Spark you will get a `UnresolvedRoutineException` exception and it will list the name of the PySpark function you are trying to call. For example, Spark 3.5.0 introduced [`bitmap_bucket_number`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.bitmap_bucket_number.html), if you try calling this against Spark 3.4.* you will get this error:
+These describe the configured checks, not a guarantee that every Spark API is implemented.
+Spark 3.4 and other server versions are not covered by this matrix. Databricks has a
+separate workflow and requires its own configured credentials and runtime validation.
 
-```shell
-[UNRESOLVED_ROUTINE] Cannot resolve function `bitmap_bucket_number` on search path [`system`.`builtin`, `system`.`session`, `spark_catalog`.`default`].
-```
+The library does not check whether a SQL function exists on the connected server.
+Calling a function introduced in a newer Spark version can return an
+`UnresolvedRoutineException`. Newer features such as Spark Connect ML and the Delta
+Connect extension also require a server that supports them.
 
-To know exactly what functions you can use see this page: https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/functions.html
+Use the [function status](function-status.md) and the documentation for your server
+version when choosing APIs. See [versioning](versioning.md) for the package naming scheme.

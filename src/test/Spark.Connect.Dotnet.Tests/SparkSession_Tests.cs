@@ -12,6 +12,7 @@ public class SparkSession_Tests : E2ETestBase
     }
 
     [Fact]
+    [Trait("Category", "Smoke")]
     public void CreateDataFrame_Test()
     {
         var data = new List<IList<object>>

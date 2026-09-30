@@ -9,7 +9,7 @@ jobs:
   build:
 
     concurrency:
-      group: ${{ github.ref }}  # Groups all runs of this workflow using the branch name
+      group: ${{ github.workflow }}-${{ github.ref }}  # Keep this workflow independent of the local Spark tests
       cancel-in-progress: true  # Automatically cancels any previous run of the workflow that is not completed
 
     strategy:

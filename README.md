@@ -29,7 +29,7 @@ var dataFrame2 = dataFrame
 
 dataFrame2.Write().Json(jsonPath);
 
-var dataFrame3 = spark.Read().Json(jsonPath);
+var dataFrame3 = spark.Read.Json(jsonPath);
 dataFrame3.Show();
 ```
 
@@ -147,7 +147,7 @@ The documentation for Spark Connect is limited at best but there is an example i
 
 ### Writing .NET code for Apache Spark
 
-[Dev Guide](docs/dev-guide.md)
+[User Guide](docs/user-guide.md)
 
 ### Deployment scenarios
 
@@ -172,9 +172,9 @@ To see how many functions are/are not implemented see [Function Status](docs/fun
 
 ### Supported Versions
 
-The version of this library isn't tied to a specific version of Apache Spark, generally the releases are backwards compatible but we make no checks as to whether a function you want to call is available in the version of spark you are using, for example spark 4.0.0 introduced `try_mod` and if you use the library to connect to spark 3.5.1 then everything will work but you will get an error calling that function.
+The package's Spark version prefix identifies its protocol/API baseline. Available features depend on the connected server, and the client does not check whether each function is supported. For example, `try_mod` requires Spark 4.0.0 or later.
 
-The general idea is that you always use the highest version of this library as possible and it will be backwards compatible with older versions of Spark. The builds are tested against Spark 3.5.3 and 4.0.0 at the moment but can be adapted to test earlier versions if required. See [Versioning](docs/versioning.md) for more details.
+CI is configured to run the full test suite against Spark 4.0.0 with Delta Lake 4.0.0, and a basic compatibility smoke suite against Spark 3.5.6. See [Supported Spark Versions](docs/supported-spark-versions.md) for the scope of these checks and [Versioning](docs/versioning.md) for package versions.
 
 ### Questions
 

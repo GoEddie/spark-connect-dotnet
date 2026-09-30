@@ -665,3 +665,6 @@ fabric.properties
 **/.DS_Store
 .idea/
 Spark.Functions.Generator/
+
+# Local package and test output
+/artifacts/

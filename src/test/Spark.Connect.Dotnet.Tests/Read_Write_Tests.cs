@@ -10,6 +10,7 @@ public class ReadWriteTests : E2ETestBase
     }
 
     [Fact]
+    [Trait("Category", "Smoke")]
     public async Task Read_And_Write_Json()
     {
         var df = Spark.Range(10)

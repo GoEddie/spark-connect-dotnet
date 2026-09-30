@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+        <!-- Keep both NuGet packages on the same release version. -->
+        <Version>4.0.0-build.40</Version>
+    </PropertyGroup>
+</Project>
