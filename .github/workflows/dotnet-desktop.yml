@@ -26,7 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      SPARK_REMOTE: http://localhost:15002
       SPARK_LOCAL_IP: 127.0.0.1
       SPARK_VERSION: ${{ matrix.spark }}
       SCALA_VERSION: ${{ matrix.scala }}
@@ -86,7 +85,19 @@ jobs:
               raise SystemExit("Spark Connect did not start within 60 seconds")
           PYTHON
 
+      - name: Print Spark logs on startup failure
+        if: failure() && env.SPARK_HOME != ''
+        run: |
+          for log in "$SPARK_HOME"/logs/*.out; do
+            if [[ -f "$log" ]]; then
+              tail -n 100 "$log"
+            fi
+          done
+
       - name: Run tests
+        env:
+          # spark-submit also reads this variable; set it only for the .NET client.
+          SPARK_REMOTE: http://localhost:15002
         run: |
           options=()
           if [[ -n "$TEST_FILTER" ]]; then
