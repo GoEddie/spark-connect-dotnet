@@ -48,7 +48,8 @@ public class WindowFunction : Functions
 
         if (!string.IsNullOrEmpty(startTime))
         {
-            return new Column(CreateExpression("window", false, timeColumn, Lit(windowDuration), Lit(startTime)));
+            return new Column(CreateExpression("window", false, timeColumn, Lit(windowDuration), Lit(windowDuration),
+                Lit(startTime)));
         }
 
         return new Column(CreateExpression("window", false, timeColumn, Lit(windowDuration)));

@@ -1,6 +1,22 @@
 # Functions Status
 
+The pre-4.0 function review adds `SumDistinct`, `Ilike` (including an escape
+expression), and `RegexpInstr` (including the optional index). `Window` is exposed
+through `WindowFunction.Window` to avoid the window-spec class name collision;
+supplying only a start offset now preserves it as the fourth Spark argument.
+Existing `Column.ILike` and `RegexpExtractInstr` APIs remain available.
+User-defined function APIs, `call_function`, `call_udf`, and `unwrap_udt` are outside
+the current implementation scope. This table records availability, not verified
+parity of every overload.
+
 ## Implemented Functions
+
+Additional pre-4.0 wrappers: `ilike` → `Ilike`, `regexp_instr` → `RegexpInstr`.
+
+The first Spark 4.0 batch adds `nullifzero` → `NullIfZero` (also available as
+`Nullifzero` for callers who prefer Spark's spelling), `zeroifnull` →
+`Zeroifnull`, and `is_valid_utf8` → `IsValidUtf8`, with column and column-name
+overloads in `Functions40.cs`.
 
 | Python Name                 | CSharp Name               |       |
 |-----------------------------|---------------------------|-------|
@@ -175,6 +191,7 @@
 | input_file_name             | InputFileName             | 3.5.* |
 | instr                       | Instr                     | 3.5.* |
 | is_variant_null             | IsVariantNull             | 4.0.0 |
+| is_valid_utf8               | IsValidUtf8               | 4.0.0 |
 | isnan                       | Isnan                     | 3.5.* |
 | isnotnull                   | Isnotnull                 | 3.5.* |
 | isnull                      | Isnull                    | 3.5.* |
@@ -243,6 +260,7 @@
 | nth_value                   | NthValue                  | 3.5.* |
 | ntile                       | Ntile                     | 3.5.* |
 | nullif                      | Nullif                    | 3.5.* |
+| nullifzero                  | NullIfZero / Nullifzero    | 4.0.0 |
 | nvl                         | Nvl                       | 3.5.* |
 | nvl2                        | Nvl2                      | 3.5.* |
 | octet_length                | OctetLength               | 3.5.* |
@@ -343,6 +361,7 @@
 | substring                   | Substring                 | 3.5.* |
 | substring_index             | SubstringIndex            | 3.5.* |
 | sum                         | Sum                       | 3.5.* |
+| sum_distinct                | SumDistinct               | 3.5.* |
 | tan                         | Tan                       | 3.5.* |
 | tanh                        | Tanh                      | 3.5.* |
 | timestamp_micros            | TimestampMicros           | 3.5.* |
@@ -418,5 +437,6 @@
 | xxhash64                    | Xxhash64                  | 3.5.* |
 | year                        | Year                      | 3.5.* |
 | years                       | Years                     | 3.5.* |
+| zeroifnull                  | Zeroifnull                | 4.0.0 |
 | zip_with                    | ZipWith                   | 3.5.* |
 | ~                           | BitwiseNot                | 3.5.* |
