@@ -2851,8 +2851,10 @@ public class Column
             {
                 expression.UnresolvedFunction.Arguments.Add(col.Expression);
             }
-
-            expression.UnresolvedFunction.Arguments.Add(Functions.Lit(o).Expression);
+            else
+            {
+                expression.UnresolvedFunction.Arguments.Add(Functions.Lit(o).Expression);
+            }
         }
 
         return new Column(expression);

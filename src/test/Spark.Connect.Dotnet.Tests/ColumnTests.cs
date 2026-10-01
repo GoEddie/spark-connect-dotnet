@@ -147,6 +147,24 @@ public class ColumnTests : E2ETestBase
     }
     
     [Fact]
+    [Trait("Category", "Smoke")]
+    public void IsIn_WithColumn_And_Literal_Returns_Expected_Rows()
+    {
+        var df = Spark.Sql("""
+            SELECT 'Alice' AS name, 'Alice' AS candidate
+            UNION ALL SELECT 'Bob', 'Carol'
+            UNION ALL SELECT 'Mike', 'Carol'
+            UNION ALL SELECT 'Spark.Connect.Dotnet.Sql.Column', 'Carol'
+            """);
+
+        var rows = df.Filter(Col("name").IsIn(Col("candidate"), "Mike"))
+            .Select("name")
+            .Collect();
+
+        Assert.Equal(new[] { "Alice", "Mike" }, rows.Select(row => (string)row[0]).OrderBy(name => name));
+    }
+
+    [Fact]
     public void CanFilter_AgainstStringNativeTypes()
     {
         var df = Spark.Range(10).WithColumn("S", Lit("a string"));

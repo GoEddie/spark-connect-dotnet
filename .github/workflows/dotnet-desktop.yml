@@ -6,93 +6,128 @@ on:
   push:
     branches: [ "main" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-
   build:
-
-    concurrency:
-      group: ${{ github.ref }}  # Groups all runs of this workflow using the branch name
-      cancel-in-progress: true  # Automatically cancels any previous run of the workflow that is not completed
-
-
     strategy:
+      fail-fast: false
       matrix:
-        configuration: [Release]
+        include:
+          - spark: '3.5.6'
+            scala: '2.12'
+            filter: 'Category=Smoke'
+          - spark: '4.0.0'
+            scala: '2.13'
+            filter: ''
 
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 30
     env:
-    
-      Solution_Name: Spark.Connect.Dotnet                
-      Test_Project_Path: src/test                
-      
+      SPARK_LOCAL_IP: 127.0.0.1
+      SPARK_VERSION: ${{ matrix.spark }}
+      SCALA_VERSION: ${{ matrix.scala }}
+      TEST_FILTER: ${{ matrix.filter }}
+
     steps:
-    
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
 
-    - uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '8.0'  # Specify your .NET Core version here
-    
-    - name: Print current directory
-      run: pwd
+      - name: Restore and build
+        working-directory: src
+        run: |
+          dotnet restore
+          dotnet build --configuration Release --no-restore
 
-    - name: Print current directory listing
-      run: ls -a ./src
+      - name: Install Spark
+        run: |
+          archive="spark-${SPARK_VERSION}-bin-hadoop3.tgz"
+          curl --fail --location --retry 3 "https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/${archive}" --output "$RUNNER_TEMP/$archive"
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
+          echo "SPARK_HOME=$RUNNER_TEMP/spark-${SPARK_VERSION}-bin-hadoop3" >> "$GITHUB_ENV"
 
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-    
-    - uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: temurin
-    
-    - name: Install dependencies
-      working-directory: ./src
-      run: dotnet restore
+      - name: Start Spark Connect
+        run: |
+          packages="org.apache.spark:spark-connect_${SCALA_VERSION}:${SPARK_VERSION}"
+          options=()
+          if [[ "$SPARK_VERSION" == "4.0.0" ]]; then
+            packages+=",io.delta:delta-connect-server_2.13:4.0.0,com.google.protobuf:protobuf-java:3.25.1"
+            options+=(
+              --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension
+              --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
+              --conf spark.connect.extensions.relation.classes=org.apache.spark.sql.connect.delta.DeltaRelationPlugin
+              --conf spark.connect.extensions.command.classes=org.apache.spark.sql.connect.delta.DeltaCommandPlugin
+            )
+          fi
+          "$SPARK_HOME/sbin/start-connect-server.sh" --master 'local[2]' --packages "$packages" "${options[@]}"
+          python - <<'PYTHON'
+          import socket
+          import time
 
-    - name: Build the project
-      working-directory: ./src
-      run: dotnet build --configuration Release --no-restore
+          for attempt in range(60):
+              try:
+                  with socket.create_connection(("localhost", 15002), timeout=1):
+                      break
+              except OSError:
+                  time.sleep(1)
+          else:
+              raise SystemExit("Spark Connect did not start within 60 seconds")
+          PYTHON
 
-    - uses: vemonet/setup-spark@v1
-      with:
-        spark-version: '3.5.6'
-        hadoop-version: '3'
-    
-    # - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
+      - name: Print Spark logs on startup failure
+        if: failure() && env.SPARK_HOME != ''
+        run: |
+          for log in "$SPARK_HOME"/logs/*.out; do
+            if [[ -f "$log" ]]; then
+              tail -n 100 "$log"
+            fi
+          done
 
-    # - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.6,io.delta:delta-connect-server_2.13:4.0.0,com.google.protobuf:protobuf-java:3.25.1 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog" --conf "spark.connect.extensions.relation.classes=org.apache.spark.sql.connect.delta.DeltaRelationPlugin" --conf "spark.connect.extensions.command.classes=org.apache.spark.sql.connect.delta.DeltaCommandPlugin"
+      - name: Run tests
+        env:
+          # spark-submit also reads this variable; set it only for the .NET client.
+          SPARK_REMOTE: http://localhost:15002
+        run: |
+          options=()
+          if [[ -n "$TEST_FILTER" ]]; then
+            options+=(--filter "$TEST_FILTER")
+          fi
+          dotnet test src/test/Spark.Connect.Dotnet.Tests/Spark.Connect.Dotnet.Tests.csproj --configuration Release --no-build --logger 'trx;LogFileName=tests.trx' --results-directory artifacts/test-results "${options[@]}"
 
-    # - name: Execute unit tests Spark 3.5
-    #   working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
-    #   run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results3.xml" --filter "SparkMinVersion!=4"
+      - name: Pack both libraries
+        if: matrix.spark == '4.0.0'
+        run: |
+          dotnet pack src/Spark.Connect.Dotnet/Spark.Connect.Dotnet.GrpcClient/Spark.Connect.Dotnet.GrpcClient.csproj --configuration Release --no-build --output artifacts/packages
+          dotnet pack src/Spark.Connect.Dotnet/Spark.Connect.Dotnet/Spark.Connect.Dotnet.csproj --configuration Release --no-build --output artifacts/packages
 
-    # - name: Upload test results
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: Test Results
-    #     path: ./test_results3.xml
-    
-    - uses: vemonet/setup-spark@v1
-      with:
-        spark-url: https://dlcdn.apache.org/spark/spark-4.0.0/spark-4.0.0-bin-hadoop3.tgz
-        spark-version: '4.0.0'
-        hadoop-version: '3'
-    
-    - run: $SPARK_HOME/sbin/stop-connect-server.sh --force
-    
-    - run: $SPARK_HOME/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.13:4.0.0,io.delta:delta-connect-server_2.13:4.0.0,com.google.protobuf:protobuf-java:3.25.1 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog" --conf "spark.connect.extensions.relation.classes=org.apache.spark.sql.connect.delta.DeltaRelationPlugin" --conf "spark.connect.extensions.command.classes=org.apache.spark.sql.connect.delta.DeltaCommandPlugin"
+      - name: Stop Spark Connect
+        if: always() && env.SPARK_HOME != ''
+        run: '"$SPARK_HOME/sbin/stop-connect-server.sh"'
 
-    - name: Execute unit tests Spark 4.0
-      working-directory: ./src/test/Spark.Connect.Dotnet.Tests/
-      run: dotnet test -l:"console;verbosity=detailed" --logger "trx;LogFileName=./test_results4.xml" --filter "SparkMinVersion=4"
+      - name: Upload test results and Spark logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-spark-${{ matrix.spark }}
+          path: |
+            artifacts/test-results/
+            ${{ runner.temp }}/spark-${{ matrix.spark }}-bin-hadoop3/logs/
 
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      with:
-        name: Test Results
-        path: ./test_results4.xml    
+      - name: Upload packages
+        if: matrix.spark == '4.0.0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
