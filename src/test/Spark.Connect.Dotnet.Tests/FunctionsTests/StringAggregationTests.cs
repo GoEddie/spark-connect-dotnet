@@ -24,7 +24,9 @@ public class StringAggregationPlanTests
     {
         var aggregate = Aggregator(sqlName);
         var function = aggregate(Col("value"), null).Expression.UnresolvedFunction;
-        Assert.Equal(sqlName, function.FunctionName);
+        var distinct = sqlName.EndsWith("_distinct", StringComparison.Ordinal);
+        Assert.Equal(distinct ? sqlName[..^"_distinct".Length] : sqlName, function.FunctionName);
+        Assert.Equal(distinct, function.IsDistinct);
         Assert.Equal("value", Assert.Single(function.Arguments).UnresolvedAttribute.UnparsedIdentifier);
 
         // Exercise every public overload, including string column names and binary delimiters.
@@ -35,6 +37,8 @@ public class StringAggregationPlanTests
                 var method = typeof(Functions).GetMethod(methodName, new[] { input.GetType(), delimiter.GetType() })!;
                 var column = (Column)method.Invoke(null, new[] { input, delimiter })!;
                 var expected = delimiter is byte[] bytes ? Lit(bytes) : Lit("|");
+                Assert.Equal(function.FunctionName, column.Expression.UnresolvedFunction.FunctionName);
+                Assert.Equal(distinct, column.Expression.UnresolvedFunction.IsDistinct);
                 Assert.Equal(aggregate(Col("value"), expected).Expression, column.Expression);
             }
         }

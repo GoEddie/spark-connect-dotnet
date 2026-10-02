@@ -47,8 +47,8 @@ public partial class Functions
 
     /// <summary>Concatenates distinct non-null string or binary values. Result order is unspecified.</summary>
     public static Column ListaggDistinct(Column col, Column? delimiter = null) =>
-        new(delimiter is null ? CreateExpression("listagg_distinct", false, col)
-            : CreateExpression("listagg_distinct", false, col, delimiter));
+        new(delimiter is null ? CreateExpression("listagg", true, col)
+            : CreateExpression("listagg", true, col, delimiter));
     public static Column ListaggDistinct(string col, Column? delimiter = null) => ListaggDistinct(Col(col), delimiter);
     /// <summary>Concatenates values using a literal string delimiter.</summary>
     public static Column ListaggDistinct(Column col, string delimiter) => ListaggDistinct(col, Lit(delimiter));
@@ -71,8 +71,8 @@ public partial class Functions
 
     /// <summary>Concatenates distinct non-null string or binary values. Result order is unspecified.</summary>
     public static Column StringAggDistinct(Column col, Column? delimiter = null) =>
-        new(delimiter is null ? CreateExpression("string_agg_distinct", false, col)
-            : CreateExpression("string_agg_distinct", false, col, delimiter));
+        new(delimiter is null ? CreateExpression("string_agg", true, col)
+            : CreateExpression("string_agg", true, col, delimiter));
     public static Column StringAggDistinct(string col, Column? delimiter = null) => StringAggDistinct(Col(col), delimiter);
     /// <summary>Concatenates values using a literal string delimiter.</summary>
     public static Column StringAggDistinct(Column col, string delimiter) => StringAggDistinct(col, Lit(delimiter));
