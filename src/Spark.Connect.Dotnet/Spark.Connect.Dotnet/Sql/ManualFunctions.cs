@@ -668,6 +668,32 @@ public partial class Functions : FunctionsWrapper
         return new Column(CreateExpression("count", true, col));
     }
 
+    /// <summary>Returns the sum of distinct non-null values.</summary>
+    public static Column SumDistinct(Column col) => new(CreateExpression("sum", true, col));
+
+    /// <summary>Returns the sum of distinct non-null values in the named column.</summary>
+    public static Column SumDistinct(string col) => SumDistinct(Col(col));
+
+    /// <summary>Matches a pattern case-insensitively. Use Lit for a literal pattern or escape character.</summary>
+    public static Column Ilike(Column str, Column pattern, Column? escapeChar = null) =>
+        new(escapeChar is null
+            ? CreateExpression("ilike", false, str, pattern)
+            : CreateExpression("ilike", false, str, pattern, escapeChar));
+
+    /// <summary>Matches named string and pattern columns case-insensitively.</summary>
+    public static Column Ilike(string str, string pattern, Column? escapeChar = null) =>
+        Ilike(Col(str), Col(pattern), escapeChar);
+
+    /// <summary>Returns the one-based position of the first regex match, or zero if no match exists.</summary>
+    public static Column RegexpInstr(Column str, Column regexp, int? idx = null) =>
+        new(idx.HasValue
+            ? CreateExpression("regexp_instr", false, str, regexp, Lit(idx.Value))
+            : CreateExpression("regexp_instr", false, str, regexp));
+
+    /// <summary>Searches named string and regex columns. Use Lit for a literal regex.</summary>
+    public static Column RegexpInstr(string str, string regexp, int? idx = null) =>
+        RegexpInstr(Col(str), Col(regexp), idx);
+
     /// <summary>
     ///     Extracts a part of the date/timestamp or interval source.
     /// </summary>

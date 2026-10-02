@@ -28,6 +28,48 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
 
     [Fact]
+    public void OlderFunctionResults_Test()
+    {
+        var values = Spark.Sql("SELECT * FROM VALUES (1), (1), (2), (NULL) AS t(value)");
+        Assert.Equal(3L, values.Select(SumDistinct("value")).Collect()[0][0]);
+
+        var strings = Spark.Sql("SELECT 'Spark' AS value, '_PARK' AS pattern, '1a 2b' AS text, '[0-9]+b' AS regex");
+        var row = strings.Select(
+            Ilike("value", "pattern"),
+            Ilike(Col("value"), Lit("_PARK")),
+            Ilike(Lit("a_b"), Lit("a/_b"), Lit("/")),
+            RegexpInstr("text", "regex"),
+            RegexpInstr(Col("text"), Lit("[0-9]+b"), 0),
+            RegexpInstr(Col("text"), Lit("missing")),
+            Ilike(Lit(), Lit("%"))).Collect()[0];
+        Assert.Equal(true, row[0]);
+        Assert.Equal(true, row[1]);
+        Assert.Equal(true, row[2]);
+        Assert.Equal(4, row[3]);
+        Assert.Equal(4, row[4]);
+        Assert.Equal(0, row[5]);
+        Assert.Null(row[6]);
+    }
+
+    [Fact]
+    public void Spark40NullAndUtf8Results_Test()
+    {
+        var row = Spark.Range(1).Select(
+            Nullifzero(Lit(0)), Nullifzero(Lit(7)), Nullifzero(Lit()),
+            Zeroifnull(Lit()), Zeroifnull(Lit(7)),
+            IsValidUtf8(Lit("Spark")), IsValidUtf8(Lit(new byte[] { 0xff })),
+            IsValidUtf8(Lit())).Collect()[0];
+        Assert.Null(row[0]);
+        Assert.Equal(7, row[1]);
+        Assert.Null(row[2]);
+        Assert.Equal(0, row[3]);
+        Assert.Equal(7, row[4]);
+        Assert.Equal(true, row[5]);
+        Assert.Equal(false, row[6]);
+        Assert.Null(row[7]);
+    }
+
+    [Fact]
     public void DatePart_Test()
     {
         Source.Select(DatePart(Lit("YEAR"), "ts").Alias("year")).Show();
