@@ -20,4 +20,16 @@ public partial class Functions
     /// <summary>Returns whether the input is valid UTF-8.</summary>
     public static Column IsValidUtf8(Column col) => new(CreateExpression("is_valid_utf8", false, col));
     public static Column IsValidUtf8(string col) => IsValidUtf8(Col(col));
+
+    /// <summary>Replaces invalid UTF-8 sequences with the Unicode replacement character.</summary>
+    public static Column MakeValidUtf8(Column col) => new(CreateExpression("make_valid_utf8", false, col));
+    public static Column MakeValidUtf8(string col) => MakeValidUtf8(Col(col));
+
+    /// <summary>Returns valid UTF-8 input, or raises an error for invalid input.</summary>
+    public static Column ValidateUtf8(Column col) => new(CreateExpression("validate_utf8", false, col));
+    public static Column ValidateUtf8(string col) => ValidateUtf8(Col(col));
+
+    /// <summary>Returns valid UTF-8 input, or null for invalid input.</summary>
+    public static Column TryValidateUtf8(Column col) => new(CreateExpression("try_validate_utf8", false, col));
+    public static Column TryValidateUtf8(string col) => TryValidateUtf8(Col(col));
 }
