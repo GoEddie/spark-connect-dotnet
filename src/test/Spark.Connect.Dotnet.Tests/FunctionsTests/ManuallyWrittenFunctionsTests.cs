@@ -86,8 +86,10 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
         Assert.Equal("Spark", row[5]);
         Assert.Null(row[6]);
         Assert.Null(row[7]);
-        var error = Assert.ThrowsAny<Exception>(() => source.Select(ValidateUtf8("invalid")).Collect());
-        Assert.Contains("UTF8", error.Message, StringComparison.OrdinalIgnoreCase);
+        var error = Assert.ThrowsAny<SparkException>(() => source.Select(ValidateUtf8("invalid")).Collect());
+        // The wrapper can have an empty Message; Spark's detail is retained by the original RPC error.
+        var rpcError = Assert.IsType<global::Grpc.Core.RpcException>(error.GetBaseException());
+        Assert.Contains("UTF8", rpcError.Status.Detail, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
