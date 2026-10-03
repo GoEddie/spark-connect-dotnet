@@ -70,6 +70,29 @@ public class ManuallyWrittenFunctionsTests : E2ETestBase
     }
 
     [Fact]
+    public void Spark40Utf8RepairAndValidationResults_Test()
+    {
+        var source = Spark.Sql("SELECT 'Spark' AS valid, CAST(unhex('61FF') AS STRING) AS invalid, CAST(NULL AS STRING) AS missing");
+        var row = source.Select(
+            MakeValidUtf8("valid"), MakeValidUtf8("invalid"), MakeValidUtf8("missing"),
+            ValidateUtf8("valid"), ValidateUtf8("missing"),
+            TryValidateUtf8("valid"), TryValidateUtf8("invalid"), TryValidateUtf8("missing"))
+            .Collect()[0];
+        Assert.Equal("Spark", row[0]);
+        Assert.Equal("a\uFFFD", row[1]);
+        Assert.Null(row[2]);
+        Assert.Equal("Spark", row[3]);
+        Assert.Null(row[4]);
+        Assert.Equal("Spark", row[5]);
+        Assert.Null(row[6]);
+        Assert.Null(row[7]);
+        var error = Assert.ThrowsAny<SparkException>(() => source.Select(ValidateUtf8("invalid")).Collect());
+        // The wrapper can have an empty Message; Spark's detail is retained by the original RPC error.
+        var rpcError = Assert.IsType<global::Grpc.Core.RpcException>(error.GetBaseException());
+        Assert.Contains("UTF8", rpcError.Status.Detail, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void DatePart_Test()
     {
         Source.Select(DatePart(Lit("YEAR"), "ts").Alias("year")).Show();

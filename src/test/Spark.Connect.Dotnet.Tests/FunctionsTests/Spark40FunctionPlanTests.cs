@@ -5,6 +5,32 @@ namespace Spark.Connect.Dotnet.Tests.FunctionsTests;
 
 public class Spark40FunctionPlanTests
 {
+    [Theory]
+    [InlineData("make_valid_utf8")]
+    [InlineData("validate_utf8")]
+    [InlineData("try_validate_utf8")]
+    public void Utf8FunctionsPreserveLiteralBytesAndNamedColumns(string name)
+    {
+        Func<Column, Column> expression = name switch
+        {
+            "make_valid_utf8" => MakeValidUtf8,
+            "validate_utf8" => ValidateUtf8,
+            _ => TryValidateUtf8
+        };
+        Func<string, Column> named = name switch
+        {
+            "make_valid_utf8" => MakeValidUtf8,
+            "validate_utf8" => ValidateUtf8,
+            _ => TryValidateUtf8
+        };
+        var function = expression(Lit(new byte[] { 0x61, 0xff })).Expression.UnresolvedFunction;
+        Assert.Equal(name, function.FunctionName);
+        Assert.Equal(new byte[] { 0x61, 0xff }, Assert.Single(function.Arguments).Literal.Binary.ToByteArray());
+        Assert.Equal("value", Assert.Single(named("value").Expression.UnresolvedFunction.Arguments)
+            .UnresolvedAttribute.UnparsedIdentifier);
+        Assert.Equal(expression(Col("value")).Expression, named("value").Expression);
+    }
+
     [Fact]
     public void NullHelpersPreserveColumnReferences()
     {
